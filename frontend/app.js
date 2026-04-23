@@ -220,8 +220,8 @@
             <span class="logo__word">Rate <em>BIPH</em></span>
           </a>
           <div class="topnav__links">
-            <a href="index.html" class="topnav__link ${active==='home'?'is-active':''}">Browse</a>
-            <a href="submit.html" class="topnav__link ${active==='submit'?'is-active':''}">Submit a teacher</a>
+            <a href="index.html" class="topnav__link"${active==='home'?' aria-current="page"':''}>Browse</a>
+            <a href="submit.html" class="topnav__link"${active==='submit'?' aria-current="page"':''}>Submit a teacher</a>
           </div>
         </div>
       </div>`;

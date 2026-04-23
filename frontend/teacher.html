@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="config.js"></script>
 </head>
-<body data-page="home">
+<body data-page="teacher">
   <div data-topnav></div>
 
   <main class="container container--narrow">
@@ -214,8 +214,6 @@
       });
     }
 
-    function bindInteractiveStars() { renderRatingRows(); }
-
     async function loadReviews() {
       try {
         const data = await RB.api(`/api/teachers/${encodeURIComponent(id)}/reviews?limit=200`);
@@ -270,7 +268,7 @@
         RB.toast('Posted. Thanks for reviewing.');
         document.getElementById('comment').value = '';
         Object.keys(state.ratings).forEach(k => state.ratings[k] = 0);
-        bindInteractiveStars();
+        renderRatingRows();
         state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
         renderHero(); renderStats(); loadReviews();
       } catch (e) {
@@ -281,10 +279,7 @@
       }
     }
 
-    init().then(() => {
-      // Replace the buggy closure version with a proper rebind
-      bindInteractiveStars();
-    });
+    init();
   })();
   </script>
 </body>

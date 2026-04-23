@@ -173,16 +173,15 @@ def get_teacher(teacher_id: str):
     sql = TEACHER_STATS_SELECT + " AND t.id = ? GROUP BY t.id"
     with get_conn() as conn:
         row = conn.execute(sql, (teacher_id,)).fetchone()
-    if not row:
-        raise HTTPException(status_code=404, detail="Teacher not found")
-    d = teacher_row_to_dict(row)
-    # Rating distribution on teaching_quality
-    with get_conn() as conn:
+        if not row:
+            raise HTTPException(status_code=404, detail="Teacher not found")
+        # Rating distribution on teaching_quality, same connection
         dist_rows = conn.execute(
             """SELECT teaching_quality AS r, COUNT(*) AS n FROM reviews
                WHERE teacher_id = ? AND is_visible = 1 GROUP BY teaching_quality""",
             (teacher_id,),
         ).fetchall()
+    d = teacher_row_to_dict(row)
     dist = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
     for r in dist_rows:
         dist[r["r"]] = r["n"]
@@ -191,7 +190,11 @@ def get_teacher(teacher_id: str):
 
 
 @app.get("/api/teachers/{teacher_id}/reviews")
-def list_reviews(teacher_id: str, limit: int = Query(default=50, le=200), offset: int = 0):
+def list_reviews(
+    teacher_id: str,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+):
     with get_conn() as conn:
         rows = conn.execute(
             """SELECT id, teaching_quality, test_difficulty, homework_load, easygoingness,
@@ -243,24 +246,32 @@ def post_review(teacher_id: str, body: ReviewIn, request: Request):
 def set_teacher_courses(teacher_id: str, body: CoursesIn, request: Request):
     """First-submitter-wins: lets anyone fill in the course list for a teacher,
     but only if it's currently empty. Once set, writes are rejected with 409
-    so the field effectively locks. Admins can clear it if a bad value sticks."""
+    so the field effectively locks. Admins can clear it if a bad value sticks.
+
+    The write is atomic: we UPDATE only rows where courses IS NULL or empty,
+    then check rowcount. Two concurrent POSTs will no longer both succeed —
+    the second one sees rowcount=0 and we reply with 409 (or 404 if the
+    teacher actually doesn't exist)."""
     normalized = normalize_courses_input(body.courses)
     if not normalized:
         raise HTTPException(status_code=400, detail="Courses cannot be empty.")
     with get_conn() as conn:
-        t = conn.execute(
-            "SELECT id, courses FROM teachers WHERE id = ? AND is_visible = 1",
-            (teacher_id,),
-        ).fetchone()
-        if not t:
-            raise HTTPException(status_code=404, detail="Teacher not found")
-        existing = (t["courses"] or "").strip()
-        if existing:
-            raise HTTPException(status_code=409, detail="Courses already set for this teacher.")
-        conn.execute(
-            "UPDATE teachers SET courses = ? WHERE id = ?",
+        updated = conn.execute(
+            """UPDATE teachers
+               SET courses = ?
+               WHERE id = ? AND is_visible = 1
+                 AND (courses IS NULL OR TRIM(courses) = '')""",
             (normalized, teacher_id),
-        )
+        ).rowcount
+        if updated == 0:
+            # Distinguish "no such teacher" from "already set"
+            exists = conn.execute(
+                "SELECT 1 FROM teachers WHERE id = ? AND is_visible = 1",
+                (teacher_id,),
+            ).fetchone()
+            if not exists:
+                raise HTTPException(status_code=404, detail="Teacher not found")
+            raise HTTPException(status_code=409, detail="Courses already set for this teacher.")
     return {"ok": True, "courses": parse_courses(normalized)}
 
 
