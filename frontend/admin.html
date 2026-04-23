@@ -72,10 +72,11 @@
       subs.forEach(s => {
         const row = document.createElement('div');
         row.className = 'admin-sub';
+        const courses = (s.courses && s.courses.length) ? ' · ' + escape(s.courses.join(', ')) : '';
         row.innerHTML = `
           <div class="admin-sub__meta">
             <div class="admin-sub__name">${escape(s.name)}</div>
-            <div class="admin-sub__subject">${escape(s.subject || '—')} · ${RB.relDate(s.created_at) || ''}</div>
+            <div class="admin-sub__subject">${escape(s.subject || '—')}${courses} · ${RB.relDate(s.created_at) || ''}</div>
           </div>
           <div class="admin-sub__actions">
             <button class="btn btn--accent btn--sm" data-act="approve">Approve</button>

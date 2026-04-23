@@ -68,6 +68,9 @@ class ReviewIn(BaseModel):
 class TeacherSubmitIn(BaseModel):
     name: str = Field(min_length=2, max_length=80)
     subject: Optional[str] = Field(default=None, max_length=60)
+    # Comma-separated course list — e.g. "AP Calculus BC, Precalculus". We
+    # normalize it on the server (strip, dedupe, rejoin with ", ").
+    courses: Optional[str] = Field(default=None, max_length=300)
     turnstile_token: Optional[str] = None
 
 
@@ -78,6 +81,23 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "0.0.0.0"
 
 
+def parse_courses(raw):
+    """Normalize a comma-separated courses string into a clean list."""
+    if not raw:
+        return []
+    seen = []
+    for piece in raw.split(","):
+        c = piece.strip()
+        if c and c not in seen:
+            seen.append(c)
+    return seen
+
+
+def normalize_courses_input(raw: Optional[str]) -> Optional[str]:
+    cleaned = parse_courses(raw)
+    return ", ".join(cleaned) if cleaned else None
+
+
 def teacher_row_to_dict(row):
     metric_avgs = [row["avg_tq"], row["avg_td"], row["avg_hl"], row["avg_eg"]]
     present = [v for v in metric_avgs if v is not None]
@@ -86,6 +106,7 @@ def teacher_row_to_dict(row):
         "id": row["id"],
         "name": row["name"],
         "subject": row["subject"],
+        "courses": parse_courses(row["courses"] if "courses" in row.keys() else None),
         "avg_rating": overall,
         "avg_teaching_quality": round(row["avg_tq"], 2) if row["avg_tq"] is not None else None,
         "avg_test_difficulty": round(row["avg_td"], 2) if row["avg_td"] is not None else None,
@@ -97,7 +118,7 @@ def teacher_row_to_dict(row):
 
 TEACHER_STATS_SELECT = """
     SELECT
-      t.id, t.name, t.subject,
+      t.id, t.name, t.subject, t.courses,
       AVG(CASE WHEN r.is_visible = 1 THEN r.teaching_quality END) AS avg_tq,
       AVG(CASE WHEN r.is_visible = 1 THEN r.test_difficulty  END) AS avg_td,
       AVG(CASE WHEN r.is_visible = 1 THEN r.homework_load    END) AS avg_hl,
@@ -131,8 +152,9 @@ def list_teachers(
     sql = TEACHER_STATS_SELECT
     params: list = []
     if q:
-        sql += " AND LOWER(t.name) LIKE ?"
-        params.append(f"%{q.lower()}%")
+        needle = f"%{q.lower()}%"
+        sql += " AND (LOWER(t.name) LIKE ? OR LOWER(COALESCE(t.courses, '')) LIKE ?)"
+        params.extend([needle, needle])
     if subject and subject != "All":
         sql += " AND t.subject = ?"
         params.append(subject)
@@ -220,11 +242,12 @@ def submit_teacher(body: TeacherSubmitIn, request: Request):
         raise SpamError("captcha_failed", "Captcha verification failed. Refresh and try again.", status=400)
     iph = hash_ip(ip)
     sub_id = str(uuid.uuid4())
+    courses_norm = normalize_courses_input(body.courses)
     with get_conn() as conn:
         conn.execute(
-            """INSERT INTO teacher_submissions (id, name, subject, ip_hash, status)
-               VALUES (?, ?, ?, ?, 'pending')""",
-            (sub_id, body.name.strip(), (body.subject or "").strip() or None, iph),
+            """INSERT INTO teacher_submissions (id, name, subject, courses, ip_hash, status)
+               VALUES (?, ?, ?, ?, ?, 'pending')""",
+            (sub_id, body.name.strip(), (body.subject or "").strip() or None, courses_norm, iph),
         )
     return {"ok": True, "id": sub_id}
 
@@ -244,9 +267,14 @@ def admin_list_submissions(authorization: Optional[str] = Header(default=None)):
     require_admin(authorization)
     with get_conn() as conn:
         rows = conn.execute(
-            "SELECT id, name, subject, status, created_at FROM teacher_submissions WHERE status = 'pending' ORDER BY created_at DESC"
+            "SELECT id, name, subject, courses, status, created_at FROM teacher_submissions WHERE status = 'pending' ORDER BY created_at DESC"
         ).fetchall()
-    return [dict(r) for r in rows]
+    out = []
+    for r in rows:
+        d = dict(r)
+        d["courses"] = parse_courses(d.get("courses"))
+        out.append(d)
+    return out
 
 
 @app.post("/api/admin/submissions/{sub_id}/approve")
@@ -254,15 +282,15 @@ def admin_approve(sub_id: str, authorization: Optional[str] = Header(default=Non
     require_admin(authorization)
     with get_conn() as conn:
         sub = conn.execute(
-            "SELECT id, name, subject FROM teacher_submissions WHERE id = ? AND status = 'pending'",
+            "SELECT id, name, subject, courses FROM teacher_submissions WHERE id = ? AND status = 'pending'",
             (sub_id,),
         ).fetchone()
         if not sub:
             raise HTTPException(status_code=404, detail="Submission not found or already handled")
         teacher_id = str(uuid.uuid4())
         conn.execute(
-            "INSERT INTO teachers (id, name, subject) VALUES (?, ?, ?)",
-            (teacher_id, sub["name"], sub["subject"]),
+            "INSERT INTO teachers (id, name, subject, courses) VALUES (?, ?, ?, ?)",
+            (teacher_id, sub["name"], sub["subject"], sub["courses"]),
         )
         conn.execute(
             "UPDATE teacher_submissions SET status = 'approved' WHERE id = ?",

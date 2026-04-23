@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS teachers (
   id             TEXT PRIMARY KEY,
   name           TEXT NOT NULL,
   subject        TEXT,
+  courses        TEXT,
   legacy_id      TEXT UNIQUE,
   created_at     TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
   is_visible     INTEGER NOT NULL DEFAULT 1
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS teacher_submissions (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL,
   subject     TEXT,
+  courses     TEXT,
   ip_hash     TEXT,
   status      TEXT NOT NULL DEFAULT 'pending',
   created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))

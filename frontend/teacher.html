@@ -84,11 +84,15 @@
     function renderHero() {
       const t = state.teacher;
       const left = document.getElementById('heroLeft');
+      const coursesLine = (t.courses && t.courses.length)
+        ? `<div class="profile-hero__courses">${escape(t.courses.join(' · '))}</div>`
+        : '';
       left.innerHTML = `
         <div class="profile-hero__meta">
           <div data-avatar></div>
           <div>
             <div class="profile-hero__subject">${escape(t.subject || '—')}</div>
+            ${coursesLine}
           </div>
         </div>
         <h1 class="profile-hero__name serif">${escape(t.name)}</h1>`;

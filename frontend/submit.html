@@ -25,6 +25,10 @@
         <div id="subjectChips" class="chips chips--wrap"></div>
         <input id="subjectCustom" class="input" placeholder="Or type a subject…" style="margin-top:10px" />
       </div>
+      <div class="field">
+        <div class="field__row"><label class="field__label" for="courses">Courses</label><span class="field__hint">Optional. Comma-separated.</span></div>
+        <input id="courses" class="input" placeholder="e.g. AP Calculus BC, Precalculus" />
+      </div>
 
       <div class="turnstile-slot" id="turnstile"></div>
 
@@ -77,6 +81,7 @@
     async function submit() {
       const name = document.getElementById('name').value.trim();
       const subject = state.subject;
+      const courses = document.getElementById('courses').value.trim();
       const status = document.getElementById('formStatus');
       status.className = 'form-status';
       if (name.length < 2) { status.textContent = 'Teacher name looks too short.'; status.classList.add('form-status--err'); return; }
@@ -85,7 +90,12 @@
       try {
         await RB.api('/api/teachers/submit', {
           method: 'POST',
-          body: JSON.stringify({ name, subject: subject || null, turnstile_token: state.turnstileToken }),
+          body: JSON.stringify({
+            name,
+            subject: subject || null,
+            courses: courses || null,
+            turnstile_token: state.turnstileToken,
+          }),
         });
         document.getElementById('formCard').hidden = true;
         document.getElementById('successName').textContent = name;
@@ -102,6 +112,7 @@
     document.getElementById('againBtn').addEventListener('click', () => {
       document.getElementById('name').value = '';
       document.getElementById('subjectCustom').value = '';
+      document.getElementById('courses').value = '';
       state.subject = '';
       [...document.getElementById('subjectChips').children].forEach(c => c.classList.remove('chip--active'));
       document.getElementById('successCard').hidden = true;

@@ -99,6 +99,10 @@
         card.className = 'card';
         card.href = `teacher.html?id=${encodeURIComponent(t.id)}`;
         const avg = t.avg_rating;
+        const firstCourse = (t.courses && t.courses.length) ? t.courses[0] : null;
+        const footMeta = firstCourse
+          ? escape(firstCourse)
+          : (avg != null ? 'overall rating' : 'no reviews yet');
         card.innerHTML = `
           <div class="card__top">
             <div data-avatar></div>
@@ -113,7 +117,7 @@
           </div>
           <div class="card__foot">
             <span data-stars></span>
-            <span class="review__date">${avg != null ? 'overall rating' : 'no reviews yet'}</span>
+            <span class="review__date">${footMeta}</span>
           </div>`;
         card.querySelector('[data-avatar]').replaceWith(RB.avatarEl(t.name, 48));
         RB.renderStars(card.querySelector('[data-stars]'), avg || 0, { size: 14 });
