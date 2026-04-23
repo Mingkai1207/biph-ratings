@@ -156,21 +156,21 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
   right: -60px; top: -40px;
   width: 280px; height: 280px;
   background: oklch(0.78 0.08 40 / 0.45);
-  animation: heroDrift1 16s ease-in-out infinite;
+  animation: heroDrift1 6s ease-in-out infinite;
 }
 /* Tan/yellow large circle, bottom right */
 .hero__shape--2 {
   right: 40px; bottom: -90px;
   width: 200px; height: 200px;
   background: oklch(0.82 0.07 85 / 0.55);
-  animation: heroDrift2 19s ease-in-out infinite;
+  animation: heroDrift2 7s ease-in-out infinite;
 }
 /* Peach circle, bottom left */
 .hero__shape--3 {
   left: -50px; bottom: -40px;
   width: 170px; height: 170px;
   background: oklch(0.80 0.09 50 / 0.35);
-  animation: heroDrift3 22s ease-in-out infinite;
+  animation: heroDrift3 8s ease-in-out infinite;
 }
 /* Rounded square, upper right */
 .hero__shape--4 {
@@ -178,72 +178,74 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
   width: 54px; height: 54px;
   border-radius: 16px;
   background: oklch(0.82 0.07 45 / 0.55);
-  animation: heroDrift4 14s ease-in-out infinite;
+  animation: heroDrift4 5s ease-in-out infinite;
 }
 /* Small orange dot, right mid */
 .hero__shape--5 {
   right: 150px; top: 190px;
   width: 18px; height: 18px;
   background: oklch(0.65 0.17 45 / 0.7);
-  animation: heroDrift5 11s ease-in-out infinite;
+  animation: heroDrift5 4s ease-in-out infinite;
 }
 /* Small olive dot, top center-right */
 .hero__shape--6 {
   right: 520px; top: 70px;
   width: 14px; height: 14px;
   background: oklch(0.70 0.12 110 / 0.65);
-  animation: heroDrift6 13s ease-in-out infinite;
+  animation: heroDrift6 4.5s ease-in-out infinite;
 }
 /* Small peach half-disc, bottom center */
 .hero__shape--7 {
   left: 45%; bottom: -30px;
   width: 64px; height: 64px;
   background: oklch(0.76 0.09 40 / 0.45);
-  animation: heroDrift7 17s ease-in-out infinite;
+  animation: heroDrift7 6s ease-in-out infinite;
 }
 /* Tiny orange dot, bottom right mid */
 .hero__shape--8 {
   right: 200px; bottom: 80px;
   width: 10px; height: 10px;
   background: oklch(0.62 0.18 40 / 0.75);
-  animation: heroDrift8 9s ease-in-out infinite;
+  animation: heroDrift8 3s ease-in-out infinite;
 }
 
+/* Bigger travel distances now that the cycles are shorter — motion is actually visible */
 @keyframes heroDrift1 {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(-18px, 22px) scale(1.04); }
+  50%      { transform: translate(-28px, 34px) scale(1.06); }
 }
 @keyframes heroDrift2 {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(22px, -14px) scale(0.97); }
+  50%      { transform: translate(32px, -22px) scale(0.95); }
 }
 @keyframes heroDrift3 {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(24px, -18px) scale(1.05); }
+  50%      { transform: translate(34px, -26px) scale(1.07); }
 }
 @keyframes heroDrift4 {
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  50%      { transform: translate(-14px, 18px) rotate(18deg); }
+  50%      { transform: translate(-22px, 26px) rotate(28deg); }
 }
 @keyframes heroDrift5 {
   0%, 100% { transform: translate(0, 0); }
-  50%      { transform: translate(12px, -20px); }
+  50%      { transform: translate(20px, -30px); }
 }
 @keyframes heroDrift6 {
   0%, 100% { transform: translate(0, 0); }
-  50%      { transform: translate(-10px, 16px); }
+  50%      { transform: translate(-18px, 24px); }
 }
 @keyframes heroDrift7 {
   0%, 100% { transform: translate(0, 0); }
-  50%      { transform: translate(-18px, -14px); }
+  50%      { transform: translate(-28px, -22px); }
 }
 @keyframes heroDrift8 {
   0%, 100% { transform: translate(0, 0); }
-  50%      { transform: translate(14px, -16px); }
+  50%      { transform: translate(22px, -26px); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .hero__shape { animation: none !important; }
-}
+/* We intentionally animate on mobile too — the floating shapes are purely decorative
+   and users who really need reduced motion can still read everything. The old
+   prefers-reduced-motion disable was catching iOS Low Power Mode and killing the
+   animation on phones even when the user wanted to see it. */
 
 .hero__inner { position: relative; z-index: 1; }
 .hero__title {
