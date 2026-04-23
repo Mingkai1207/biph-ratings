@@ -843,23 +843,20 @@ body[data-page="home"] .container {
 /* ——— Rankings */
 .ranking-controls {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
 }
-.ranking-controls__label {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-mute);
+/* Neutralize the global .chips margin so the flex gap above is what
+   actually controls spacing between the pill row and the metric note. */
+.ranking-controls .chips {
+  margin-bottom: 0;
 }
 .ranking-note {
   color: var(--ink-soft);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
-  margin: 0 0 22px;
-  font-style: italic;
+  margin: 0;
 }
 .ranking-list {
   display: flex;

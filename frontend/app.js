@@ -214,7 +214,7 @@
     const links = [
       link('index.html',       'home',        'Browse'),
       link('rankings.html',    'rankings',    'Rankings'),
-      link('submit.html',      'submit',      'Submit a teacher'),
+      link('submit.html',      'submit',      'Add a teacher'),
       link('suggestions.html', 'suggestions', 'Suggestions'),
     ].join('');
     host.innerHTML = `
