@@ -111,7 +111,7 @@
           <div class="card__top">
             <div data-avatar></div>
             <div class="card__rating">
-              ${avg != null ? avg.toFixed(1) : '—'}
+              ${avg != null ? avg.toFixed(2) : '—'}
               <small>${t.review_count} review${t.review_count === 1 ? '' : 's'}</small>
             </div>
           </div>
@@ -200,7 +200,8 @@
     window.addEventListener('touchend',    onTouchEnd, { passive: true });
     window.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
-    var target = Math.max(14, Math.min(28, Math.round(W * H / 55000)));
+    // Density 1.5x the handoff baseline (was 14/28/55000). More side-margin snow.
+    var target = Math.max(21, Math.min(42, Math.round(W * H / 36667)));
 
     function makeFaller(top) {
       var side = Math.random() < 0.5 ? 'L' : 'R';

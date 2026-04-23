@@ -89,7 +89,7 @@
       const avg = t.avg_rating;
       right.innerHTML = `
         <div class="profile-hero__big">
-          ${avg != null ? avg.toFixed(1) : '—'}<small>/5</small>
+          ${avg != null ? avg.toFixed(2) : '—'}<small>/5</small>
         </div>
         <div data-hero-stars></div>
         <div class="profile-hero__count">based on ${t.review_count} anonymous review${t.review_count === 1 ? '' : 's'}</div>`;
@@ -162,7 +162,7 @@
         const v = t['avg_' + m.key];
         return `<div class="metric">
           <div class="metric__label">${m.label}</div>
-          <div class="metric__value">${v != null ? v.toFixed(1) : '—'}</div>
+          <div class="metric__value">${v != null ? v.toFixed(2) : '—'}</div>
         </div>`;
       }).join('');
 
