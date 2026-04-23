@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rate BIPH — rankings</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
+</head>
+<body data-page="rankings">
+  <div data-topnav></div>
+
+  <main class="container container--narrow">
+    <div class="eyebrow">LEADERBOARD</div>
+    <h1 class="page-title serif">Teacher <em>rankings</em>.</h1>
+    <p class="page-lede">Sorted by student ratings. Only teachers with at least 3 reviews appear here — a single review isn't enough to rank on.</p>
+
+    <div class="ranking-controls">
+      <div class="ranking-controls__label">Rank by</div>
+      <div id="metricChips" class="chips"></div>
+    </div>
+
+    <p id="metricNote" class="ranking-note"></p>
+
+    <div id="rankingList" class="ranking-list"></div>
+    <div id="rankingEmpty" class="empty" hidden>
+      <h2 class="serif">Not enough reviews yet</h2>
+      <div>Once a few teachers pick up 3+ reviews, they'll show up here.</div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="app.js"></script>
+  <script>
+  (function () {
+    const MIN_REVIEWS = 3;
+
+    // For each metric: key on the teacher object, label, whether higher is "better" (just
+    // for the visual copy — the list still shows the raw number and lets the student judge).
+    const METRICS = [
+      { key: 'avg_rating',          label: 'Overall',          higherIs: 'better',  note: 'Average across all 4 metrics. The default "who\'s best overall" view.' },
+      { key: 'avg_teaching_quality',label: 'Teaching quality', higherIs: 'better',  note: 'Who students felt actually taught them the material well.' },
+      { key: 'avg_easygoingness',   label: 'Easygoing',        higherIs: 'better',  note: 'Relaxed vibe, not strict. Ranked high = chill class.' },
+      { key: 'avg_test_difficulty', label: 'Hardest tests',    higherIs: 'harder',  note: 'Higher rating = harder tests. Useful if you\'re choosing how much you want to suffer.' },
+      { key: 'avg_homework_load',   label: 'Most homework',    higherIs: 'harder',  note: 'Higher rating = heavier workload. Useful if you\'re already drowning.' },
+    ];
+
+    const state = { metric: METRICS[0], teachers: [] };
+
+    function escape(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+    async function init() {
+      renderChips();
+      try {
+        state.teachers = await RB.api('/api/teachers');
+      } catch (e) {
+        document.getElementById('rankingEmpty').hidden = false;
+        return;
+      }
+      render();
+    }
+
+    function renderChips() {
+      const host = document.getElementById('metricChips');
+      host.innerHTML = '';
+      METRICS.forEach(m => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip' + (m.key === state.metric.key ? ' chip--active' : '');
+        b.textContent = m.label;
+        b.onclick = () => {
+          state.metric = m;
+          [...host.children].forEach(c => c.classList.toggle('chip--active', c.textContent === m.label));
+          render();
+        };
+        host.appendChild(b);
+      });
+    }
+
+    function render() {
+      document.getElementById('metricNote').textContent = state.metric.note;
+      const key = state.metric.key;
+      const eligible = state.teachers
+        .filter(t => t.review_count >= MIN_REVIEWS && t[key] != null)
+        .sort((a, b) => b[key] - a[key]);
+      const host = document.getElementById('rankingList');
+      const empty = document.getElementById('rankingEmpty');
+      host.innerHTML = '';
+      if (!eligible.length) {
+        empty.hidden = false;
+        return;
+      }
+      empty.hidden = true;
+
+      // Rank with ties — teachers tied to 2 decimals share the same rank number.
+      let displayRank = 0;
+      let lastVal = null;
+      let seen = 0;
+      eligible.forEach(t => {
+        seen += 1;
+        const rounded = Math.round(t[key] * 10) / 10;
+        if (rounded !== lastVal) {
+          displayRank = seen;
+          lastVal = rounded;
+        }
+        const row = document.createElement('a');
+        row.className = 'ranking-row';
+        row.href = `teacher.html?id=${encodeURIComponent(t.id)}`;
+        const medal = displayRank === 1 ? '🥇' : displayRank === 2 ? '🥈' : displayRank === 3 ? '🥉' : '';
+        const courses = (t.courses && t.courses.length)
+          ? `<span class="ranking-row__courses">${escape(t.courses.slice(0, 2).join(' · '))}${t.courses.length > 2 ? '…' : ''}</span>`
+          : '';
+        row.innerHTML = `
+          <div class="ranking-row__rank">
+            <span class="ranking-row__num">#${displayRank}</span>
+            <span class="ranking-row__medal">${medal}</span>
+          </div>
+          <div class="ranking-row__meta">
+            <div class="ranking-row__name serif">${escape(t.name)}</div>
+            <div class="ranking-row__sub">${escape(t.subject || '—')}${courses ? ' · ' : ''}${courses}</div>
+          </div>
+          <div class="ranking-row__score">
+            <div class="ranking-row__value">${rounded.toFixed(1)}<small>/5</small></div>
+            <div class="ranking-row__count">${t.review_count} review${t.review_count === 1 ? '' : 's'}</div>
+          </div>`;
+        host.appendChild(row);
+      });
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>

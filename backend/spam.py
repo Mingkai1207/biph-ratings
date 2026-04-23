@@ -16,6 +16,9 @@ MAX_REVIEWS_PER_DAY = 5
 TEACHER_COOLDOWN_DAYS = 7
 MIN_COMMENT_LEN = 20
 MAX_COMMENT_LEN = 2000
+MAX_SUGGESTIONS_PER_DAY = 3
+MIN_SUGGESTION_LEN = 10
+MAX_SUGGESTION_LEN = 2000
 
 
 class SpamError(Exception):
@@ -98,3 +101,37 @@ def enforce_rate_limit(ip_hash: str, teacher_id: str, comment: str | None):
             ).fetchone()
             if row["n"] > 0:
                 raise SpamError("duplicate", "You already posted that comment.")
+
+
+def check_suggestion(body: str | None) -> str:
+    if body is None:
+        raise SpamError("suggestion_too_short", f"Write at least {MIN_SUGGESTION_LEN} characters.")
+    b = body.strip()
+    if len(b) < MIN_SUGGESTION_LEN:
+        raise SpamError("suggestion_too_short", f"Write at least {MIN_SUGGESTION_LEN} characters.")
+    if len(b) > MAX_SUGGESTION_LEN:
+        raise SpamError("suggestion_too_long", f"Suggestion must be under {MAX_SUGGESTION_LEN} characters.")
+    return b
+
+
+def enforce_suggestion_rate_limit(ip_hash: str, body: str):
+    now = datetime.now(timezone.utc)
+    day_ago = (now - timedelta(days=1)).isoformat()
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) AS n FROM suggestions WHERE ip_hash = ? AND created_at > ?",
+            (ip_hash, day_ago),
+        ).fetchone()
+        if row["n"] >= MAX_SUGGESTIONS_PER_DAY:
+            raise SpamError(
+                "rate_limited",
+                f"You've posted {MAX_SUGGESTIONS_PER_DAY} suggestions today — come back tomorrow.",
+                status=429,
+            )
+        # Duplicate body — same person re-submitting the same text
+        row = conn.execute(
+            "SELECT COUNT(*) AS n FROM suggestions WHERE ip_hash = ? AND body = ?",
+            (ip_hash, body),
+        ).fetchone()
+        if row["n"] > 0:
+            raise SpamError("duplicate", "You already sent that suggestion.")

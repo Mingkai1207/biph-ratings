@@ -15,7 +15,9 @@ from .spam import (
     TEACHER_COOLDOWN_DAYS,
     SpamError,
     check_comment,
+    check_suggestion,
     enforce_rate_limit,
+    enforce_suggestion_rate_limit,
     hash_ip,
     verify_turnstile,
 )
@@ -77,6 +79,11 @@ class TeacherSubmitIn(BaseModel):
     # Comma-separated course list — e.g. "AP Calculus BC, Precalculus". We
     # normalize it on the server (strip, dedupe, rejoin with ", ").
     courses: Optional[str] = Field(default=None, max_length=300)
+    turnstile_token: Optional[str] = None
+
+
+class SuggestionIn(BaseModel):
+    body: str = Field(min_length=1, max_length=2000)
     turnstile_token: Optional[str] = None
 
 
@@ -315,6 +322,29 @@ def submit_teacher(body: TeacherSubmitIn, request: Request):
     return {"ok": True, "id": sub_id}
 
 
+@app.post("/api/suggestions")
+def post_suggestion(body: SuggestionIn, request: Request):
+    """Public write-only endpoint. Reads are admin-only.
+
+    Users can send site feedback here — bug reports, missing teachers,
+    feature ideas. Rate-limited to 3/day per ip_hash with the same
+    Turnstile + duplicate-body protection as reviews.
+    """
+    ip = client_ip(request)
+    if not verify_turnstile(body.turnstile_token, ip):
+        raise SpamError("captcha_failed", "Captcha verification failed. Refresh and try again.", status=400)
+    cleaned = check_suggestion(body.body)
+    iph = hash_ip(ip)
+    enforce_suggestion_rate_limit(iph, cleaned)
+    sug_id = str(uuid.uuid4())
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO suggestions (id, body, ip_hash) VALUES (?, ?, ?)",
+            (sug_id, cleaned, iph),
+        )
+    return {"ok": True, "id": sug_id}
+
+
 # ——— Admin
 
 def require_admin(authorization: Optional[str]):
@@ -396,6 +426,48 @@ def admin_hide_review(review_id: str, authorization: Optional[str] = Header(defa
         ).rowcount
     if not n:
         raise HTTPException(status_code=404, detail="Review not found")
+    return {"ok": True}
+
+
+@app.get("/api/admin/suggestions")
+def admin_list_suggestions(
+    include_resolved: bool = Query(default=False),
+    authorization: Optional[str] = Header(default=None),
+):
+    require_admin(authorization)
+    sql = "SELECT id, body, created_at, is_resolved, resolved_at FROM suggestions"
+    if not include_resolved:
+        sql += " WHERE is_resolved = 0"
+    sql += " ORDER BY created_at DESC"
+    with get_conn() as conn:
+        rows = conn.execute(sql).fetchall()
+    return [dict(r) for r in rows]
+
+
+@app.post("/api/admin/suggestions/{sug_id}/resolve")
+def admin_resolve_suggestion(sug_id: str, authorization: Optional[str] = Header(default=None)):
+    require_admin(authorization)
+    now = datetime.now(timezone.utc).isoformat()
+    with get_conn() as conn:
+        n = conn.execute(
+            "UPDATE suggestions SET is_resolved = 1, resolved_at = ? WHERE id = ? AND is_resolved = 0",
+            (now, sug_id),
+        ).rowcount
+    if not n:
+        raise HTTPException(status_code=404, detail="Suggestion not found or already resolved")
+    return {"ok": True}
+
+
+@app.post("/api/admin/suggestions/{sug_id}/reopen")
+def admin_reopen_suggestion(sug_id: str, authorization: Optional[str] = Header(default=None)):
+    require_admin(authorization)
+    with get_conn() as conn:
+        n = conn.execute(
+            "UPDATE suggestions SET is_resolved = 0, resolved_at = NULL WHERE id = ? AND is_resolved = 1",
+            (sug_id,),
+        ).rowcount
+    if not n:
+        raise HTTPException(status_code=404, detail="Suggestion not found or not resolved")
     return {"ok": True}
 
 

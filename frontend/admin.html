@@ -35,6 +35,15 @@
       <div id="subsEmpty" class="empty" hidden>No pending submissions.</div>
 
       <div class="reviews-header" style="margin-top:40px">
+        <div class="serif reviews-header__title">Suggestions inbox</div>
+        <label class="reviews-header__toggle">
+          <input type="checkbox" id="showResolved" /> Show resolved
+        </label>
+      </div>
+      <div id="sugsList"></div>
+      <div id="sugsEmpty" class="empty" hidden>No suggestions.</div>
+
+      <div class="reviews-header" style="margin-top:40px">
         <div class="serif reviews-header__title">Hide a review</div>
       </div>
       <div class="form-card">
@@ -94,6 +103,46 @@
       });
     }
 
+    async function loadSugs() {
+      const showResolved = document.getElementById('showResolved').checked;
+      const sugs = await auth(`/api/admin/suggestions${showResolved ? '?include_resolved=true' : ''}`);
+      const host = document.getElementById('sugsList');
+      host.innerHTML = '';
+      const empty = document.getElementById('sugsEmpty');
+      if (!sugs.length) { empty.hidden = false; return; }
+      empty.hidden = true;
+      sugs.forEach(s => {
+        const row = document.createElement('div');
+        row.className = 'admin-sug' + (s.is_resolved ? ' admin-sug--resolved' : '');
+        const when = RB.relDate(s.created_at) || '';
+        const state = s.is_resolved
+          ? `<span class="admin-sug__state">resolved ${RB.relDate(s.resolved_at) || ''}</span>`
+          : `<span class="admin-sug__state admin-sug__state--open">open</span>`;
+        const actionBtn = s.is_resolved
+          ? `<button class="btn btn--ghost btn--sm" data-act="reopen">Reopen</button>`
+          : `<button class="btn btn--accent btn--sm" data-act="resolve">Mark resolved</button>`;
+        row.innerHTML = `
+          <div class="admin-sug__head">
+            ${state}
+            <span class="admin-sug__when">${when}</span>
+          </div>
+          <div class="admin-sug__body">${escape(s.body)}</div>
+          <div class="admin-sub__actions">${actionBtn}</div>`;
+        const act = row.querySelector('[data-act]');
+        act.onclick = async () => {
+          const path = s.is_resolved
+            ? `/api/admin/suggestions/${s.id}/reopen`
+            : `/api/admin/suggestions/${s.id}/resolve`;
+          try {
+            await auth(path, { method: 'POST' });
+            RB.toast(s.is_resolved ? 'Reopened' : 'Marked resolved');
+            loadSugs();
+          } catch (e) { RB.toast(e.message); }
+        };
+        host.appendChild(row);
+      });
+    }
+
     async function unlock() {
       token = document.getElementById('token').value.trim();
       const status = document.getElementById('authStatus');
@@ -104,6 +153,7 @@
         document.getElementById('authCard').hidden = true;
         document.getElementById('panel').hidden = false;
         loadSubs();
+        loadSugs();
       } catch (e) {
         status.textContent = 'Invalid token.';
         status.classList.add('form-status--err');
@@ -112,7 +162,8 @@
 
     document.getElementById('loginBtn').addEventListener('click', unlock);
     document.getElementById('token').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
-    document.getElementById('refreshBtn').addEventListener('click', loadSubs);
+    document.getElementById('refreshBtn').addEventListener('click', () => { loadSubs(); loadSugs(); });
+    document.getElementById('showResolved').addEventListener('change', loadSugs);
     document.getElementById('hideBtn').addEventListener('click', async () => {
       const rid = document.getElementById('reviewId').value.trim();
       const st = document.getElementById('hideStatus');

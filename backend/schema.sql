@@ -33,7 +33,17 @@ CREATE TABLE IF NOT EXISTS teacher_submissions (
   created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 
+CREATE TABLE IF NOT EXISTS suggestions (
+  id           TEXT PRIMARY KEY,
+  body         TEXT NOT NULL,
+  ip_hash      TEXT,
+  created_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  is_resolved  INTEGER NOT NULL DEFAULT 0,
+  resolved_at  TEXT
+);
+
 CREATE INDEX IF NOT EXISTS idx_reviews_teacher_created ON reviews(teacher_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_teachers_name ON teachers(name);
 CREATE INDEX IF NOT EXISTS idx_teachers_subject ON teachers(subject);
 CREATE INDEX IF NOT EXISTS idx_submissions_status ON teacher_submissions(status);
+CREATE INDEX IF NOT EXISTS idx_suggestions_resolved_created ON suggestions(is_resolved, created_at DESC);

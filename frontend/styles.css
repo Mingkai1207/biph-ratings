@@ -815,6 +815,136 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
 }
 .admin-sub__actions { display: flex; gap: 8px; }
 
+/* ——— Rankings */
+.ranking-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.ranking-controls__label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.ranking-note {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 22px;
+  font-style: italic;
+}
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ranking-row {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.ranking-row:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.ranking-row__rank {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.ranking-row__num {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  color: var(--ink-soft);
+}
+.ranking-row__medal { font-size: 22px; }
+.ranking-row__name {
+  font-size: 22px;
+  line-height: 1.15;
+  margin-bottom: 2px;
+}
+.ranking-row__sub {
+  font-size: 12px;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ranking-row__courses {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink-soft);
+}
+.ranking-row__score { text-align: right; }
+.ranking-row__value {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  color: var(--accent-ink);
+  line-height: 1;
+}
+.ranking-row__value small {
+  font-size: 14px;
+  color: var(--ink-mute);
+  margin-left: 2px;
+}
+.ranking-row__count {
+  font-size: 11px;
+  color: var(--ink-mute);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+
+.admin-sug {
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.admin-sug + .admin-sug { margin-top: 10px; }
+.admin-sug--resolved { opacity: 0.6; }
+.admin-sug__head {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 8px;
+}
+.admin-sug__state {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-sunken);
+  color: var(--ink-mute);
+}
+.admin-sug__state--open {
+  background: oklch(0.82 0.07 45);
+  color: oklch(0.30 0.06 40);
+}
+.admin-sug__when { font-size: 12px; color: var(--ink-mute); }
+.admin-sug__body {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  white-space: pre-wrap;
+  margin-bottom: 12px;
+}
+.reviews-header__toggle {
+  font-size: 13px;
+  color: var(--ink-soft);
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
 /* ——— Mobile */
 @media (max-width: 720px) {
   .container { padding: 20px 16px 60px; }
@@ -850,4 +980,11 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
   .rating-row { grid-template-columns: 120px auto; gap: 12px; }
   .topnav__inner { padding: 12px 16px; }
   .logo__word { font-size: 18px; }
+
+  /* Tighter ranking cards on small screens */
+  .ranking-row { grid-template-columns: 54px 1fr auto; gap: 12px; padding: 14px 16px; }
+  .ranking-row__num { font-size: 22px; }
+  .ranking-row__medal { font-size: 18px; }
+  .ranking-row__name { font-size: 18px; }
+  .ranking-row__value { font-size: 26px; }
 }

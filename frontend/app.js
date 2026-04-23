@@ -221,7 +221,9 @@
           </a>
           <div class="topnav__links">
             <a href="index.html" class="topnav__link"${active==='home'?' aria-current="page"':''}>Browse</a>
+            <a href="rankings.html" class="topnav__link"${active==='rankings'?' aria-current="page"':''}>Rankings</a>
             <a href="submit.html" class="topnav__link"${active==='submit'?' aria-current="page"':''}>Submit a teacher</a>
+            <a href="suggestions.html" class="topnav__link"${active==='suggestions'?' aria-current="page"':''}>Suggestions</a>
           </div>
         </div>
       </div>`;
