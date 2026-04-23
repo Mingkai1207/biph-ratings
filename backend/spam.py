@@ -12,7 +12,6 @@ TURNSTILE_SECRET = os.environ.get("TURNSTILE_SECRET", "1x00000000000000000000000
 IP_HASH_SALT = os.environ.get("IP_HASH_SALT", "biph-dev-salt")
 TURNSTILE_ENABLED = os.environ.get("TURNSTILE_ENABLED", "1") == "1"
 
-MAX_REVIEWS_PER_DAY = 5
 TEACHER_COOLDOWN_DAYS = 7
 MIN_COMMENT_LEN = 20
 MAX_COMMENT_LEN = 2000
@@ -68,20 +67,8 @@ def check_comment(comment: str | None) -> str | None:
 
 def enforce_rate_limit(ip_hash: str, teacher_id: str, comment: str | None):
     now = datetime.now(timezone.utc)
-    day_ago = (now - timedelta(days=1)).isoformat()
     cooldown_start = (now - timedelta(days=TEACHER_COOLDOWN_DAYS)).isoformat()
     with get_conn() as conn:
-        # Per-day cap
-        row = conn.execute(
-            "SELECT COUNT(*) AS n FROM reviews WHERE ip_hash = ? AND created_at > ?",
-            (ip_hash, day_ago),
-        ).fetchone()
-        if row["n"] >= MAX_REVIEWS_PER_DAY:
-            raise SpamError(
-                "rate_limited",
-                f"You've posted {MAX_REVIEWS_PER_DAY} reviews today — come back tomorrow.",
-                status=429,
-            )
         # Per-teacher cooldown
         row = conn.execute(
             "SELECT COUNT(*) AS n FROM reviews WHERE ip_hash = ? AND teacher_id = ? AND created_at > ?",

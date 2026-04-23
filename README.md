@@ -153,7 +153,6 @@ Or just commit a pre-seeded `biph.db` to the volume: copy your local `backend/bi
 
 All in `backend/spam.py`:
 
-- `MAX_REVIEWS_PER_DAY = 5`
 - `TEACHER_COOLDOWN_DAYS = 7`
 - `MIN_COMMENT_LEN = 20`, `MAX_COMMENT_LEN = 2000`
 
