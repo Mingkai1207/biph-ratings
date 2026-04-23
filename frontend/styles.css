@@ -96,11 +96,16 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
 }
 
 /* ——— Page container */
+.container,
 .page {
   max-width: 1200px; margin: 0 auto;
   padding: 32px 40px 80px;
+  width: 100%;
+  box-sizing: border-box;
 }
+.container--narrow,
 .page--narrow { max-width: 920px; }
+.container--skinny,
 .page--skinny { max-width: 640px; padding-top: 56px; }
 
 /* ——— Hero (home) */
@@ -596,6 +601,7 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
 
 /* ——— Mobile */
 @media (max-width: 720px) {
+  .container,
   .page { padding: 20px 16px 60px; }
   .hero { padding: 28px 22px; }
   .hero__title { font-size: 34px; }
