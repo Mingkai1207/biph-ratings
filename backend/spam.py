@@ -58,8 +58,6 @@ def check_comment(comment: str | None) -> str | None:
     c = comment.strip()
     if not c:
         return None
-    if len(c) < MIN_COMMENT_LEN:
-        raise SpamError("comment_too_short", f"Comment must be at least {MIN_COMMENT_LEN} characters.")
     if len(c) > MAX_COMMENT_LEN:
         raise SpamError("comment_too_long", f"Comment must be under {MAX_COMMENT_LEN} characters.")
     return c

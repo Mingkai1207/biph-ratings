@@ -71,32 +71,55 @@
     </svg>`;
   }
   function renderStars(container, value, { size = 18, interactive = false, onChange } = {}) {
+    // Build span wrappers ONCE and keep them stable. Only swap the inner SVG on hover/commit.
+    // Rebuilding the DOM on every hover breaks touch taps: the emulated mouseenter destroys
+    // the span mid-gesture, so the subsequent click event never fires. Keeping the spans
+    // stable lets both desktop clicks and mobile taps register reliably.
     container.innerHTML = '';
     container.classList.add('stars');
     if (interactive) container.classList.add('stars--interactive');
     const id = 's' + Math.random().toString(36).slice(2, 7);
+    let committed = value || 0;
     let hover = 0;
-    const draw = (v) => {
-      container.innerHTML = '';
+
+    const wraps = [];
+    for (let i = 1; i <= 5; i++) {
+      const wrap = document.createElement('span');
+      wrap.style.display = 'inline-flex';
+      wrap.style.cursor = interactive ? 'pointer' : 'default';
+      wrap.dataset.idx = String(i);
+      if (interactive) {
+        const idx = i;
+        // Use pointerenter (fires for both mouse and touch) plus mouseenter fallback.
+        wrap.addEventListener('mouseenter', () => { hover = idx; paint(); });
+        wrap.addEventListener('pointerenter', () => { hover = idx; paint(); });
+        // pointerdown registers the commit on touch even before click fires.
+        wrap.addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+            if (onChange) onChange(idx);
+          }
+        });
+        wrap.addEventListener('click', () => { if (onChange) onChange(idx); });
+      }
+      container.appendChild(wrap);
+      wraps.push(wrap);
+    }
+
+    const paint = () => {
+      const v = hover || committed;
       for (let i = 1; i <= 5; i++) {
         let kind = 'empty';
         if (i <= Math.floor(v)) kind = 'full';
         else if (i - 0.5 <= v) kind = 'half';
-        const wrap = document.createElement('span');
-        wrap.style.display = 'inline-flex';
-        wrap.style.cursor = interactive ? 'pointer' : 'default';
-        wrap.innerHTML = starSvg(kind, id + '-' + i, size);
-        if (interactive) {
-          wrap.addEventListener('mouseenter', () => { hover = i; draw(hover); });
-          wrap.addEventListener('click', () => { onChange && onChange(i); });
-        }
-        container.appendChild(wrap);
+        wraps[i - 1].innerHTML = starSvg(kind, id + '-' + i, size);
       }
     };
-    draw(value || 0);
+    paint();
+
     if (interactive) {
-      container.addEventListener('mouseleave', () => { hover = 0; draw(value || 0); });
-      container.setValue = (v) => { value = v; draw(v); };
+      container.addEventListener('mouseleave', () => { hover = 0; paint(); });
+      container.addEventListener('pointerleave', () => { hover = 0; paint(); });
+      container.setValue = (v) => { committed = v; hover = 0; paint(); };
     }
   }
 

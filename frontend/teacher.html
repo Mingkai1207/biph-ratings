@@ -22,7 +22,6 @@
 
     <section class="panel-accent" id="reviewForm">
       <div class="panel-accent__title serif">Write a review</div>
-      <div class="panel-accent__sub">Anonymous. Honest. Comment min 20 characters.</div>
 
       <div class="rating-rows" id="ratingRows"></div>
 
@@ -53,10 +52,10 @@
     if (!id) { location.href = 'index.html'; return; }
 
     const METRICS = [
-      { key: 'teaching_quality', label: 'Teaching quality', hint: 'Clear, engaging, makes you understand' },
-      { key: 'test_difficulty',  label: 'Test difficulty',  hint: '5 = very hard, 1 = easy' },
-      { key: 'homework_load',    label: 'Homework load',    hint: '5 = heavy, 1 = light' },
-      { key: 'easygoingness',    label: 'Easygoingness',    hint: 'Chill factor / how they handle mistakes' },
+      { key: 'teaching_quality', label: 'Teaching quality' },
+      { key: 'test_difficulty',  label: 'Test difficulty' },
+      { key: 'homework_load',    label: 'Homework load' },
+      { key: 'easygoingness',    label: 'Easygoingness' },
     ];
 
     const state = {
@@ -146,7 +145,6 @@
         row.innerHTML = `
           <div class="rating-row__label">
             <div class="rating-row__title">${m.label}</div>
-            <div class="rating-row__hint">${m.hint}</div>
           </div>
           <div class="rating-row__stars"></div>`;
         host.appendChild(row);
@@ -203,11 +201,6 @@
       const missing = METRICS.find(m => !state.ratings[m.key]);
       if (missing) { status.textContent = `Pick a rating for "${missing.label}".`; status.classList.add('form-status--err'); return; }
       const comment = document.getElementById('comment').value.trim();
-      if (comment && comment.length < 20) {
-        status.textContent = `Comment must be at least 20 characters (you have ${comment.length}). Leave blank to skip.`;
-        status.classList.add('form-status--err');
-        return;
-      }
       const btn = document.getElementById('submitBtn');
       btn.disabled = true; btn.textContent = 'Posting…';
       try {
