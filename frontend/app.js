@@ -238,9 +238,41 @@
     </footer>`;
   }
 
+  // ——— Cursor star trail (page-wide, fixed to viewport)
+  // Fires on every mousemove, throttled to one dot per ~45ms, auto-removed
+  // after 900ms. Only runs on pointer-capable devices (hover: hover) and when
+  // the user has not asked for reduced motion. Dots are positioned absolutely
+  // in viewport coords so they keep working through scroll.
+  const TRAIL_HUES = [
+    'oklch(0.72 0.14 70)',  // amber
+    'oklch(0.68 0.15 40)',  // terracotta
+    'oklch(0.75 0.12 90)',  // mustard
+  ];
+  const TRAIL_STAR_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.95 5.98 6.6.96-4.78 4.66 1.13 6.57L12 17.58l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2z"/></svg>';
+  function mountStarTrail() {
+    if (!window.matchMedia) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (window.matchMedia('(hover: none)').matches) return;
+    let last = 0;
+    window.addEventListener('mousemove', (e) => {
+      const now = Date.now();
+      if (now - last < 45) return;
+      last = now;
+      const dot = document.createElement('span');
+      dot.className = 'rb-trail';
+      dot.innerHTML = TRAIL_STAR_SVG;
+      dot.style.left = (e.clientX - 7) + 'px';
+      dot.style.top = (e.clientY - 7) + 'px';
+      dot.style.color = TRAIL_HUES[Math.floor(Math.random() * TRAIL_HUES.length)];
+      document.body.appendChild(dot);
+      setTimeout(() => dot.remove(), 900);
+    }, { passive: true });
+  }
+
   window.RB = { api, renderStars, avatarEl, initials, avatarColor, toast, relDate, mountTurnstile, renderTopnav, renderFooter };
   document.addEventListener('DOMContentLoaded', () => {
     renderTopnav(document.body.dataset.page);
     renderFooter();
+    mountStarTrail();
   });
 })();

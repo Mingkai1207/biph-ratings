@@ -319,12 +319,26 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
   color: var(--ink);
   display: flex; flex-direction: column;
   gap: 14px;
+  /* Per-card aura — set via inline style from JS (matches the teacher avatar color).
+     Falls back to the neutral line color so cards without a set --aura still have a
+     readable hover state. */
+  --aura: var(--line-strong);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-  border-color: var(--line-strong);
+/* Hover aura — only on pointing devices so touchscreens don't get stuck-hover state */
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 42px color-mix(in oklch, var(--aura) 70%, transparent);
+    border-color: var(--aura);
+  }
+}
+/* Keyboard parity — tabbing through cards should feel like hovering */
+.card:focus-visible {
+  outline: none;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 42px color-mix(in oklch, var(--aura) 70%, transparent);
+  border-color: var(--aura);
 }
 .card__top {
   display: flex; align-items: center; justify-content: space-between;
@@ -987,4 +1001,28 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
   .ranking-row__medal { font-size: 18px; }
   .ranking-row__name { font-size: 18px; }
   .ranking-row__value { font-size: 26px; }
+}
+
+/* ——— Cursor star trail
+   Page-wide effect. Each mousemove spawns a .rb-trail dot that fades, shrinks,
+   drifts down and rotates before auto-removing after ~900ms. Scoped to
+   pointer-only devices via JS (matchMedia 'hover: none'), and respects
+   prefers-reduced-motion as a defense-in-depth layer. */
+.rb-trail {
+  position: fixed;
+  pointer-events: none;
+  display: inline-block;
+  animation: rb-trail-fade 0.9s ease-out forwards;
+  z-index: 9999;
+}
+@keyframes rb-trail-fade {
+  0%   { opacity: 0.9; transform: scale(1) rotate(0deg); }
+  100% { opacity: 0;   transform: scale(0.4) translateY(14px) rotate(40deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Trail-only — do NOT kill hero shape animations here. iOS Low Power Mode
+     triggers reduced-motion, and we want the hero drift to keep going.
+     The trail is a cursor effect and only ever runs on desktop, where the
+     user has consciously enabled Reduce Motion in System Settings. */
+  .rb-trail { display: none !important; }
 }

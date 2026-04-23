@@ -98,6 +98,10 @@
         const card = document.createElement('a');
         card.className = 'card';
         card.href = `teacher.html?id=${encodeURIComponent(t.id)}`;
+        // Expose the teacher's avatar color as --aura so hover/focus-visible
+        // can render a card-specific drop shadow + border. Each teacher ends
+        // up with its own "aura" on the roster.
+        card.style.setProperty('--aura', RB.avatarColor(t.name));
         const avg = t.avg_rating;
         const firstCourse = (t.courses && t.courses.length) ? t.courses[0] : null;
         const footMeta = firstCourse
