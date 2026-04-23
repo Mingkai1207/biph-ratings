@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/
+
+# SQLite database — never commit; Railway volume holds prod data
+backend/biph.db
+backend/biph.db-journal
+backend/biph.db-wal
+backend/biph.db-shm
+
+# Env files (secrets)
+.env
+.env.local
+.env.*.local
+
+# Editor/OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Node (only if you ever add any tooling)
+node_modules/
+
+# Claude
+.claude/

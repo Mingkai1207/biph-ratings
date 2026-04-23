@@ -1,0 +1,29 @@
+import os
+import sqlite3
+from contextlib import contextmanager
+from pathlib import Path
+
+DB_PATH = os.environ.get("BIPH_DB_PATH", str(Path(__file__).parent / "biph.db"))
+SCHEMA_PATH = Path(__file__).parent / "schema.sql"
+
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.executescript(SCHEMA_PATH.read_text())
+    conn.commit()
+    conn.close()
+
+
+@contextmanager
+def get_conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()

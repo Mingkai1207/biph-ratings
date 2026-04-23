@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rate BIPH — teacher profile</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
+</head>
+<body data-page="home">
+  <div data-topnav></div>
+
+  <main class="container container--narrow">
+    <a href="index.html" class="crumb">← Back to roster</a>
+
+    <section class="profile-hero" id="hero">
+      <div id="heroLeft"></div>
+      <div id="heroRight"></div>
+    </section>
+
+    <section class="stats-block" id="stats"></section>
+
+    <section class="panel-accent" id="reviewForm">
+      <div class="panel-accent__title serif">Write a review</div>
+      <div class="panel-accent__sub">Anonymous. Honest. Comment min 20 characters.</div>
+
+      <div class="rating-rows" id="ratingRows"></div>
+
+      <textarea id="comment" class="textarea" rows="5"
+        placeholder="What's the class actually like? Grading, pace, personality, anything specific that'd help the next student…"></textarea>
+
+      <div class="turnstile-slot" id="turnstile"></div>
+
+      <div class="panel-accent__footer">
+        <div id="formStatus" class="form-status"></div>
+        <button id="submitBtn" class="btn btn--accent">Post anonymously</button>
+      </div>
+    </section>
+
+    <div class="reviews-header">
+      <div class="serif reviews-header__title">What students said</div>
+      <div class="reviews-header__meta">newest first</div>
+    </div>
+    <div id="reviewList" class="reviews"></div>
+    <div id="reviewEmpty" class="empty" hidden>No reviews yet. Be the first.</div>
+  </main>
+
+  <div data-footer></div>
+  <script src="app.js"></script>
+  <script>
+  (function () {
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) { location.href = 'index.html'; return; }
+
+    const METRICS = [
+      { key: 'teaching_quality', label: 'Teaching quality', hint: 'Clear, engaging, makes you understand' },
+      { key: 'test_difficulty',  label: 'Test difficulty',  hint: '5 = very hard, 1 = easy' },
+      { key: 'homework_load',    label: 'Homework load',    hint: '5 = heavy, 1 = light' },
+      { key: 'easygoingness',    label: 'Easygoingness',    hint: 'Chill factor / how they handle mistakes' },
+    ];
+
+    const state = {
+      teacher: null,
+      ratings: { teaching_quality: 0, test_difficulty: 0, homework_load: 0, easygoingness: 0 },
+      turnstileToken: null,
+    };
+
+    async function init() {
+      try {
+        state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
+      } catch (e) {
+        document.querySelector('main').innerHTML = '<div class="empty">Teacher not found.</div>';
+        return;
+      }
+      renderHero();
+      renderStats();
+      renderRatingRows();
+      loadReviews();
+      RB.mountTurnstile(document.getElementById('turnstile'), (t) => { state.turnstileToken = t; });
+      document.getElementById('submitBtn').addEventListener('click', submit);
+    }
+
+    function escape(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+    function renderHero() {
+      const t = state.teacher;
+      const left = document.getElementById('heroLeft');
+      left.innerHTML = `
+        <div class="profile-hero__person">
+          <div class="profile-hero__avatar"></div>
+          <div>
+            <div class="profile-hero__subject">${escape(t.subject || '—')}</div>
+          </div>
+        </div>
+        <h1 class="profile-hero__name serif">${escape(t.name)}</h1>`;
+      left.querySelector('.profile-hero__avatar').replaceWith(RB.avatarEl(t.name, 72));
+
+      const right = document.getElementById('heroRight');
+      const avg = t.avg_teaching_quality;
+      right.innerHTML = `
+        <div class="profile-hero__score serif">
+          ${avg != null ? avg.toFixed(1) : '—'}<span class="profile-hero__denom">/5</span>
+        </div>
+        <div class="profile-hero__stars"></div>
+        <div class="profile-hero__count">based on ${t.review_count} anonymous review${t.review_count === 1 ? '' : 's'}</div>`;
+      RB.renderStars(right.querySelector('.profile-hero__stars'), avg || 0, { size: 22 });
+    }
+
+    function renderStats() {
+      const t = state.teacher;
+      const el = document.getElementById('stats');
+      const total = t.review_count || 0;
+      const dist = t.distribution || {1:0,2:0,3:0,4:0,5:0};
+      const bars = [5,4,3,2,1].map(n => {
+        const c = dist[n] || 0;
+        const pct = total ? (c / total) * 100 : 0;
+        return `<div class="distrow"><span class="distrow__label">${n}★</span>
+          <div class="distrow__bar"><div class="distrow__fill" style="width:${pct}%"></div></div>
+          <span class="distrow__count">${c}</span></div>`;
+      }).join('');
+
+      const metrics = METRICS.map(m => {
+        const v = t['avg_' + m.key];
+        return `<div class="metric">
+          <div class="metric__label">${m.label}</div>
+          <div class="metric__value serif">${v != null ? v.toFixed(1) : '—'}<span class="metric__denom">/5</span></div>
+        </div>`;
+      }).join('');
+
+      el.innerHTML = `
+        <div class="stats-block__left">
+          <div class="serif stats-block__title">Teaching quality distribution</div>
+          <div class="distrows">${bars}</div>
+        </div>
+        <div class="stats-block__right">
+          <div class="metrics">${metrics}</div>
+        </div>`;
+    }
+
+    function renderRatingRows() {
+      const host = document.getElementById('ratingRows');
+      host.innerHTML = '';
+      METRICS.forEach(m => {
+        const row = document.createElement('div');
+        row.className = 'rating-row';
+        row.innerHTML = `
+          <div class="rating-row__label">
+            <div class="rating-row__title">${m.label}</div>
+            <div class="rating-row__hint">${m.hint}</div>
+          </div>
+          <div class="rating-row__stars"></div>`;
+        host.appendChild(row);
+        const rowStars = row.querySelector('.rating-row__stars');
+        const rebind = () => {
+          RB.renderStars(rowStars, state.ratings[m.key], {
+            size: 28,
+            interactive: true,
+            onChange: (v) => { state.ratings[m.key] = v; rebind(); },
+          });
+        };
+        rebind();
+      });
+    }
+
+    function bindInteractiveStars() { renderRatingRows(); }
+
+    async function loadReviews() {
+      try {
+        const data = await RB.api(`/api/teachers/${encodeURIComponent(id)}/reviews?limit=200`);
+        renderReviews(data.reviews);
+      } catch (e) {
+        document.getElementById('reviewEmpty').hidden = false;
+      }
+    }
+
+    function renderReviews(rows) {
+      const host = document.getElementById('reviewList');
+      const empty = document.getElementById('reviewEmpty');
+      host.innerHTML = '';
+      if (!rows.length) { empty.hidden = false; return; }
+      empty.hidden = true;
+      rows.forEach(r => {
+        const el = document.createElement('div');
+        el.className = 'review';
+        el.innerHTML = `
+          <div class="review__top">
+            <span class="review__stars"></span>
+            <span class="review__date">${RB.relDate(r.created_at)}</span>
+          </div>
+          <div class="review__metrics">
+            ${METRICS.map(m => `<span class="metric-badge">${m.label.split(' ')[0]} <b>${r[m.key]}</b></span>`).join('')}
+          </div>
+          ${r.comment ? `<div class="review__body">${escape(r.comment)}</div>` : ''}`;
+        RB.renderStars(el.querySelector('.review__stars'), r.teaching_quality, { size: 15 });
+        host.appendChild(el);
+      });
+    }
+
+    async function submit() {
+      const status = document.getElementById('formStatus');
+      status.className = 'form-status';
+      const missing = METRICS.find(m => !state.ratings[m.key]);
+      if (missing) { status.textContent = `Pick a rating for "${missing.label}".`; status.classList.add('form-status--err'); return; }
+      const comment = document.getElementById('comment').value.trim();
+      if (comment && comment.length < 20) {
+        status.textContent = `Comment must be at least 20 characters (you have ${comment.length}). Leave blank to skip.`;
+        status.classList.add('form-status--err');
+        return;
+      }
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = 'Posting…';
+      try {
+        await RB.api(`/api/teachers/${encodeURIComponent(id)}/reviews`, {
+          method: 'POST',
+          body: JSON.stringify({
+            ...state.ratings,
+            comment: comment || null,
+            turnstile_token: state.turnstileToken,
+          }),
+        });
+        RB.toast('Posted. Thanks for reviewing.');
+        document.getElementById('comment').value = '';
+        Object.keys(state.ratings).forEach(k => state.ratings[k] = 0);
+        bindInteractiveStars();
+        state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
+        renderHero(); renderStats(); loadReviews();
+      } catch (e) {
+        status.textContent = e.data?.message || e.message || 'Something went wrong.';
+        status.classList.add('form-status--err');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Post anonymously';
+      }
+    }
+
+    init().then(() => {
+      // Replace the buggy closure version with a proper rebind
+      bindInteractiveStars();
+    });
+  })();
+  </script>
+</body>
+</html>

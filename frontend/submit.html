@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rate BIPH — add a teacher</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
+</head>
+<body data-page="submit">
+  <div data-topnav></div>
+
+  <main class="container container--narrow">
+    <div class="eyebrow">CAN'T FIND SOMEONE?</div>
+    <h1 class="page-title serif">Add a teacher to the <em>roster</em>.</h1>
+    <p class="page-lede">Submissions are reviewed by a student moderator and usually show up within a day. No photos, no personal contact info — just the basics.</p>
+
+    <div id="formCard" class="form-card">
+      <div class="field">
+        <div class="field__row"><label class="field__label" for="name">Teacher name</label><span class="field__hint">Full name as used at school</span></div>
+        <input id="name" class="input" placeholder="e.g. Daniel Huang" />
+      </div>
+      <div class="field">
+        <div class="field__row"><label class="field__label">Subject</label></div>
+        <div id="subjectChips" class="chips chips--wrap"></div>
+        <input id="subjectCustom" class="input" placeholder="Or type a subject…" style="margin-top:10px" />
+      </div>
+
+      <div class="turnstile-slot" id="turnstile"></div>
+
+      <div id="formStatus" class="form-status"></div>
+      <div class="form-actions">
+        <button id="submitBtn" class="btn btn--accent btn--lg">Submit for review</button>
+        <a href="index.html" class="btn btn--ghost btn--lg">Cancel</a>
+      </div>
+    </div>
+
+    <div id="successCard" class="panel-accent" hidden>
+      <div class="panel-accent__title serif">Sent for review ✓</div>
+      <div class="panel-accent__sub">Thanks — a student moderator will take a look. Once approved, <strong id="successName"></strong> will appear in the roster.</div>
+      <div class="form-actions">
+        <button id="againBtn" class="btn btn--primary">Submit another</button>
+        <a href="index.html" class="btn btn--ghost">Back to roster</a>
+      </div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="app.js"></script>
+  <script>
+  (function () {
+    const state = { subject: '', turnstileToken: null };
+
+    async function loadSubjects() {
+      const subs = await RB.api('/api/subjects');
+      const host = document.getElementById('subjectChips');
+      host.innerHTML = '';
+      subs.forEach(s => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.textContent = s;
+        b.onclick = () => {
+          state.subject = s;
+          document.getElementById('subjectCustom').value = '';
+          [...host.children].forEach(c => c.classList.toggle('chip--active', c.textContent === s));
+        };
+        host.appendChild(b);
+      });
+    }
+
+    document.getElementById('subjectCustom').addEventListener('input', (e) => {
+      state.subject = e.target.value.trim();
+      [...document.getElementById('subjectChips').children].forEach(c => c.classList.remove('chip--active'));
+    });
+
+    async function submit() {
+      const name = document.getElementById('name').value.trim();
+      const subject = state.subject;
+      const status = document.getElementById('formStatus');
+      status.className = 'form-status';
+      if (name.length < 2) { status.textContent = 'Teacher name looks too short.'; status.classList.add('form-status--err'); return; }
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = 'Sending…';
+      try {
+        await RB.api('/api/teachers/submit', {
+          method: 'POST',
+          body: JSON.stringify({ name, subject: subject || null, turnstile_token: state.turnstileToken }),
+        });
+        document.getElementById('formCard').hidden = true;
+        document.getElementById('successName').textContent = name;
+        document.getElementById('successCard').hidden = false;
+      } catch (e) {
+        status.textContent = e.data?.message || e.message || 'Something went wrong.';
+        status.classList.add('form-status--err');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Submit for review';
+      }
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', submit);
+    document.getElementById('againBtn').addEventListener('click', () => {
+      document.getElementById('name').value = '';
+      document.getElementById('subjectCustom').value = '';
+      state.subject = '';
+      [...document.getElementById('subjectChips').children].forEach(c => c.classList.remove('chip--active'));
+      document.getElementById('successCard').hidden = true;
+      document.getElementById('formCard').hidden = false;
+    });
+
+    loadSubjects();
+    RB.mountTurnstile(document.getElementById('turnstile'), (t) => { state.turnstileToken = t; });
+  })();
+  </script>
+</body>
+</html>

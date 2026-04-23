@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rate BIPH — admin</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
+</head>
+<body data-page="admin">
+  <div data-topnav></div>
+
+  <main class="container container--narrow">
+    <div class="eyebrow">MODERATION</div>
+    <h1 class="page-title serif">Admin</h1>
+    <p class="page-lede">Token-gated tools for the student moderator. Approve teacher submissions or hide individual reviews.</p>
+
+    <div id="authCard" class="form-card">
+      <div class="field">
+        <div class="field__row"><label class="field__label" for="token">Admin token</label></div>
+        <input id="token" class="input" type="password" placeholder="Paste admin token" />
+      </div>
+      <div id="authStatus" class="form-status"></div>
+      <div class="form-actions">
+        <button id="loginBtn" class="btn btn--primary">Unlock</button>
+      </div>
+    </div>
+
+    <section id="panel" hidden>
+      <div class="reviews-header">
+        <div class="serif reviews-header__title">Pending submissions</div>
+        <button id="refreshBtn" class="btn btn--ghost btn--sm">Refresh</button>
+      </div>
+      <div id="subsList"></div>
+      <div id="subsEmpty" class="empty" hidden>No pending submissions.</div>
+
+      <div class="reviews-header" style="margin-top:40px">
+        <div class="serif reviews-header__title">Hide a review</div>
+      </div>
+      <div class="form-card">
+        <div class="field">
+          <div class="field__row"><label class="field__label" for="reviewId">Review ID (UUID)</label></div>
+          <input id="reviewId" class="input" placeholder="paste review id" />
+        </div>
+        <div id="hideStatus" class="form-status"></div>
+        <div class="form-actions">
+          <button id="hideBtn" class="btn btn--primary">Hide review</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-footer></div>
+  <script src="app.js"></script>
+  <script>
+  (function () {
+    let token = sessionStorage.getItem('rb.admin');
+
+    async function auth(path, opts = {}) {
+      return RB.api(path, { ...opts, headers: { Authorization: `Bearer ${token}`, ...(opts.headers || {}) } });
+    }
+
+    function escape(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+    async function loadSubs() {
+      const subs = await auth('/api/admin/submissions');
+      const host = document.getElementById('subsList');
+      host.innerHTML = '';
+      const empty = document.getElementById('subsEmpty');
+      if (!subs.length) { empty.hidden = false; return; }
+      empty.hidden = true;
+      subs.forEach(s => {
+        const row = document.createElement('div');
+        row.className = 'admin-sub';
+        row.innerHTML = `
+          <div class="admin-sub__meta">
+            <div class="admin-sub__name">${escape(s.name)}</div>
+            <div class="admin-sub__subject">${escape(s.subject || '—')} · ${RB.relDate(s.created_at) || ''}</div>
+          </div>
+          <div class="admin-sub__actions">
+            <button class="btn btn--accent btn--sm" data-act="approve">Approve</button>
+            <button class="btn btn--ghost btn--sm" data-act="reject">Reject</button>
+          </div>`;
+        row.querySelector('[data-act="approve"]').onclick = async () => {
+          try { await auth(`/api/admin/submissions/${s.id}/approve`, { method: 'POST' }); RB.toast('Approved'); loadSubs(); }
+          catch (e) { RB.toast(e.message); }
+        };
+        row.querySelector('[data-act="reject"]').onclick = async () => {
+          try { await auth(`/api/admin/submissions/${s.id}/reject`, { method: 'POST' }); RB.toast('Rejected'); loadSubs(); }
+          catch (e) { RB.toast(e.message); }
+        };
+        host.appendChild(row);
+      });
+    }
+
+    async function unlock() {
+      token = document.getElementById('token').value.trim();
+      const status = document.getElementById('authStatus');
+      status.className = 'form-status';
+      try {
+        await auth('/api/admin/submissions');
+        sessionStorage.setItem('rb.admin', token);
+        document.getElementById('authCard').hidden = true;
+        document.getElementById('panel').hidden = false;
+        loadSubs();
+      } catch (e) {
+        status.textContent = 'Invalid token.';
+        status.classList.add('form-status--err');
+      }
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', unlock);
+    document.getElementById('token').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
+    document.getElementById('refreshBtn').addEventListener('click', loadSubs);
+    document.getElementById('hideBtn').addEventListener('click', async () => {
+      const rid = document.getElementById('reviewId').value.trim();
+      const st = document.getElementById('hideStatus');
+      st.className = 'form-status';
+      if (!rid) { st.textContent = 'Paste a review ID.'; st.classList.add('form-status--err'); return; }
+      try {
+        await auth(`/api/admin/reviews/${rid}/hide`, { method: 'POST' });
+        RB.toast('Review hidden');
+        document.getElementById('reviewId').value = '';
+      } catch (e) {
+        st.textContent = e.message; st.classList.add('form-status--err');
+      }
+    });
+
+    if (token) {
+      document.getElementById('token').value = token;
+      unlock();
+    }
+  })();
+  </script>
+</body>
+</html>
