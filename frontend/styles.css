@@ -104,6 +104,14 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
 }
 .container--narrow { max-width: 920px; }
 
+/* Browse page: narrower than the global container so the 3-card grid
+   sits in a more comfortable column with breathing room on both sides.
+   Matches handoff 3/design/components/page-search-b.jsx (min(75vw, 1080px)). */
+body[data-page="home"] .container {
+  max-width: min(75vw, 1080px);
+  padding: 32px 32px 80px;
+}
+
 /* ——— Page heading block (submit, admin) */
 .eyebrow {
   font-size: 12px;
@@ -305,9 +313,12 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
 }
 
 /* ——— Card grid */
+/* Locked to 3 columns on desktop per handoff 3 spec — not auto-fill. The
+   narrower .container above keeps each card at a comfortable width; letting
+   it flex to 4+ columns on wide monitors makes the page feel stretched. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 .card {
