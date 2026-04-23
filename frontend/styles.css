@@ -712,6 +712,16 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
   .page { padding: 20px 16px 60px; }
   .hero { padding: 28px 22px; }
   .hero__title { font-size: 34px; }
+
+  /* Reposition + scale decorative shapes so they actually fit inside a phone */
+  .hero__shape--1 { right: -40px; top: -30px; width: 150px; height: 150px; }
+  .hero__shape--2 { right: -20px; bottom: -60px; width: 130px; height: 130px; }
+  .hero__shape--3 { left: -30px; bottom: -30px; width: 100px; height: 100px; }
+  .hero__shape--4 { right: auto; left: 14%; top: 12px; width: 34px; height: 34px; border-radius: 10px; }
+  .hero__shape--5 { right: 16px; top: 120px; width: 12px; height: 12px; }
+  .hero__shape--6 { right: auto; left: 55%; top: 40px; width: 10px; height: 10px; }
+  .hero__shape--7 { left: 38%; bottom: -20px; width: 44px; height: 44px; }
+  .hero__shape--8 { right: 70px; bottom: 60px; width: 8px; height: 8px; }
   .profile-hero {
     grid-template-columns: 1fr;
     gap: 22px;

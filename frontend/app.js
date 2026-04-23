@@ -127,26 +127,56 @@
     return `${Math.floor(days / 365)}y ago`;
   }
 
-  // ——— Turnstile loader
+  // ——— Turnstile loader (resilient: if sitekey missing, Cloudflare blocked,
+  // or api.js never fully initializes, we give up gracefully and let the user
+  // submit anyway — backend still has rate limiting + IP hashing.)
   let turnstileLoaded = false;
   function loadTurnstile() {
     if (turnstileLoaded) return;
     turnstileLoaded = true;
+    // Wipe any stub that extensions / earlier failed loads left behind.
+    if (window.turnstile && typeof window.turnstile.render !== 'function') {
+      try { delete window.turnstile; } catch (_) { window.turnstile = undefined; }
+    }
     const s = document.createElement('script');
     s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
     s.async = true; s.defer = true;
+    s.onerror = () => { console.warn('[turnstile] api.js failed to load'); };
     document.head.appendChild(s);
   }
   function mountTurnstile(slot, onToken) {
+    if (!slot || !window.TURNSTILE_SITEKEY) {
+      if (slot) slot.style.display = 'none';
+      return;
+    }
     loadTurnstile();
-    const render = () => {
-      if (!window.turnstile) return setTimeout(render, 150);
-      window.turnstile.render(slot, {
-        sitekey: window.TURNSTILE_SITEKEY,
-        callback: (t) => onToken(t),
-      });
+    const started = Date.now();
+    const MAX_WAIT = 6000;
+    const tryRender = () => {
+      const ready = window.turnstile && typeof window.turnstile.render === 'function';
+      if (ready) {
+        try {
+          window.turnstile.render(slot, {
+            sitekey: window.TURNSTILE_SITEKEY,
+            callback: (t) => onToken(t),
+            'error-callback': () => { slot.style.display = 'none'; console.warn('[turnstile] widget error'); },
+          });
+          return;
+        } catch (e) {
+          console.warn('[turnstile] render threw', e);
+          slot.style.display = 'none';
+          return;
+        }
+      }
+      if (Date.now() - started > MAX_WAIT) {
+        // Gave up — hide the empty slot so the form doesn't look broken.
+        slot.style.display = 'none';
+        console.warn('[turnstile] never became ready after ' + MAX_WAIT + 'ms — submit will proceed without captcha');
+        return;
+      }
+      setTimeout(tryRender, 200);
     };
-    render();
+    tryRender();
   }
 
   // ——— Topnav helper (logo + links)
