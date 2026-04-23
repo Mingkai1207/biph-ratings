@@ -96,7 +96,9 @@
       let seen = 0;
       eligible.forEach(t => {
         seen += 1;
-        const rounded = Math.round(t[key] * 10) / 10;
+        // 2-decimal precision in both the display and the tie-break. Fewer
+        // accidental ties from 4.92 vs 4.88 both rendering as 4.9.
+        const rounded = Math.round(t[key] * 100) / 100;
         if (rounded !== lastVal) {
           displayRank = seen;
           lastVal = rounded;
@@ -118,7 +120,7 @@
             <div class="ranking-row__sub">${escape(t.subject || '—')}${courses ? ' · ' : ''}${courses}</div>
           </div>
           <div class="ranking-row__score">
-            <div class="ranking-row__value">${rounded.toFixed(1)}<small>/5</small></div>
+            <div class="ranking-row__value">${rounded.toFixed(2)}<small>/5</small></div>
             <div class="ranking-row__count">${t.review_count} review${t.review_count === 1 ? '' : 's'}</div>
           </div>`;
         host.appendChild(row);
