@@ -96,7 +96,7 @@
       left.querySelector('.profile-hero__avatar').replaceWith(RB.avatarEl(t.name, 72));
 
       const right = document.getElementById('heroRight');
-      const avg = t.avg_teaching_quality;
+      const avg = t.avg_rating;
       right.innerHTML = `
         <div class="profile-hero__score serif">
           ${avg != null ? avg.toFixed(1) : '—'}<span class="profile-hero__denom">/5</span>
@@ -182,6 +182,7 @@
       rows.forEach(r => {
         const el = document.createElement('div');
         el.className = 'review';
+        const reviewAvg = (r.teaching_quality + r.test_difficulty + r.homework_load + r.easygoingness) / 4;
         el.innerHTML = `
           <div class="review__top">
             <span class="review__stars"></span>
@@ -191,7 +192,7 @@
             ${METRICS.map(m => `<span class="metric-badge">${m.label.split(' ')[0]} <b>${r[m.key]}</b></span>`).join('')}
           </div>
           ${r.comment ? `<div class="review__body">${escape(r.comment)}</div>` : ''}`;
-        RB.renderStars(el.querySelector('.review__stars'), r.teaching_quality, { size: 15 });
+        RB.renderStars(el.querySelector('.review__stars'), reviewAvg, { size: 15 });
         host.appendChild(el);
       });
     }

@@ -79,10 +79,14 @@ def client_ip(request: Request) -> str:
 
 
 def teacher_row_to_dict(row):
+    metric_avgs = [row["avg_tq"], row["avg_td"], row["avg_hl"], row["avg_eg"]]
+    present = [v for v in metric_avgs if v is not None]
+    overall = round(sum(present) / len(present), 2) if present else None
     return {
         "id": row["id"],
         "name": row["name"],
         "subject": row["subject"],
+        "avg_rating": overall,
         "avg_teaching_quality": round(row["avg_tq"], 2) if row["avg_tq"] is not None else None,
         "avg_test_difficulty": round(row["avg_td"], 2) if row["avg_td"] is not None else None,
         "avg_homework_load": round(row["avg_hl"], 2) if row["avg_hl"] is not None else None,

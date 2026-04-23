@@ -90,7 +90,7 @@
         const card = document.createElement('a');
         card.className = 'card';
         card.href = `teacher.html?id=${encodeURIComponent(t.id)}`;
-        const avg = t.avg_teaching_quality;
+        const avg = t.avg_rating;
         card.innerHTML = `
           <div class="card__top">
             <div class="card__avatar"></div>
@@ -105,7 +105,7 @@
           </div>
           <div class="card__bottom">
             <span class="card__stars"></span>
-            <span class="card__first-course">${avg != null ? 'teaching quality' : 'no reviews yet'}</span>
+            <span class="card__first-course">${avg != null ? 'rating' : 'no reviews yet'}</span>
           </div>`;
         card.querySelector('.card__avatar').replaceWith(RB.avatarEl(t.name, 48));
         RB.renderStars(card.querySelector('.card__stars'), avg || 0, { size: 14 });
