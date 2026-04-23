@@ -65,6 +65,10 @@ class ReviewIn(BaseModel):
     turnstile_token: Optional[str] = None
 
 
+class CoursesIn(BaseModel):
+    courses: str = Field(min_length=1, max_length=300)
+
+
 class TeacherSubmitIn(BaseModel):
     name: str = Field(min_length=2, max_length=80)
     subject: Optional[str] = Field(default=None, max_length=60)
@@ -235,6 +239,31 @@ def post_review(teacher_id: str, body: ReviewIn, request: Request):
     return {"ok": True, "id": review_id}
 
 
+@app.post("/api/teachers/{teacher_id}/courses")
+def set_teacher_courses(teacher_id: str, body: CoursesIn, request: Request):
+    """First-submitter-wins: lets anyone fill in the course list for a teacher,
+    but only if it's currently empty. Once set, writes are rejected with 409
+    so the field effectively locks. Admins can clear it if a bad value sticks."""
+    normalized = normalize_courses_input(body.courses)
+    if not normalized:
+        raise HTTPException(status_code=400, detail="Courses cannot be empty.")
+    with get_conn() as conn:
+        t = conn.execute(
+            "SELECT id, courses FROM teachers WHERE id = ? AND is_visible = 1",
+            (teacher_id,),
+        ).fetchone()
+        if not t:
+            raise HTTPException(status_code=404, detail="Teacher not found")
+        existing = (t["courses"] or "").strip()
+        if existing:
+            raise HTTPException(status_code=409, detail="Courses already set for this teacher.")
+        conn.execute(
+            "UPDATE teachers SET courses = ? WHERE id = ?",
+            (normalized, teacher_id),
+        )
+    return {"ok": True, "courses": parse_courses(normalized)}
+
+
 @app.post("/api/teachers/submit")
 def submit_teacher(body: TeacherSubmitIn, request: Request):
     ip = client_ip(request)
@@ -309,6 +338,18 @@ def admin_reject(sub_id: str, authorization: Optional[str] = Header(default=None
         ).rowcount
     if not n:
         raise HTTPException(status_code=404, detail="Submission not found or already handled")
+    return {"ok": True}
+
+
+@app.post("/api/admin/teachers/{teacher_id}/courses/clear")
+def admin_clear_courses(teacher_id: str, authorization: Optional[str] = Header(default=None)):
+    require_admin(authorization)
+    with get_conn() as conn:
+        n = conn.execute(
+            "UPDATE teachers SET courses = NULL WHERE id = ?", (teacher_id,)
+        ).rowcount
+    if not n:
+        raise HTTPException(status_code=404, detail="Teacher not found")
     return {"ok": True}
 
 

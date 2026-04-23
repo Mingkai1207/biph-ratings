@@ -84,9 +84,10 @@
     function renderHero() {
       const t = state.teacher;
       const left = document.getElementById('heroLeft');
-      const coursesLine = (t.courses && t.courses.length)
+      const hasCourses = t.courses && t.courses.length;
+      const coursesLine = hasCourses
         ? `<div class="profile-hero__courses">${escape(t.courses.join(' · '))}</div>`
-        : '';
+        : `<button type="button" class="profile-hero__courses-add" data-add-courses>+ Add courses</button>`;
       left.innerHTML = `
         <div class="profile-hero__meta">
           <div data-avatar></div>
@@ -97,6 +98,8 @@
         </div>
         <h1 class="profile-hero__name serif">${escape(t.name)}</h1>`;
       left.querySelector('[data-avatar]').replaceWith(RB.avatarEl(t.name, 72));
+      const addBtn = left.querySelector('[data-add-courses]');
+      if (addBtn) addBtn.addEventListener('click', openCoursesEditor);
 
       const right = document.getElementById('heroRight');
       const avg = t.avg_rating;
@@ -107,6 +110,55 @@
         <div data-hero-stars></div>
         <div class="profile-hero__count">based on ${t.review_count} anonymous review${t.review_count === 1 ? '' : 's'}</div>`;
       RB.renderStars(right.querySelector('[data-hero-stars]'), avg || 0, { size: 22 });
+    }
+
+    function openCoursesEditor() {
+      const host = document.querySelector('.profile-hero__meta > div:last-child');
+      if (!host) return;
+      const existing = host.querySelector('[data-add-courses], .profile-hero__courses-editor');
+      if (existing && existing.classList.contains('profile-hero__courses-editor')) return;
+      if (existing) existing.remove();
+      const editor = document.createElement('div');
+      editor.className = 'profile-hero__courses-editor';
+      editor.innerHTML = `
+        <input type="text" class="profile-hero__courses-input" maxlength="300"
+          placeholder="e.g. AP Calculus BC, Precalculus" />
+        <button type="button" class="btn btn--accent btn--sm" data-save-courses>Save</button>
+        <button type="button" class="btn btn--ghost btn--sm" data-cancel-courses>Cancel</button>
+        <div class="profile-hero__courses-note">Comma-separated. This locks once saved.</div>
+        <div class="profile-hero__courses-err" hidden></div>`;
+      host.appendChild(editor);
+      const input = editor.querySelector('input');
+      input.focus();
+      const err = editor.querySelector('.profile-hero__courses-err');
+      const save = async () => {
+        const v = input.value.trim();
+        err.hidden = true;
+        if (!v) { err.textContent = 'Enter at least one course.'; err.hidden = false; return; }
+        const saveBtn = editor.querySelector('[data-save-courses]');
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        try {
+          await RB.api(`/api/teachers/${encodeURIComponent(id)}/courses`, {
+            method: 'POST',
+            body: JSON.stringify({ courses: v }),
+          });
+          RB.toast('Courses saved.');
+          state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
+          renderHero();
+        } catch (e) {
+          err.textContent = e.data?.detail || e.message || 'Could not save.';
+          err.hidden = false;
+          saveBtn.disabled = false; saveBtn.textContent = 'Save';
+        }
+      };
+      editor.querySelector('[data-save-courses]').addEventListener('click', save);
+      editor.querySelector('[data-cancel-courses]').addEventListener('click', () => {
+        renderHero();
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') save();
+        if (e.key === 'Escape') renderHero();
+      });
     }
 
     function renderStats() {
