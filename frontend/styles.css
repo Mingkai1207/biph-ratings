@@ -1040,6 +1040,11 @@ body[data-page="home"] .container {
 /* ——— Mobile (≤640px, per handoff 3 spec §3) */
 @media (max-width: 640px) {
   .container { padding: 20px 16px 60px; }
+  /* The desktop Browse rule locks the container to min(75vw, 1080px) so the
+     3-card grid sits in a comfortable column. On a phone, 75vw is ~280px and
+     the whole page collapses into a narrow centered strip. Restore full-width
+     on mobile — edge-to-edge with standard 16px side padding. */
+  body[data-page="home"] .container { max-width: 100%; padding: 20px 16px 60px; }
   .hero { padding: 28px 22px; }
   .hero__title { font-size: 34px; }
   .hero__subtitle { font-size: 14px; }
