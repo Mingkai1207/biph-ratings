@@ -200,8 +200,13 @@
     window.addEventListener('touchend',    onTouchEnd, { passive: true });
     window.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
-    // Density 1.5x the handoff baseline (was 14/28/55000). More side-margin snow.
-    var target = Math.max(21, Math.min(42, Math.round(W * H / 36667)));
+    // Desktop/tablet: 1.5x the handoff baseline (21/42/36667).
+    // Mobile (≤640, matching styles.css breakpoint): leave the original
+    // 14/28/55000 so the narrow viewport doesn't get crowded.
+    var isMobile = W <= 640;
+    var target = isMobile
+      ? Math.max(14, Math.min(28, Math.round(W * H / 55000)))
+      : Math.max(21, Math.min(42, Math.round(W * H / 36667)));
 
     function makeFaller(top) {
       var side = Math.random() < 0.5 ? 'L' : 'R';
