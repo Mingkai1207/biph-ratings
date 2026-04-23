@@ -20,21 +20,7 @@
 
     <section class="stats-block" id="stats"></section>
 
-    <section class="panel-accent" id="reviewForm">
-      <h2 class="serif">Write a review</h2>
-
-      <div class="rating-rows" id="ratingRows"></div>
-
-      <textarea id="comment" class="textarea" rows="5"
-        placeholder="What's the class actually like? Grading, pace, personality, anything specific that'd help the next student…"></textarea>
-
-      <div class="turnstile-slot" id="turnstile"></div>
-
-      <div class="form-foot">
-        <div id="formStatus" class="form-foot__status"></div>
-        <button id="submitBtn" class="btn btn--accent btn--lg">Post anonymously</button>
-      </div>
-    </section>
+    <section class="panel-accent" id="reviewPanel"></section>
 
     <div class="reviews-head">
       <h2 class="serif">What students said</h2>
@@ -73,10 +59,8 @@
       }
       renderHero();
       renderStats();
-      renderRatingRows();
+      renderReviewPanel();
       loadReviews();
-      RB.mountTurnstile(document.getElementById('turnstile'), (t) => { state.turnstileToken = t; });
-      document.getElementById('submitBtn').addEventListener('click', submit);
     }
 
     function escape(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
@@ -192,8 +176,59 @@
         </div>`;
     }
 
+    function renderReviewPanel() {
+      const panel = document.getElementById('reviewPanel');
+      const mine = state.teacher.my_recent_review;
+      if (mine) {
+        renderAlreadyReviewed(panel, mine);
+      } else {
+        renderReviewForm(panel);
+      }
+    }
+
+    function renderReviewForm(panel) {
+      panel.innerHTML = `
+        <h2 class="serif">Write a review</h2>
+        <div class="rating-rows" id="ratingRows"></div>
+        <textarea id="comment" class="textarea" rows="5"
+          placeholder="What's the class actually like? Grading, pace, personality, anything specific that'd help the next student…"></textarea>
+        <div class="turnstile-slot" id="turnstile"></div>
+        <div class="form-foot">
+          <div id="formStatus" class="form-foot__status"></div>
+          <button id="submitBtn" class="btn btn--accent btn--lg">Post anonymously</button>
+        </div>`;
+      renderRatingRows();
+      RB.mountTurnstile(document.getElementById('turnstile'), (t) => { state.turnstileToken = t; });
+      document.getElementById('submitBtn').addEventListener('click', submit);
+    }
+
+    function renderAlreadyReviewed(panel, mine) {
+      const avg = (mine.teaching_quality + mine.test_difficulty + mine.homework_load + mine.easygoingness) / 4;
+      const cooldownDays = mine.cooldown_days || 7;
+      const created = new Date(mine.created_at);
+      const msSince = Date.now() - created.getTime();
+      const daysSince = Math.max(0, Math.floor(msSince / 86400000));
+      const daysLeft = Math.max(1, cooldownDays - daysSince);
+      const whenStr = daysSince === 0 ? 'today' : daysSince === 1 ? 'yesterday' : `${daysSince} days ago`;
+      const againStr = daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`;
+
+      panel.innerHTML = `
+        <h2 class="serif">You already reviewed this teacher</h2>
+        <p class="review-notice__lede">
+          You posted ${whenStr} with a rating of <strong>${avg.toFixed(1)}/5</strong>.
+          You can post another review ${againStr}.
+        </p>
+        <div class="review-notice__stars" data-my-stars></div>
+        <div class="review-notice__metrics">
+          ${METRICS.map(m => `<span class="metric-badge">${m.label.split(' ')[0]} <strong>${mine[m.key]}</strong></span>`).join('')}
+        </div>
+        ${mine.comment ? `<div class="review-notice__comment">${escape(mine.comment)}</div>` : ''}`;
+      RB.renderStars(panel.querySelector('[data-my-stars]'), avg, { size: 28 });
+    }
+
     function renderRatingRows() {
       const host = document.getElementById('ratingRows');
+      if (!host) return;
       host.innerHTML = '';
       METRICS.forEach(m => {
         const row = document.createElement('div');
@@ -266,16 +301,24 @@
           }),
         });
         RB.toast('Posted. Thanks for reviewing.');
-        document.getElementById('comment').value = '';
         Object.keys(state.ratings).forEach(k => state.ratings[k] = 0);
-        renderRatingRows();
         state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
-        renderHero(); renderStats(); loadReviews();
+        renderHero(); renderStats(); renderReviewPanel(); loadReviews();
       } catch (e) {
+        // If the rate limit fires (eg they already reviewed in another tab),
+        // re-fetch so the panel flips to the "you already reviewed" notice.
+        if (e.data?.error === 'teacher_cooldown') {
+          try {
+            state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
+            renderReviewPanel();
+            return;
+          } catch (_) { /* fall through */ }
+        }
         status.textContent = e.data?.message || e.message || 'Something went wrong.';
         status.classList.add('form-foot__status--err');
       } finally {
-        btn.disabled = false; btn.textContent = 'Post anonymously';
+        const stillThere = document.getElementById('submitBtn');
+        if (stillThere) { stillThere.disabled = false; stillThere.textContent = 'Post anonymously'; }
       }
     }
 

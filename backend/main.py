@@ -1,5 +1,6 @@
 import os
 import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -11,6 +12,7 @@ from pydantic import BaseModel, Field, conint
 
 from .db import get_conn, init_db
 from .spam import (
+    TEACHER_COOLDOWN_DAYS,
     SpamError,
     check_comment,
     enforce_rate_limit,
@@ -169,8 +171,10 @@ def list_teachers(
 
 
 @app.get("/api/teachers/{teacher_id}")
-def get_teacher(teacher_id: str):
+def get_teacher(teacher_id: str, request: Request):
     sql = TEACHER_STATS_SELECT + " AND t.id = ? GROUP BY t.id"
+    iph = hash_ip(client_ip(request))
+    cooldown_start = (datetime.now(timezone.utc) - timedelta(days=TEACHER_COOLDOWN_DAYS)).isoformat()
     with get_conn() as conn:
         row = conn.execute(sql, (teacher_id,)).fetchone()
         if not row:
@@ -181,11 +185,30 @@ def get_teacher(teacher_id: str):
                WHERE teacher_id = ? AND is_visible = 1 GROUP BY teaching_quality""",
             (teacher_id,),
         ).fetchall()
+        # "Has the requester already reviewed this teacher in the last N days?"
+        # We DON'T filter on is_visible here — rate limiting doesn't either, so the
+        # two must agree. If admin hid the review the user still can't re-post, and
+        # it's fine to show the rating back to them (they wrote it).
+        my_review_row = conn.execute(
+            """SELECT teaching_quality, test_difficulty, homework_load, easygoingness,
+                      comment, created_at
+               FROM reviews
+               WHERE teacher_id = ? AND ip_hash = ? AND created_at > ?
+               ORDER BY created_at DESC
+               LIMIT 1""",
+            (teacher_id, iph, cooldown_start),
+        ).fetchone()
     d = teacher_row_to_dict(row)
     dist = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
     for r in dist_rows:
         dist[r["r"]] = r["n"]
     d["distribution"] = dist
+    if my_review_row:
+        mr = dict(my_review_row)
+        mr["cooldown_days"] = TEACHER_COOLDOWN_DAYS
+        d["my_recent_review"] = mr
+    else:
+        d["my_recent_review"] = None
     return d
 
 

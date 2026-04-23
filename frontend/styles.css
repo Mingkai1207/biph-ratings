@@ -655,6 +655,36 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
 }
 .metric-badge strong { color: var(--ink); font-weight: 500; }
 
+/* ——— "You already reviewed" notice (shown inside .panel-accent when on cooldown) */
+.review-notice__lede {
+  margin: 10px 0 18px;
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.review-notice__lede strong { color: var(--ink); font-weight: 600; }
+.review-notice__stars {
+  display: inline-flex;
+  margin-bottom: 14px;
+}
+.review-notice__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.review-notice__comment {
+  margin-top: 8px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  color: var(--ink);
+  font-style: italic;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
 /* ——— Form page shared */
 .form-card {
   background: var(--bg-card);
