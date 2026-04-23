@@ -42,8 +42,21 @@ CREATE TABLE IF NOT EXISTS suggestions (
   resolved_at  TEXT
 );
 
+-- One thumbs-up / thumbs-down per IP per review. Primary key on
+-- (review_id, ip_hash) makes double-voting a no-op at the DB level.
+-- Switching sides is handled by INSERT ... ON CONFLICT DO UPDATE in the
+-- vote endpoint, and "clear my vote" is a DELETE on the same key.
+CREATE TABLE IF NOT EXISTS review_votes (
+  review_id   TEXT NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+  ip_hash     TEXT NOT NULL,
+  vote        INTEGER NOT NULL CHECK (vote IN (-1, 1)),
+  created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  PRIMARY KEY (review_id, ip_hash)
+);
+
 CREATE INDEX IF NOT EXISTS idx_reviews_teacher_created ON reviews(teacher_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_teachers_name ON teachers(name);
 CREATE INDEX IF NOT EXISTS idx_teachers_subject ON teachers(subject);
 CREATE INDEX IF NOT EXISTS idx_submissions_status ON teacher_submissions(status);
 CREATE INDEX IF NOT EXISTS idx_suggestions_resolved_created ON suggestions(is_resolved, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_review_votes_review ON review_votes(review_id);

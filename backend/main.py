@@ -87,6 +87,13 @@ class SuggestionIn(BaseModel):
     turnstile_token: Optional[str] = None
 
 
+class VoteIn(BaseModel):
+    # 1 = thumbs up, -1 = thumbs down, 0 = clear my vote.
+    # The client sends the *desired final state*, not a delta, so flipping
+    # sides is one request instead of two (delete + insert).
+    vote: conint(ge=-1, le=1)
+
+
 def client_ip(request: Request) -> str:
     fwd = request.headers.get("x-forwarded-for")
     if fwd:
@@ -222,22 +229,77 @@ def get_teacher(teacher_id: str, request: Request):
 @app.get("/api/teachers/{teacher_id}/reviews")
 def list_reviews(
     teacher_id: str,
+    request: Request,
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ):
+    iph = hash_ip(client_ip(request))
     with get_conn() as conn:
+        # Join vote aggregates and the caller's own vote in one query. LEFT JOIN
+        # on a subquery keeps reviews with zero votes visible — they just come
+        # back with NULL counts that we COALESCE to 0.
         rows = conn.execute(
-            """SELECT id, teaching_quality, test_difficulty, homework_load, easygoingness,
-                      comment, created_at
-               FROM reviews
-               WHERE teacher_id = ? AND is_visible = 1
-               ORDER BY created_at DESC
+            """SELECT r.id, r.teaching_quality, r.test_difficulty, r.homework_load, r.easygoingness,
+                      r.comment, r.created_at,
+                      COALESCE(v.likes, 0) AS likes,
+                      COALESCE(v.dislikes, 0) AS dislikes,
+                      mv.vote AS my_vote
+               FROM reviews r
+               LEFT JOIN (
+                 SELECT review_id,
+                        SUM(CASE WHEN vote =  1 THEN 1 ELSE 0 END) AS likes,
+                        SUM(CASE WHEN vote = -1 THEN 1 ELSE 0 END) AS dislikes
+                 FROM review_votes GROUP BY review_id
+               ) v ON v.review_id = r.id
+               LEFT JOIN review_votes mv ON mv.review_id = r.id AND mv.ip_hash = ?
+               WHERE r.teacher_id = ? AND r.is_visible = 1
+               ORDER BY r.created_at DESC
                LIMIT ? OFFSET ?""",
-            (teacher_id, limit, offset),
+            (iph, teacher_id, limit, offset),
         ).fetchall()
     return {
         "reviews": [dict(r) for r in rows],
         "has_more": len(rows) == limit,
+    }
+
+
+@app.post("/api/reviews/{review_id}/vote")
+def vote_on_review(review_id: str, body: VoteIn, request: Request):
+    """Thumbs up/down on a review comment. Keyed by ip_hash so each IP gets
+    one vote per review — not bulletproof against shared IPs or VPN rotation,
+    but it's the same identity model the rest of the site uses."""
+    iph = hash_ip(client_ip(request))
+    with get_conn() as conn:
+        exists = conn.execute(
+            "SELECT 1 FROM reviews WHERE id = ? AND is_visible = 1",
+            (review_id,),
+        ).fetchone()
+        if not exists:
+            raise HTTPException(status_code=404, detail="Review not found")
+        if body.vote == 0:
+            conn.execute(
+                "DELETE FROM review_votes WHERE review_id = ? AND ip_hash = ?",
+                (review_id, iph),
+            )
+        else:
+            # Upsert — inserts on first vote, flips sides on repeat vote.
+            conn.execute(
+                """INSERT INTO review_votes (review_id, ip_hash, vote) VALUES (?, ?, ?)
+                   ON CONFLICT(review_id, ip_hash) DO UPDATE SET vote = excluded.vote""",
+                (review_id, iph, body.vote),
+            )
+        counts = conn.execute(
+            """SELECT
+                 COALESCE(SUM(CASE WHEN vote =  1 THEN 1 ELSE 0 END), 0) AS likes,
+                 COALESCE(SUM(CASE WHEN vote = -1 THEN 1 ELSE 0 END), 0) AS dislikes
+               FROM review_votes WHERE review_id = ?""",
+            (review_id,),
+        ).fetchone()
+    return {
+        "ok": True,
+        "likes": counts["likes"],
+        "dislikes": counts["dislikes"],
+        "my_vote": body.vote if body.vote != 0 else None,
     }
 
 
