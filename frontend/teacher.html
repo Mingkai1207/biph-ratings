@@ -14,14 +14,14 @@
     <a href="index.html" class="crumb">← Back to roster</a>
 
     <section class="profile-hero" id="hero">
-      <div id="heroLeft"></div>
-      <div id="heroRight"></div>
+      <div class="profile-hero__left" id="heroLeft"></div>
+      <div class="profile-hero__rating" id="heroRight"></div>
     </section>
 
     <section class="stats-block" id="stats"></section>
 
     <section class="panel-accent" id="reviewForm">
-      <div class="panel-accent__title serif">Write a review</div>
+      <h2 class="serif">Write a review</h2>
 
       <div class="rating-rows" id="ratingRows"></div>
 
@@ -30,17 +30,17 @@
 
       <div class="turnstile-slot" id="turnstile"></div>
 
-      <div class="panel-accent__footer">
-        <div id="formStatus" class="form-status"></div>
-        <button id="submitBtn" class="btn btn--accent">Post anonymously</button>
+      <div class="form-foot">
+        <div id="formStatus" class="form-foot__status"></div>
+        <button id="submitBtn" class="btn btn--accent btn--lg">Post anonymously</button>
       </div>
     </section>
 
-    <div class="reviews-header">
-      <div class="serif reviews-header__title">What students said</div>
-      <div class="reviews-header__meta">newest first</div>
+    <div class="reviews-head">
+      <h2 class="serif">What students said</h2>
+      <span class="review__date">newest first</span>
     </div>
-    <div id="reviewList" class="reviews"></div>
+    <div id="reviewList" class="reviews-list"></div>
     <div id="reviewEmpty" class="empty" hidden>No reviews yet. Be the first.</div>
   </main>
 
@@ -85,24 +85,24 @@
       const t = state.teacher;
       const left = document.getElementById('heroLeft');
       left.innerHTML = `
-        <div class="profile-hero__person">
-          <div class="profile-hero__avatar"></div>
+        <div class="profile-hero__meta">
+          <div data-avatar></div>
           <div>
             <div class="profile-hero__subject">${escape(t.subject || '—')}</div>
           </div>
         </div>
         <h1 class="profile-hero__name serif">${escape(t.name)}</h1>`;
-      left.querySelector('.profile-hero__avatar').replaceWith(RB.avatarEl(t.name, 72));
+      left.querySelector('[data-avatar]').replaceWith(RB.avatarEl(t.name, 72));
 
       const right = document.getElementById('heroRight');
       const avg = t.avg_rating;
       right.innerHTML = `
-        <div class="profile-hero__score serif">
-          ${avg != null ? avg.toFixed(1) : '—'}<span class="profile-hero__denom">/5</span>
+        <div class="profile-hero__big">
+          ${avg != null ? avg.toFixed(1) : '—'}<small>/5</small>
         </div>
-        <div class="profile-hero__stars"></div>
+        <div data-hero-stars></div>
         <div class="profile-hero__count">based on ${t.review_count} anonymous review${t.review_count === 1 ? '' : 's'}</div>`;
-      RB.renderStars(right.querySelector('.profile-hero__stars'), avg || 0, { size: 22 });
+      RB.renderStars(right.querySelector('[data-hero-stars]'), avg || 0, { size: 22 });
     }
 
     function renderStats() {
@@ -113,7 +113,7 @@
       const bars = [5,4,3,2,1].map(n => {
         const c = dist[n] || 0;
         const pct = total ? (c / total) * 100 : 0;
-        return `<div class="distrow"><span class="distrow__label">${n}★</span>
+        return `<div class="distrow"><span class="distrow__star">${n}★</span>
           <div class="distrow__bar"><div class="distrow__fill" style="width:${pct}%"></div></div>
           <span class="distrow__count">${c}</span></div>`;
       }).join('');
@@ -122,17 +122,17 @@
         const v = t['avg_' + m.key];
         return `<div class="metric">
           <div class="metric__label">${m.label}</div>
-          <div class="metric__value serif">${v != null ? v.toFixed(1) : '—'}<span class="metric__denom">/5</span></div>
+          <div class="metric__value">${v != null ? v.toFixed(1) : '—'}</div>
         </div>`;
       }).join('');
 
       el.innerHTML = `
         <div class="stats-block__left">
-          <div class="serif stats-block__title">Teaching quality distribution</div>
-          <div class="distrows">${bars}</div>
+          <h3 class="serif">Teaching quality distribution</h3>
+          ${bars}
         </div>
         <div class="stats-block__right">
-          <div class="metrics">${metrics}</div>
+          ${metrics}
         </div>`;
     }
 
@@ -143,15 +143,13 @@
         const row = document.createElement('div');
         row.className = 'rating-row';
         row.innerHTML = `
-          <div class="rating-row__label">
-            <div class="rating-row__title">${m.label}</div>
-          </div>
-          <div class="rating-row__stars"></div>`;
+          <div class="rating-row__label">${m.label}</div>
+          <div data-row-stars></div>`;
         host.appendChild(row);
-        const rowStars = row.querySelector('.rating-row__stars');
+        const rowStars = row.querySelector('[data-row-stars]');
         const rebind = () => {
           RB.renderStars(rowStars, state.ratings[m.key], {
-            size: 28,
+            size: 36,
             interactive: true,
             onChange: (v) => { state.ratings[m.key] = v; rebind(); },
           });
@@ -183,23 +181,24 @@
         const reviewAvg = (r.teaching_quality + r.test_difficulty + r.homework_load + r.easygoingness) / 4;
         el.innerHTML = `
           <div class="review__top">
-            <span class="review__stars"></span>
+            <span data-review-stars></span>
             <span class="review__date">${RB.relDate(r.created_at)}</span>
           </div>
+          ${r.comment ? `<div class="review__body">${escape(r.comment)}</div>` : '<div class="review__body review__body--empty">No comment — rating only.</div>'}
           <div class="review__metrics">
-            ${METRICS.map(m => `<span class="metric-badge">${m.label.split(' ')[0]} <b>${r[m.key]}</b></span>`).join('')}
-          </div>
-          ${r.comment ? `<div class="review__body">${escape(r.comment)}</div>` : ''}`;
-        RB.renderStars(el.querySelector('.review__stars'), reviewAvg, { size: 15 });
+            ${METRICS.map(m => `<span class="metric-badge">${m.label.split(' ')[0]} <strong>${r[m.key]}</strong></span>`).join('')}
+          </div>`;
+        RB.renderStars(el.querySelector('[data-review-stars]'), reviewAvg, { size: 16 });
         host.appendChild(el);
       });
     }
 
     async function submit() {
       const status = document.getElementById('formStatus');
-      status.className = 'form-status';
+      status.className = 'form-foot__status';
+      status.textContent = '';
       const missing = METRICS.find(m => !state.ratings[m.key]);
-      if (missing) { status.textContent = `Pick a rating for "${missing.label}".`; status.classList.add('form-status--err'); return; }
+      if (missing) { status.textContent = `Pick a rating for "${missing.label}".`; status.classList.add('form-foot__status--err'); return; }
       const comment = document.getElementById('comment').value.trim();
       const btn = document.getElementById('submitBtn');
       btn.disabled = true; btn.textContent = 'Posting…';
@@ -220,7 +219,7 @@
         renderHero(); renderStats(); loadReviews();
       } catch (e) {
         status.textContent = e.data?.message || e.message || 'Something went wrong.';
-        status.classList.add('form-status--err');
+        status.classList.add('form-foot__status--err');
       } finally {
         btn.disabled = false; btn.textContent = 'Post anonymously';
       }

@@ -24,7 +24,7 @@
       </div>
       <div class="hero__inner">
         <h1 class="hero__title serif">Which teacher, <em>honestly</em>?</h1>
-        <p class="hero__lede">Real reviews from BIPH students. Anonymous, unfiltered, kind when deserved.</p>
+        <p class="hero__subtitle">Real reviews from BIPH students. Anonymous, unfiltered, kind when deserved.</p>
         <form class="searchbar" id="searchForm">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-mute)" stroke-width="2">
             <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
@@ -101,22 +101,22 @@
         const avg = t.avg_rating;
         card.innerHTML = `
           <div class="card__top">
-            <div class="card__avatar"></div>
-            <div class="card__score">
-              <div class="card__avg serif">${avg != null ? avg.toFixed(1) : '—'}</div>
-              <div class="card__count">${t.review_count} review${t.review_count === 1 ? '' : 's'}</div>
+            <div data-avatar></div>
+            <div class="card__rating">
+              ${avg != null ? avg.toFixed(1) : '—'}
+              <small>${t.review_count} review${t.review_count === 1 ? '' : 's'}</small>
             </div>
           </div>
           <div>
-            <div class="card__name serif">${escape(t.name)}</div>
+            <div class="card__name">${escape(t.name)}</div>
             <div class="card__subject">${escape(t.subject || '—')}</div>
           </div>
-          <div class="card__bottom">
-            <span class="card__stars"></span>
-            <span class="card__first-course">${avg != null ? 'rating' : 'no reviews yet'}</span>
+          <div class="card__foot">
+            <span data-stars></span>
+            <span class="review__date">${avg != null ? 'overall rating' : 'no reviews yet'}</span>
           </div>`;
-        card.querySelector('.card__avatar').replaceWith(RB.avatarEl(t.name, 48));
-        RB.renderStars(card.querySelector('.card__stars'), avg || 0, { size: 14 });
+        card.querySelector('[data-avatar]').replaceWith(RB.avatarEl(t.name, 48));
+        RB.renderStars(card.querySelector('[data-stars]'), avg || 0, { size: 14 });
         grid.appendChild(card);
       });
     }
