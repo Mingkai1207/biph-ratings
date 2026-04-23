@@ -203,9 +203,20 @@
   }
 
   // ——— Topnav helper (logo + links)
+  // Desktop: inline link row. Mobile (≤640px): hamburger button + collapsible
+  // panel. The hamburger / panel elements are always in the DOM; CSS shows
+  // them only below 640px. JS just toggles aria-expanded.
   function renderTopnav(active) {
     const host = document.querySelector('[data-topnav]');
     if (!host) return;
+    const link = (href, id, label) =>
+      `<a href="${href}" class="topnav__link"${active===id?' aria-current="page"':''}>${label}</a>`;
+    const links = [
+      link('index.html',       'home',        'Browse'),
+      link('rankings.html',    'rankings',    'Rankings'),
+      link('submit.html',      'submit',      'Submit a teacher'),
+      link('suggestions.html', 'suggestions', 'Suggestions'),
+    ].join('');
     host.innerHTML = `
       <div class="topnav">
         <div class="topnav__inner">
@@ -219,14 +230,29 @@
             </span>
             <span class="logo__word">Rate <em>BIPH</em></span>
           </a>
-          <div class="topnav__links">
-            <a href="index.html" class="topnav__link"${active==='home'?' aria-current="page"':''}>Browse</a>
-            <a href="rankings.html" class="topnav__link"${active==='rankings'?' aria-current="page"':''}>Rankings</a>
-            <a href="submit.html" class="topnav__link"${active==='submit'?' aria-current="page"':''}>Submit a teacher</a>
-            <a href="suggestions.html" class="topnav__link"${active==='suggestions'?' aria-current="page"':''}>Suggestions</a>
-          </div>
+          <div class="topnav__links">${links}</div>
+          <button class="topnav__toggle" type="button" aria-label="Menu" aria-expanded="false" data-topnav-toggle>
+            <span></span><span></span><span></span>
+          </button>
         </div>
+        <div class="topnav__panel" data-topnav-panel hidden>${links}</div>
       </div>`;
+    const toggle = host.querySelector('[data-topnav-toggle]');
+    const panel = host.querySelector('[data-topnav-panel]');
+    if (toggle && panel) {
+      toggle.addEventListener('click', () => {
+        const open = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+        panel.hidden = open;
+      });
+      // Tapping a link closes the panel
+      panel.querySelectorAll('.topnav__link').forEach(a => {
+        a.addEventListener('click', () => {
+          toggle.setAttribute('aria-expanded', 'false');
+          panel.hidden = true;
+        });
+      });
+    }
   }
 
   function renderFooter() {
@@ -238,41 +264,9 @@
     </footer>`;
   }
 
-  // ——— Cursor star trail (page-wide, fixed to viewport)
-  // Fires on every mousemove, throttled to one dot per ~45ms, auto-removed
-  // after 900ms. Only runs on pointer-capable devices (hover: hover) and when
-  // the user has not asked for reduced motion. Dots are positioned absolutely
-  // in viewport coords so they keep working through scroll.
-  const TRAIL_HUES = [
-    'oklch(0.72 0.14 70)',  // amber
-    'oklch(0.68 0.15 40)',  // terracotta
-    'oklch(0.75 0.12 90)',  // mustard
-  ];
-  const TRAIL_STAR_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.95 5.98 6.6.96-4.78 4.66 1.13 6.57L12 17.58l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2z"/></svg>';
-  function mountStarTrail() {
-    if (!window.matchMedia) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (window.matchMedia('(hover: none)').matches) return;
-    let last = 0;
-    window.addEventListener('mousemove', (e) => {
-      const now = Date.now();
-      if (now - last < 45) return;
-      last = now;
-      const dot = document.createElement('span');
-      dot.className = 'rb-trail';
-      dot.innerHTML = TRAIL_STAR_SVG;
-      dot.style.left = (e.clientX - 7) + 'px';
-      dot.style.top = (e.clientY - 7) + 'px';
-      dot.style.color = TRAIL_HUES[Math.floor(Math.random() * TRAIL_HUES.length)];
-      document.body.appendChild(dot);
-      setTimeout(() => dot.remove(), 900);
-    }, { passive: true });
-  }
-
   window.RB = { api, renderStars, avatarEl, initials, avatarColor, toast, relDate, mountTurnstile, renderTopnav, renderFooter };
   document.addEventListener('DOMContentLoaded', () => {
     renderTopnav(document.body.dataset.page);
     renderFooter();
-    mountStarTrail();
   });
 })();

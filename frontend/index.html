@@ -142,5 +142,206 @@
     loadTeachers();
   })();
   </script>
+
+  <!-- ——— Star canvas (home page only, per handoff 3 spec).
+       Full-page falling stars in the outer margins, attraction + constellation
+       lines toward cursor/finger, amber cursor-crown. Single RAF, no per-frame
+       DOM. Respects prefers-reduced-motion; runs on both pointer and touch. -->
+  <script>
+  (function () {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var canvas = document.createElement('canvas');
+    canvas.className = 'rb-star-canvas';
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext('2d');
+
+    var STAR_PATH = new Path2D('M12 2l2.95 5.98 6.6.96-4.78 4.66 1.13 6.57L12 17.58l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2z');
+    var HUES = ['oklch(0.72 0.14 70)', 'oklch(0.68 0.15 40)', 'oklch(0.75 0.12 90)'];
+    var LINE_COL = 'oklch(0.42 0.12 35)';
+
+    function drawStar(x, y, size, rot, color, alpha) {
+      ctx.save();
+      ctx.translate(x, y); ctx.rotate(rot);
+      var s = size / 24; ctx.scale(s, s); ctx.translate(-12, -12);
+      ctx.fillStyle = color; ctx.globalAlpha = alpha;
+      ctx.fill(STAR_PATH);
+      ctx.restore();
+    }
+
+    var W, H;
+    function resize() {
+      W = window.innerWidth; H = window.innerHeight;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    var mouse = { x: -9999, y: -9999, inside: false };
+    window.addEventListener('mousemove', function (e) {
+      mouse.x = e.clientX; mouse.y = e.clientY; mouse.inside = true;
+    });
+    window.addEventListener('mouseout', function (e) {
+      if (!e.relatedTarget) { mouse.inside = false; mouse.x = mouse.y = -9999; }
+    });
+    // Touch support — finger acts as cursor while pressed
+    function onTouch(e) {
+      if (e.touches && e.touches.length) {
+        var t = e.touches[0];
+        mouse.x = t.clientX; mouse.y = t.clientY; mouse.inside = true;
+      }
+    }
+    function onTouchEnd() { mouse.inside = false; mouse.x = mouse.y = -9999; }
+    window.addEventListener('touchstart',  onTouch,    { passive: true });
+    window.addEventListener('touchmove',   onTouch,    { passive: true });
+    window.addEventListener('touchend',    onTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+    var target = Math.max(14, Math.min(28, Math.round(W * H / 55000)));
+
+    function makeFaller(top) {
+      var side = Math.random() < 0.5 ? 'L' : 'R';
+      var margin = W * (1 / 8);
+      var x = side === 'L' ? Math.random() * margin : W - Math.random() * margin;
+      return {
+        x: x,
+        y: top ? -20 - Math.random() * 60 : Math.random() * H,
+        vx: 0, vy: 18 + Math.random() * 20,
+        size: 10 + Math.random() * 12,
+        rot: Math.random() * Math.PI * 2,
+        vrot: (Math.random() - 0.5) * 1.2,
+        alpha: 0.22 + Math.random() * 0.30,
+        color: HUES[Math.floor(Math.random() * HUES.length)],
+      };
+    }
+
+    var ATTR_R = 220, LINE_R = 180;
+    var stars = [];
+    var last = performance.now();
+
+    function loop(now) {
+      var dt = Math.min((now - last) / 1000, 0.05); last = now;
+      while (stars.length < target) stars.push(makeFaller(stars.length > target * 0.4));
+
+      ctx.clearRect(0, 0, W, H);
+
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i];
+        if (mouse.inside) {
+          var dx = mouse.x - s.x, dy = mouse.y - s.y;
+          var d = Math.hypot(dx, dy);
+          if (d < ATTR_R) {
+            var f = (1 - d / ATTR_R) * 140;
+            s.vx += (dx / (d + 0.1)) * f * dt;
+            s.vy += (dy / (d + 0.1)) * f * dt - 50 * dt;
+          }
+        }
+        s.vy += 22 * dt; s.vx *= 0.95;
+        s.x += s.vx * dt * 8; s.y += s.vy * dt * 2.5;
+        s.rot += s.vrot * dt;
+        if (s.y > H + 30 || s.x < -40 || s.x > W + 40) Object.assign(s, makeFaller(true));
+      }
+
+      if (mouse.inside) {
+        var near = stars
+          .map(function (s) { return { s: s, d: Math.hypot(s.x - mouse.x, s.y - mouse.y) }; })
+          .filter(function (p) { return p.d < LINE_R; })
+          .sort(function (a, b) { return a.d - b.d; })
+          .slice(0, 3);
+        ctx.strokeStyle = LINE_COL; ctx.lineWidth = 1;
+        for (var j = 0; j < near.length; j++) {
+          ctx.globalAlpha = (1 - near[j].d / LINE_R) * 0.6;
+          ctx.beginPath();
+          ctx.moveTo(mouse.x, mouse.y);
+          ctx.lineTo(near[j].s.x, near[j].s.y);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        var grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 36);
+        grad.addColorStop(0, 'oklch(0.72 0.14 70 / 0.30)');
+        grad.addColorStop(1, 'oklch(0.72 0.14 70 / 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 36, 0, Math.PI * 2); ctx.fill();
+      }
+
+      for (var k = 0; k < stars.length; k++) {
+        var sk = stars[k];
+        drawStar(sk.x, sk.y, sk.size, sk.rot, sk.color, sk.alpha);
+      }
+      if (mouse.inside) drawStar(mouse.x, mouse.y, 16, now / 500, 'oklch(0.72 0.14 70)', 0.85);
+
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  })();
+  </script>
+
+  <!-- ——— Cursor hint (desktop only). Fades once the cursor reaches the hint
+       box (+60px grace) OR after 14s. Hidden on touch + reduced-motion. -->
+  <script>
+  (function () {
+    if (!window.matchMedia) return;
+    if (window.matchMedia('(hover: none)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var wrap = document.createElement('div');
+    wrap.setAttribute('aria-hidden', 'true');
+    wrap.style.cssText = [
+      'position:fixed',
+      'right:clamp(16px,4vw,52px)',
+      'top:50%',
+      'transform:translateY(-50%) translateX(0)',
+      'opacity:1',
+      'transition:opacity 0.6s ease,transform 0.6s ease',
+      'pointer-events:none',
+      'z-index:50',
+      'display:flex',
+      'flex-direction:column',
+      'align-items:center',
+      'gap:10px',
+    ].join(';');
+    wrap.innerHTML = [
+      '<div style="position:relative;width:56px;height:56px">',
+      '  <div class="rb-cursor-orbit" style="position:absolute;inset:0;border:1.5px dashed var(--accent);border-radius:50%;opacity:0.45"></div>',
+      '  <div class="rb-cursor-dot"   style="position:absolute;width:8px;height:8px;border-radius:50%;background:var(--accent);top:50%;left:50%;margin-left:-4px;margin-top:-4px"></div>',
+      '  <svg width="22" height="22" viewBox="0 0 24 24" style="position:absolute;top:50%;left:50%;transform:translate(-40%,-40%);color:var(--accent-ink)">',
+      '    <path d="M4 3l7 17 2.5-6.5L20 11z" fill="currentColor"/>',
+      '  </svg>',
+      '</div>',
+      '<div class="serif" style="font-style:italic;color:var(--accent-ink);font-size:15px;white-space:nowrap;letter-spacing:-0.005em">drag your cursor</div>',
+      '<svg width="16" height="24" viewBox="0 0 16 24" style="color:var(--accent-ink);opacity:0.6">',
+      '  <path d="M8 2v18M2 14l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+      '</svg>',
+    ].join('');
+    document.body.appendChild(wrap);
+
+    var GRACE = 60;
+    var fired = false;
+    function fadeOut() {
+      if (fired) return;
+      fired = true;
+      wrap.style.opacity = '0';
+      wrap.style.transform = 'translateY(-50%) translateX(20px)';
+      window.removeEventListener('mousemove', onMove);
+      clearTimeout(timer);
+      // Remove from DOM after the fade completes so it can't intercept anything.
+      setTimeout(function () { wrap.remove(); }, 700);
+    }
+    function onMove(e) {
+      var r = wrap.getBoundingClientRect();
+      if (
+        e.clientX >= r.left  - GRACE &&
+        e.clientX <= r.right + GRACE &&
+        e.clientY >= r.top   - GRACE &&
+        e.clientY <= r.bottom + GRACE
+      ) fadeOut();
+    }
+    window.addEventListener('mousemove', onMove);
+    var timer = setTimeout(fadeOut, 14000);
+  })();
+  </script>
 </body>
 </html>

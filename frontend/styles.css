@@ -959,23 +959,66 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
   user-select: none;
 }
 
-/* ——— Mobile */
-@media (max-width: 720px) {
+/* ——— Star canvas (full-page falling stars + constellation + cursor crown)
+   Replaces the old .rb-trail DOM approach. One fixed <canvas> pinned to the
+   viewport, animation driven by a single RAF loop in index.html. Script mount
+   lives only on the home page; other pages never see the canvas. */
+.rb-star-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Cursor hint — decorative 'drag your cursor' cue on the Browse page right margin.
+   Hidden on touch + reduced-motion in JS (never attached). */
+@keyframes rb-cursor-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.45; }
+  50%      { transform: scale(1.08); opacity: 0.7; }
+}
+@keyframes rb-cursor-orbit {
+  from { transform: rotate(0deg)   translateX(20px); }
+  to   { transform: rotate(360deg) translateX(20px); }
+}
+.rb-cursor-orbit { animation: rb-cursor-pulse 2.4s ease-in-out infinite; }
+.rb-cursor-dot   { animation: rb-cursor-orbit 3s linear infinite; transform-origin: -18px 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Belt-and-suspenders kill for the canvas. The JS also early-returns, but
+     if anyone ever re-enables it, the canvas still won't render. We do NOT
+     kill hero shape animations here — iOS Low Power Mode triggers
+     reduced-motion and users want the hero drift to keep going. */
+  .rb-star-canvas { display: none !important; }
+}
+
+/* ——— Mobile (≤640px, per handoff 3 spec §3) */
+@media (max-width: 640px) {
   .container { padding: 20px 16px 60px; }
   .hero { padding: 28px 22px; }
   .hero__title { font-size: 34px; }
-  .page-title { font-size: 34px; }
-  .form-card { padding: 20px 18px; }
+  .hero__subtitle { font-size: 14px; }
+  .searchbar { margin-top: 18px; }
+  .page-title { font-size: 40px; }
+  .page-lede { font-size: 15px; }
+  .form-card { padding: 24px 22px; }
 
-  /* Reposition + scale decorative shapes so they actually fit inside a phone */
-  .hero__shape--1 { right: -40px; top: -30px; width: 150px; height: 150px; }
-  .hero__shape--2 { right: -20px; bottom: -60px; width: 130px; height: 130px; }
-  .hero__shape--3 { left: -30px; bottom: -30px; width: 100px; height: 100px; }
-  .hero__shape--4 { right: auto; left: 14%; top: 12px; width: 34px; height: 34px; border-radius: 10px; }
-  .hero__shape--5 { right: 16px; top: 120px; width: 12px; height: 12px; }
-  .hero__shape--6 { right: auto; left: 55%; top: 40px; width: 10px; height: 10px; }
-  .hero__shape--7 { left: 38%; bottom: -20px; width: 44px; height: 44px; }
-  .hero__shape--8 { right: 70px; bottom: 60px; width: 8px; height: 8px; }
+  /* Only shapes 1–3 on mobile — the rest clutter copy on a 375px viewport */
+  .hero__shape--1 { right: -60px; top: -50px;    width: 140px; height: 140px; }
+  .hero__shape--2 { right: -20px; bottom: -30px; width: 80px;  height: 80px; }
+  .hero__shape--3 { left: -24px;  bottom: 30px;  width: 56px;  height: 56px; }
+  .hero__shape--4,
+  .hero__shape--5,
+  .hero__shape--6,
+  .hero__shape--7,
+  .hero__shape--8 { display: none; }
+
+  /* Single column grid on phones */
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Profile hero — single column, big rating becomes a header row */
   .profile-hero {
     grid-template-columns: 1fr;
     gap: 22px;
@@ -986,14 +1029,57 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
   .profile-hero__name { font-size: 42px; }
   .profile-hero__big { font-size: 72px; }
   .profile-hero__big small { font-size: 30px; }
-  .stats-block { grid-template-columns: 1fr; gap: 20px; }
-  .stats-block__right { border-left: none; border-top: 1px dashed var(--line-strong); padding: 20px 0 0; }
+
+  /* Hide just the 5-bar distribution histogram on mobile — too noisy on a phone.
+     Keep the per-metric averages (__right) and let them take the full width. */
+  .stats-block { grid-template-columns: 1fr; gap: 0; padding: 16px 18px; }
+  .stats-block__left { display: none; }
+  .stats-block__right { border-left: none; padding-left: 0; }
+
+  /* Review form & list scaling */
   .panel-accent { padding: 22px 20px; }
   .panel-accent h2 { font-size: 24px; }
+  .panel-accent__title { font-size: 24px; }
+  .stars--interactive svg { width: 30px; height: 30px; }
+  .review { padding: 16px 18px; }
+  .review__body { font-size: 14px; }
   .reviews-head h2 { font-size: 24px; }
   .rating-row { grid-template-columns: 120px auto; gap: 12px; }
+
+  /* Top nav — hamburger takes over; app.js re-renders it */
   .topnav__inner { padding: 12px 16px; }
   .logo__word { font-size: 18px; }
+  .topnav__links { display: none; }
+  .topnav__inner[data-compact="true"] .topnav__links { display: none; }
+  .topnav__toggle {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--bg-card);
+    display: flex; flex-direction: column; gap: 4px;
+    align-items: center; justify-content: center;
+    cursor: pointer; padding: 0;
+  }
+  .topnav__toggle span {
+    display: block;
+    width: 16px; height: 1.5px;
+    background: var(--ink);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .topnav__toggle[aria-expanded="true"] span:nth-child(1) { transform: rotate(45deg)  translate(3px, 4px); }
+  .topnav__toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .topnav__toggle[aria-expanded="true"] span:nth-child(3) { transform: rotate(-45deg) translate(3px, -4px); }
+  .topnav__panel {
+    padding: 8px 14px 14px;
+    border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .topnav__panel[hidden] { display: none; }
+  .topnav__panel .topnav__link {
+    padding: 12px 14px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
 
   /* Tighter ranking cards on small screens */
   .ranking-row { grid-template-columns: 54px 1fr auto; gap: 12px; padding: 14px 16px; }
@@ -1003,26 +1089,8 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
   .ranking-row__value { font-size: 26px; }
 }
 
-/* ——— Cursor star trail
-   Page-wide effect. Each mousemove spawns a .rb-trail dot that fades, shrinks,
-   drifts down and rotates before auto-removing after ~900ms. Scoped to
-   pointer-only devices via JS (matchMedia 'hover: none'), and respects
-   prefers-reduced-motion as a defense-in-depth layer. */
-.rb-trail {
-  position: fixed;
-  pointer-events: none;
-  display: inline-block;
-  animation: rb-trail-fade 0.9s ease-out forwards;
-  z-index: 9999;
-}
-@keyframes rb-trail-fade {
-  0%   { opacity: 0.9; transform: scale(1) rotate(0deg); }
-  100% { opacity: 0;   transform: scale(0.4) translateY(14px) rotate(40deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  /* Trail-only — do NOT kill hero shape animations here. iOS Low Power Mode
-     triggers reduced-motion, and we want the hero drift to keep going.
-     The trail is a cursor effect and only ever runs on desktop, where the
-     user has consciously enabled Reduce Motion in System Settings. */
-  .rb-trail { display: none !important; }
+/* ≥641px: hide the hamburger button, show links inline */
+@media (min-width: 641px) {
+  .topnav__toggle { display: none !important; }
+  .topnav__panel  { display: none !important; }
 }
