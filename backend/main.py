@@ -253,7 +253,13 @@ def list_reviews(
                ) v ON v.review_id = r.id
                LEFT JOIN review_votes mv ON mv.review_id = r.id AND mv.ip_hash = ?
                WHERE r.teacher_id = ? AND r.is_visible = 1
-               ORDER BY r.created_at DESC
+               ORDER BY
+                 -- Section 1: reviews with a real comment. Section 2: rating-only.
+                 CASE WHEN r.comment IS NOT NULL AND TRIM(r.comment) != '' THEN 0 ELSE 1 END,
+                 -- Within each section: most-liked first. Ignore dislikes (per user).
+                 COALESCE(v.likes, 0) DESC,
+                 -- Stable tiebreak: newer reviews win ties on likes.
+                 r.created_at DESC
                LIMIT ? OFFSET ?""",
             (iph, teacher_id, limit, offset),
         ).fetchall()
