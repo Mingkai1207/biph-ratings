@@ -33,3 +33,15 @@ Everything else: flag it, don't ship it.
 ## Voice
 
 Direct. Concrete. Name the file and line. No throat-clearing. Match the gstack/GStack voice already established in this session — builder-to-builder, not consultant-to-client.
+
+## Testing
+
+Run: `./venv/bin/python -m pytest` from the repo root. Tests live in `tests/`. See `TESTING.md` for the full guide.
+
+Expectations:
+- 100% coverage is the goal. Tests make vibe coding safe.
+- New function → corresponding test.
+- Bug fix → regression test that would have caught it.
+- New error handler → test that triggers the error.
+- New conditional (if/else, switch) → tests for BOTH paths.
+- Never commit code that makes existing tests fail.
