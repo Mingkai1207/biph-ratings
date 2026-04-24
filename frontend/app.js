@@ -406,12 +406,12 @@
     // Page <title>
     const pt = document.documentElement.getAttribute('data-i18n-page-title');
     if (pt) document.title = t(pt);
-    // Update language toggle button label
+    // Update language toggle button label — show CURRENT language (click flips it)
     const langBtns = document.querySelectorAll('[data-lang-toggle]');
     langBtns.forEach(b => {
       const cur = getLang();
-      b.textContent = cur === 'zh' ? 'EN' : '中文';
-      b.setAttribute('aria-label', cur === 'zh' ? 'Switch to English' : '切换到中文');
+      b.textContent = cur === 'zh' ? '中文' : 'EN';
+      b.setAttribute('aria-label', cur === 'zh' ? '切换到英文' : 'Switch to Chinese');
     });
   }
 
@@ -619,8 +619,9 @@
     // 3. Inside the mobile hamburger panel (for users who've already opened it)
     // All three share `data-lang-toggle` and get wired to the same setLang flip.
     const cur = getLang();
-    const langLabel = cur === 'zh' ? 'EN' : '中文';
-    const langAria  = cur === 'zh' ? 'Switch to English' : '切换到中文';
+    // Button shows the CURRENT language, not the target. Click flips it.
+    const langLabel = cur === 'zh' ? '中文' : 'EN';
+    const langAria  = cur === 'zh' ? '切换到英文' : 'Switch to Chinese';
     const langBtnInline = `<button type="button" class="topnav__lang" data-lang-toggle aria-label="${langAria}">${langLabel}</button>`;
     const langBtnMobile = `<button type="button" class="topnav__lang topnav__lang--mobile" data-lang-toggle aria-label="${langAria}">${langLabel}</button>`;
     host.innerHTML = `
