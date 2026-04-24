@@ -13,6 +13,9 @@ backend/biph.db-journal
 backend/biph.db-wal
 backend/biph.db-shm
 
+# Timestamp for scripts/dev.sh auto-sync logic (local-only)
+backend/.last-prod-sync
+
 # Env files (secrets)
 .env
 .env.local
