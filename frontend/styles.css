@@ -531,6 +531,20 @@ body[data-page="home"] .container {
   font-size: 13px; color: var(--ink-mute); margin-top: 4px;
 }
 
+/* ——— Share bar: lives in the 40px gap between hero and stats.
+   The hero already has a bottom border, so the share bar gets no
+   extra chrome — just a small flex row of ghost buttons. */
+.share-bar {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: -28px 0 32px;
+}
+.share-bar .btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--ink-soft);
+}
+.share-bar .btn svg { flex: 0 0 auto; }
+.share-bar .btn:hover { color: var(--ink); }
+
 /* ——— Stats block */
 .stats-block {
   background: var(--bg-card);

@@ -116,6 +116,22 @@
       'teacher.wta.statsNone':       'Not enough responses yet',
       'teacher.wta.badgeYes':        'Would take again',
       'teacher.wta.badgeNo':         "Wouldn't take again",
+      'teacher.share.card':          'Share card',
+      'teacher.share.qr':            'Print QR',
+      'teacher.share.text':          'Honest reviews of {name} on Rate BIPH.',
+
+      // Printable QR sheet
+      'qrs.pageTitle':    'Rate BIPH — printable QR sheet',
+      'qrs.back':         '← Back to roster',
+      'qrs.eyebrow':      'PRINT-READY QR SHEET',
+      'qrs.headingHtml':  'Printable <em>QR codes</em>.',
+      'qrs.lede':         "One QR per teacher. Print this page, cut into cards, tape outside classrooms during course-selection week. Each QR takes students straight to that teacher's page.",
+      'qrs.filter':       'Filter by name or subject…',
+      'qrs.print':        'Print',
+      'qrs.count':        '{n} teachers',
+      'qrs.loading':      'Loading teachers…',
+      'qrs.empty':        'No teachers match that filter.',
+      'qrs.error':        "Couldn't load teachers. Try refreshing.",
 
       // Rankings
       'rank.pageTitle':           'Rate BIPH — rankings',
@@ -293,6 +309,22 @@
       'teacher.wta.statsNone':       '回答还不够',
       'teacher.wta.badgeYes':        '愿意再选',
       'teacher.wta.badgeNo':         '不会再选',
+      'teacher.share.card':          '分享卡片',
+      'teacher.share.qr':            '打印二维码',
+      'teacher.share.text':          '{name} 在 Rate BIPH 的真实评价。',
+
+      // 可打印的二维码总表
+      'qrs.pageTitle':    'Rate BIPH — 可打印二维码',
+      'qrs.back':         '← 返回老师列表',
+      'qrs.eyebrow':      '可打印二维码',
+      'qrs.headingHtml':  '可打印的 <em>二维码</em>。',
+      'qrs.lede':         '每位老师一个二维码。打印这页，剪成卡片，选课周贴在教室门口 — 扫码直达老师主页。',
+      'qrs.filter':       '按姓名或科目筛选…',
+      'qrs.print':        '打印',
+      'qrs.count':        '共 {n} 位老师',
+      'qrs.loading':      '加载中…',
+      'qrs.empty':        '没有匹配的老师。',
+      'qrs.error':        '加载失败，请刷新重试。',
 
       // Rankings
       'rank.pageTitle':           'Rate BIPH — 排行榜',

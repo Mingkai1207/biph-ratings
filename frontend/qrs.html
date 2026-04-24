@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en" data-i18n-page-title="qrs.pageTitle">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rate BIPH — printable QR sheet</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
+  <style>
+    /* Page-specific grid. Screen view keeps the site chrome; print view
+       drops everything except the QR cards so an A4 print renders cleanly. */
+    .qrs-controls {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+      margin: 20px 0 28px;
+    }
+    .qrs-controls input[type="search"] {
+      flex: 1 1 240px; min-width: 0;
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      font-size: 15px; color: var(--ink);
+      outline: none;
+    }
+    .qrs-controls input[type="search"]:focus {
+      border-color: var(--accent-ink);
+      box-shadow: 0 0 0 3px oklch(0.68 0.15 40 / 0.18);
+    }
+    .qrs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 18px;
+    }
+    .qrs-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 14px 18px;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center;
+      break-inside: avoid;
+    }
+    .qrs-card__name {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      line-height: 1.15;
+      color: var(--ink);
+      margin: 0 0 2px;
+    }
+    .qrs-card__subject {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-ink);
+      margin-bottom: 10px;
+    }
+    .qrs-card__qr {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 6px;
+      display: block;
+    }
+    .qrs-card__qr img { width: 100%; height: 100%; display: block; }
+    .qrs-card__url {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--ink-mute);
+      letter-spacing: 0.02em;
+    }
+    .qrs-note { font-size: 13px; color: var(--ink-mute); }
+    .qrs-loading { padding: 40px 0; text-align: center; color: var(--ink-mute); }
+
+    @media print {
+      body { background: #fff; }
+      .topnav, [data-footer], [data-topnav], .qrs-controls, .crumb,
+      .page-title, .page-lede, .eyebrow { display: none !important; }
+      main.container { max-width: none; padding: 0; margin: 0; }
+      .qrs-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .qrs-card {
+        border: 1px solid #bbb;
+        background: #fff;
+        padding: 10px 8px 12px;
+      }
+      .qrs-card__name { font-size: 15px; }
+      .qrs-card__subject { font-size: 10px; margin-bottom: 6px; }
+      .qrs-card__url { font-size: 10px; margin-top: 6px; }
+    }
+  </style>
+</head>
+<body data-page="qrs">
+  <div data-topnav></div>
+
+  <main class="container">
+    <a href="index.html" class="crumb" data-i18n="qrs.back">← Back to roster</a>
+    <div class="eyebrow" data-i18n="qrs.eyebrow">PRINT-READY QR SHEET</div>
+    <h1 class="page-title serif" data-i18n-html="qrs.headingHtml">Printable <em>QR codes</em>.</h1>
+    <p class="page-lede" data-i18n="qrs.lede">One QR per teacher. Print this page, cut into cards, tape outside classrooms during course-selection week. Each QR takes students straight to that teacher's page.</p>
+
+    <div class="qrs-controls">
+      <input type="search" id="qrsFilter" data-i18n-placeholder="qrs.filter" placeholder="Filter by name or subject…" />
+      <button type="button" class="btn btn--accent btn--lg" id="qrsPrint" data-i18n="qrs.print">Print</button>
+      <span class="qrs-note" id="qrsCount"></span>
+    </div>
+
+    <div id="qrsGrid" class="qrs-grid">
+      <div class="qrs-loading" data-i18n="qrs.loading">Loading teachers…</div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="app.js"></script>
+  <script>
+  (function () {
+    const state = { teachers: [], filter: '' };
+
+    async function init() {
+      try {
+        state.teachers = await RB.api('/api/teachers');
+      } catch (e) {
+        document.getElementById('qrsGrid').innerHTML =
+          `<div class="qrs-loading">${RB.t('qrs.error')}</div>`;
+        return;
+      }
+      render();
+    }
+
+    function render() {
+      const host = document.getElementById('qrsGrid');
+      const needle = state.filter.toLowerCase();
+      const rows = needle
+        ? state.teachers.filter(t =>
+            (t.name || '').toLowerCase().includes(needle) ||
+            (t.subject || '').toLowerCase().includes(needle))
+        : state.teachers;
+      document.getElementById('qrsCount').textContent =
+        RB.t('qrs.count', { n: rows.length });
+      if (!rows.length) {
+        host.innerHTML = `<div class="qrs-loading">${RB.t('qrs.empty')}</div>`;
+        return;
+      }
+      const host_url = location.host;
+      const apiBase = window.API_BASE || '';
+      host.innerHTML = rows.map(t => {
+        const qrSrc = `${apiBase}/api/teachers/${encodeURIComponent(t.id)}/qr.png`;
+        // Don't escape the API-driven src; it's our own endpoint.
+        return `
+          <div class="qrs-card">
+            <div class="qrs-card__subject">${escape(RB.localizeSubject(t.subject) || '—')}</div>
+            <div class="qrs-card__name">${escape(t.name)}</div>
+            <div class="qrs-card__qr" style="margin-top:6px">
+              <img src="${qrSrc}" alt="QR for ${escape(t.name)}" loading="lazy" />
+            </div>
+            <div class="qrs-card__url">${escape(host_url)}</div>
+          </div>`;
+      }).join('');
+    }
+
+    function escape(s) {
+      return (s || '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    document.getElementById('qrsFilter').addEventListener('input', (e) => {
+      state.filter = e.target.value.trim();
+      render();
+    });
+    document.getElementById('qrsPrint').addEventListener('click', () => {
+      window.print();
+    });
+    document.addEventListener('rb:lang', render);
+    init();
+  })();
+  </script>
+</body>
+</html>

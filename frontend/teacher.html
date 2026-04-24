@@ -18,6 +18,8 @@
       <div class="profile-hero__rating" id="heroRight"></div>
     </section>
 
+    <div class="share-bar" id="shareBar"></div>
+
     <section class="stats-block" id="stats"></section>
 
     <section class="panel-accent" id="reviewPanel"></section>
@@ -65,6 +67,7 @@
         return;
       }
       renderHero();
+      renderShareBar();
       renderStats();
       renderReviewPanel();
       loadReviews();
@@ -77,6 +80,7 @@
     document.addEventListener('rb:lang', () => {
       if (!state.teacher) return;
       renderHero();
+      renderShareBar();
       renderStats();
       renderReviewPanel();
       if (lastReviews) renderReviews(lastReviews);
@@ -116,6 +120,59 @@
         <div data-hero-stars></div>
         <div class="profile-hero__count">${basedOn}</div>`;
       RB.renderStars(right.querySelector('[data-hero-stars]'), avg || 0, { size: 22 });
+    }
+
+    // Share assets — links open the PNG in a new tab. On mobile (where
+    // Web Share API is available with image files), we grab the PNG via
+    // fetch and hand it to the native share sheet so the user can post
+    // it straight to WeChat / Xiaohongshu / iMessage without saving first.
+    function renderShareBar() {
+      const host = document.getElementById('shareBar');
+      if (!host) return;
+      const apiBase = window.API_BASE || '';
+      const cardUrl = `${apiBase}/api/teachers/${encodeURIComponent(id)}/card.png`;
+      const qrUrl   = `${apiBase}/api/teachers/${encodeURIComponent(id)}/qr.png`;
+      host.innerHTML = `
+        <button type="button" class="btn btn--ghost btn--sm" data-share-card>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/>
+          </svg>
+          <span>${RB.t('teacher.share.card')}</span>
+        </button>
+        <a class="btn btn--ghost btn--sm" href="${qrUrl}" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3"  width="7" height="7"/><rect x="14" y="3"  width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+            <path d="M14 14h3v3h-3zM20 14h1v1h-1zM14 20h3v1h-3zM20 17h1v4M17 20h3"/>
+          </svg>
+          <span>${RB.t('teacher.share.qr')}</span>
+        </a>`;
+      host.querySelector('[data-share-card]').addEventListener('click', async () => {
+        // Try native share first (mobile). Falls through to a new-tab open
+        // if the browser doesn't support sharing files — that's every
+        // desktop browser as of 2026, which is fine.
+        try {
+          if (navigator.canShare && navigator.share) {
+            const res = await fetch(cardUrl);
+            const blob = await res.blob();
+            const file = new File([blob], `ratebiph-${state.teacher.name}.png`,
+                                  { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                title: `${state.teacher.name} — Rate BIPH`,
+                text: RB.t('teacher.share.text', { name: state.teacher.name }),
+              });
+              return;
+            }
+          }
+        } catch (e) {
+          // User cancelled, or share failed — fall through to tab open.
+          if (e && e.name === 'AbortError') return;
+        }
+        window.open(cardUrl, '_blank', 'noopener');
+      });
     }
 
     function openCoursesEditor() {

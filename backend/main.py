@@ -6,10 +6,11 @@ from typing import Optional
 
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, conint
 
+from .cards import render_teacher_card, render_teacher_qr
 from .db import get_conn, init_db
 from .spam import (
     TEACHER_COOLDOWN_DAYS,
@@ -236,6 +237,79 @@ def get_teacher(teacher_id: str, request: Request):
     else:
         d["my_recent_review"] = None
     return d
+
+
+def _site_base(request: Request) -> tuple[str, str]:
+    """Resolve (full URL prefix, short display label) for share assets.
+
+    Preference order:
+      1. SITE_URL env var (explicit override for prod).
+      2. x-forwarded-proto + host headers (Railway proxies + custom domains).
+      3. Fall back to request.url.scheme + request headers host.
+
+    The display label strips the protocol so it reads cleanly on the card.
+    """
+    base = os.environ.get("SITE_URL", "").strip().rstrip("/")
+    if not base:
+        scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+        host = request.headers.get("host", "ratebiph.com")
+        base = f"{scheme}://{host}"
+    label = base.replace("https://", "").replace("http://", "").rstrip("/")
+    return base, label
+
+
+def _fetch_teacher_stats(teacher_id: str) -> dict:
+    sql = TEACHER_STATS_SELECT + " AND t.id = ? GROUP BY t.id"
+    with get_conn() as conn:
+        row = conn.execute(sql, (teacher_id,)).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+    return teacher_row_to_dict(row)
+
+
+@app.get("/api/teachers/{teacher_id}/card.png")
+def teacher_card_png(teacher_id: str, request: Request):
+    """1080x1350 social-share card — designed for Xiaohongshu + WeChat status.
+
+    Cache-Control: 5-minute public cache so reshares don't re-render every
+    time, but new reviews land fast enough on the card for the feedback loop
+    to feel alive.
+    """
+    d = _fetch_teacher_stats(teacher_id)
+    base, label = _site_base(request)
+    png = render_teacher_card(
+        name=d["name"],
+        subject=d["subject"],
+        rating=d["avg_rating"],
+        review_count=d["review_count"],
+        wta_percent=d["wta_percent"],
+        wta_count=d["wta_count"],
+        qr_url=f"{base}/teacher.html?id={teacher_id}",
+        site_label=label,
+    )
+    return Response(
+        content=png,
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=300"},
+    )
+
+
+@app.get("/api/teachers/{teacher_id}/qr.png")
+def teacher_qr_png(teacher_id: str, request: Request):
+    """1024x1024 printable poster — print and tape outside classrooms."""
+    d = _fetch_teacher_stats(teacher_id)
+    base, label = _site_base(request)
+    png = render_teacher_qr(
+        name=d["name"],
+        subject=d["subject"],
+        qr_url=f"{base}/teacher.html?id={teacher_id}",
+        site_label=label,
+    )
+    return Response(
+        content=png,
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=600"},
+    )
 
 
 @app.get("/api/teachers/{teacher_id}/reviews")
