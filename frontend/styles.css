@@ -95,6 +95,33 @@ input, textarea, select { font-family: inherit; color: var(--ink); }
   font-weight: 500;
 }
 
+/* Language toggle (EN ↔ 中文). Sits at the end of the inline link row on
+   desktop, and next to the hamburger on mobile. Styled as a subtle pill — it
+   matches nav links but carries a thin border so it reads as an action, not
+   a destination. */
+.topnav__lang {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  margin-left: 4px;
+  /* Mobile-only button is hidden on desktop. */
+}
+.topnav__lang:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: var(--bg-sunken);
+}
+.topnav__lang--mobile { display: none; }
+
 /* ——— Page container */
 .container {
   max-width: 1200px; margin: 0 auto;
@@ -1130,6 +1157,26 @@ body[data-page="home"] .container {
     padding: 12px 14px;
     font-size: 15px;
     border-radius: 10px;
+  }
+  /* Show the mobile-only lang button in the top bar; style it to match
+     the hamburger's visual weight so they sit evenly side-by-side. */
+  .topnav__lang--mobile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    min-width: 48px;
+    padding: 0 12px;
+    border-radius: 10px;
+    margin-left: auto;
+    margin-right: 4px;
+  }
+  /* Inside the hamburger panel, scale the lang pill up to match nav links. */
+  .topnav__panel .topnav__lang {
+    align-self: flex-start;
+    padding: 10px 14px;
+    font-size: 14px;
+    margin: 6px 0 0;
   }
 
   /* Tighter ranking cards on small screens */

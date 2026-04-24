@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-i18n-page-title="sub.pageTitle">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,40 +11,40 @@
   <div data-topnav></div>
 
   <main class="container container--narrow">
-    <div class="eyebrow">CAN'T FIND SOMEONE?</div>
-    <h1 class="page-title serif">Add a teacher to the <em>roster</em>.</h1>
-    <p class="page-lede">Submissions are reviewed by a student moderator and usually show up within a day. No photos, no personal contact info — just the basics.</p>
+    <div class="eyebrow" data-i18n="sub.eyebrow">CAN'T FIND SOMEONE?</div>
+    <h1 class="page-title serif" data-i18n-html="sub.headingHtml">Add a teacher to the <em>roster</em>.</h1>
+    <p class="page-lede" data-i18n="sub.lede">Submissions are reviewed by a student moderator and usually show up within a day. No photos, no personal contact info — just the basics.</p>
 
     <div id="formCard" class="form-card">
       <div class="field">
-        <div class="field__row"><label class="field__label" for="name">Teacher name</label><span class="field__hint">Full name as used at school</span></div>
-        <input id="name" class="input" placeholder="e.g. Daniel Huang" />
+        <div class="field__row"><label class="field__label" for="name" data-i18n="sub.name.label">Teacher name</label><span class="field__hint" data-i18n="sub.name.hint">Full name as used at school</span></div>
+        <input id="name" class="input" data-i18n-placeholder="sub.name.placeholder" placeholder="e.g. Daniel Huang" />
       </div>
       <div class="field">
-        <div class="field__row"><label class="field__label">Subject</label></div>
+        <div class="field__row"><label class="field__label" data-i18n="sub.subject.label">Subject</label></div>
         <div id="subjectChips" class="chips chips--wrap"></div>
-        <input id="subjectCustom" class="input" placeholder="Or type a subject…" style="margin-top:10px" />
+        <input id="subjectCustom" class="input" data-i18n-placeholder="sub.subject.placeholder" placeholder="Or type a subject…" style="margin-top:10px" />
       </div>
       <div class="field">
-        <div class="field__row"><label class="field__label" for="courses">Courses</label><span class="field__hint">Optional. Comma-separated.</span></div>
-        <input id="courses" class="input" placeholder="e.g. AP Calculus BC, Precalculus" />
+        <div class="field__row"><label class="field__label" for="courses" data-i18n="sub.courses.label">Courses</label><span class="field__hint" data-i18n="sub.courses.hint">Optional. Comma-separated.</span></div>
+        <input id="courses" class="input" data-i18n-placeholder="sub.courses.placeholder" placeholder="e.g. AP Calculus BC, Precalculus" />
       </div>
 
       <div class="turnstile-slot" id="turnstile"></div>
 
       <div id="formStatus" class="form-status"></div>
       <div class="form-actions">
-        <button id="submitBtn" class="btn btn--accent btn--lg">Submit for review</button>
-        <a href="index.html" class="btn btn--ghost btn--lg">Cancel</a>
+        <button id="submitBtn" class="btn btn--accent btn--lg" data-i18n="sub.submit">Submit for review</button>
+        <a href="index.html" class="btn btn--ghost btn--lg" data-i18n="common.cancel">Cancel</a>
       </div>
     </div>
 
     <div id="successCard" class="panel-accent" hidden>
-      <div class="panel-accent__title serif">Sent for review ✓</div>
-      <div class="panel-accent__sub">Thanks — a student moderator will take a look. Once approved, <strong id="successName"></strong> will appear in the roster.</div>
+      <div class="panel-accent__title serif" data-i18n="sub.success.title">Sent for review ✓</div>
+      <div class="panel-accent__sub"><span data-i18n="sub.success.body">Thanks — a student moderator will take a look. Once approved, </span><strong id="successName"></strong><span data-i18n="sub.success.bodyTail"> will appear in the roster.</span></div>
       <div class="form-actions">
-        <button id="againBtn" class="btn btn--primary">Submit another</button>
-        <a href="index.html" class="btn btn--ghost">Back to roster</a>
+        <button id="againBtn" class="btn btn--primary" data-i18n="sub.success.again">Submit another</button>
+        <a href="index.html" class="btn btn--ghost" data-i18n="sub.success.back">Back to roster</a>
       </div>
     </div>
   </main>
@@ -84,9 +84,9 @@
       const courses = document.getElementById('courses').value.trim();
       const status = document.getElementById('formStatus');
       status.className = 'form-status';
-      if (name.length < 2) { status.textContent = 'Teacher name looks too short.'; status.classList.add('form-status--err'); return; }
+      if (name.length < 2) { status.textContent = RB.t('sub.errShort'); status.classList.add('form-status--err'); return; }
       const btn = document.getElementById('submitBtn');
-      btn.disabled = true; btn.textContent = 'Sending…';
+      btn.disabled = true; btn.textContent = RB.t('sub.sending');
       try {
         await RB.api('/api/teachers/submit', {
           method: 'POST',
@@ -101,10 +101,10 @@
         document.getElementById('successName').textContent = name;
         document.getElementById('successCard').hidden = false;
       } catch (e) {
-        status.textContent = e.data?.message || e.message || 'Something went wrong.';
+        status.textContent = e.data?.message || e.message || RB.t('common.somethingWentWrong');
         status.classList.add('form-status--err');
       } finally {
-        btn.disabled = false; btn.textContent = 'Submit for review';
+        btn.disabled = false; btn.textContent = RB.t('sub.submit');
       }
     }
 

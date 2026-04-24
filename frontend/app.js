@@ -19,6 +19,402 @@
     return data;
   }
 
+  // ——— i18n
+  // Two-language toggle (EN ↔ 中文). User-entered content (teacher names,
+  // subjects, courses, comments, suggestion bodies) is NEVER translated —
+  // only chrome / labels / placeholders / system toasts.
+  //
+  // Static markup uses `data-i18n="key"` (textContent), `data-i18n-html="key"`
+  // (innerHTML, for strings that contain markup like <em>), `data-i18n-placeholder`,
+  // `data-i18n-title`, `data-i18n-aria-label`. Inline JS uses `RB.t('key', { param })`.
+  // Per-page scripts that render dynamic content (review lists, cards) listen for
+  // the `rb:lang` event on `document` and re-render.
+  const I18N = {
+    en: {
+      // Nav
+      'nav.browse':      'Browse',
+      'nav.rankings':    'Rankings',
+      'nav.submit':      'Add a teacher',
+      'nav.suggestions': 'Suggestions',
+      'nav.menu':        'Menu',
+      // Footer
+      'footer.body':     'Rate BIPH is student-run and independent of Beijing International Private High. Reviews are anonymous and moderated.<br/>Be kind. Be honest. Be specific.',
+      // Relative time
+      'time.today':      'today',
+      'time.yesterday':  'yesterday',
+      'time.dAgo':       '{n}d ago',
+      'time.wAgo':       '{n}w ago',
+      'time.moAgo':      '{n}mo ago',
+      'time.yAgo':       '{n}y ago',
+      'time.daysAgo':    '{n} days ago',
+      'time.tomorrow':   'tomorrow',
+      'time.inDays':     'in {n} days',
+      // Common
+      'common.cancel':   'Cancel',
+      'common.save':     'Save',
+      'common.saving':   'Saving…',
+      'common.somethingWentWrong': 'Something went wrong.',
+
+      // Home
+      'home.pageTitle':           'Rate BIPH — anonymous teacher reviews',
+      'home.hero.titleHtml':      'Which teacher, <em>honestly</em>?',
+      'home.hero.subtitle':       'Real reviews from BIPH students. Anonymous, unfiltered, kind when deserved.',
+      'home.search.placeholder':  'Teacher name…',
+      'home.search.go':           'Go',
+      'home.chips.all':           'All',
+      'home.empty.html':          'No teachers match that search. <a href="submit.html">Add one →</a>',
+      'home.loading':             'Loading teachers…',
+      'home.card.overall':        'overall rating',
+      'home.card.noReviews':      'no reviews yet',
+      'home.card.review':         'review',
+      'home.card.reviews':        'reviews',
+      'home.cursorHint':          'drag your cursor',
+      'home.errLoading':          'Could not load teachers: {msg}',
+
+      // Teacher detail
+      'teacher.pageTitle':        'Rate BIPH — teacher profile',
+      'teacher.back':             '← Back to roster',
+      'teacher.notFound':         'Teacher not found.',
+      'teacher.review.heading':   'What students said',
+      'teacher.review.sortLabel': 'most liked first',
+      'teacher.review.empty':     'No reviews yet. Be the first.',
+      'teacher.review.noComment': 'No comment — rating only.',
+      'teacher.basedOn':          'based on {n} anonymous reviews',
+      'teacher.basedOnSingular':  'based on {n} anonymous review',
+      'teacher.distribution':     'Teaching quality distribution',
+      'teacher.metrics.teaching_quality': 'Teaching quality',
+      'teacher.metrics.test_difficulty':  'Test difficulty',
+      'teacher.metrics.homework_load':    'Homework load',
+      'teacher.metrics.easygoingness':    'Easygoingness',
+      'teacher.metrics.short.teaching_quality': 'Teaching',
+      'teacher.metrics.short.test_difficulty':  'Test',
+      'teacher.metrics.short.homework_load':    'Homework',
+      'teacher.metrics.short.easygoingness':    'Easygoing',
+      'teacher.courses.add':         '+ Add courses',
+      'teacher.courses.placeholder': 'e.g. AP Calculus BC, Precalculus',
+      'teacher.courses.note':        'Comma-separated. This locks once saved.',
+      'teacher.courses.errEmpty':    'Enter at least one course.',
+      'teacher.courses.errSave':     'Could not save.',
+      'teacher.courses.saved':       'Courses saved.',
+      'teacher.form.heading':        'Write a review',
+      'teacher.form.commentPlaceholder': "What's the class actually like? Grading, pace, personality, anything specific that'd help the next student…",
+      'teacher.form.submit':         'Post anonymously',
+      'teacher.form.submitting':     'Posting…',
+      'teacher.form.posted':         'Posted. Thanks for reviewing.',
+      'teacher.form.missing':        'Pick a rating for "{label}".',
+      'teacher.already.heading':     'You already reviewed this teacher',
+      'teacher.already.ledeHtml':    'You posted {when} with a rating of <strong>{rating}/5</strong>. You can post another review {again}.',
+      'teacher.voteFail':            'Could not save your vote.',
+
+      // Rankings
+      'rank.pageTitle':           'Rate BIPH — rankings',
+      'rank.eyebrow':             'LEADERBOARD',
+      'rank.headingHtml':         'Teacher <em>rankings</em>.',
+      'rank.lede':                "Sorted by student ratings. Only teachers with at least 3 reviews appear here — a single review isn't enough to rank on.",
+      'rank.empty.heading':       'Not enough reviews yet',
+      'rank.empty.body':          "Once a few teachers pick up 3+ reviews, they'll show up here.",
+      'rank.review':              'review',
+      'rank.reviews':             'reviews',
+      'rank.metric.overall.label':  'Overall',
+      'rank.metric.overall.note':   "Average across all 4 metrics. The default \"who's best overall\" view.",
+      'rank.metric.teaching.label': 'Teaching quality',
+      'rank.metric.teaching.note':  'Who students felt actually taught them the material well.',
+      'rank.metric.easy.label':     'Easygoing',
+      'rank.metric.easy.note':      'Relaxed vibe, not strict. Ranked high = chill class.',
+      'rank.metric.tests.label':    'Hardest tests',
+      'rank.metric.tests.note':     "Higher rating = harder tests. Useful if you're choosing how much you want to suffer.",
+      'rank.metric.homework.label': 'Most homework',
+      'rank.metric.homework.note':  "Higher rating = heavier workload. Useful if you're already drowning.",
+
+      // Submit
+      'sub.pageTitle':       'Rate BIPH — add a teacher',
+      'sub.eyebrow':         "CAN'T FIND SOMEONE?",
+      'sub.headingHtml':     'Add a teacher to the <em>roster</em>.',
+      'sub.lede':            'Submissions are reviewed by a student moderator and usually show up within a day. No photos, no personal contact info — just the basics.',
+      'sub.name.label':      'Teacher name',
+      'sub.name.hint':       'Full name as used at school',
+      'sub.name.placeholder':'e.g. Daniel Huang',
+      'sub.subject.label':   'Subject',
+      'sub.subject.placeholder': 'Or type a subject…',
+      'sub.courses.label':   'Courses',
+      'sub.courses.hint':    'Optional. Comma-separated.',
+      'sub.courses.placeholder': 'e.g. AP Calculus BC, Precalculus',
+      'sub.submit':          'Submit for review',
+      'sub.sending':         'Sending…',
+      'sub.errShort':        'Teacher name looks too short.',
+      'sub.success.title':   'Sent for review ✓',
+      'sub.success.body':    'Thanks — a student moderator will take a look. Once approved, ',
+      'sub.success.bodyTail':' will appear in the roster.',
+      'sub.success.again':   'Submit another',
+      'sub.success.back':    'Back to roster',
+
+      // Suggestions
+      'sug.pageTitle':       'Rate BIPH — suggestions',
+      'sug.eyebrow':         'IDEAS FOR THE SITE',
+      'sug.headingHtml':     'Suggestions <em>welcome</em>.',
+      'sug.lede':            'Bug reports, missing teachers, features you want, things that feel off. Read by a student moderator. Your suggestion is private — only the admin account can see it.',
+      'sug.body.label':      'Your suggestion',
+      'sug.body.hint':       'Anonymous. At least 10 characters.',
+      'sug.body.placeholder':"Be specific so we can actually act on it — what should change, what's broken, what you wish existed…",
+      'sug.send':            'Send suggestion',
+      'sug.sending':         'Sending…',
+      'sug.errShort':        'Write at least 10 characters so we can act on it.',
+      'sug.success.title':   'Sent ✓',
+      'sug.success.body':    'Thanks for writing in. The moderator will read this. Suggestions are only visible to the admin account, not to other students.',
+      'sug.success.again':   'Send another',
+      'sug.success.back':    'Back to roster',
+
+      // Admin
+      'admin.pageTitle':     'Rate BIPH — admin',
+      'admin.eyebrow':       'MODERATION',
+      'admin.heading':       'Admin',
+      'admin.lede':          'Token-gated tools for the student moderator. Approve teacher submissions or hide individual reviews.',
+      'admin.token.label':   'Admin token',
+      'admin.token.placeholder': 'Paste admin token',
+      'admin.unlock':        'Unlock',
+      'admin.invalid':       'Invalid token.',
+      'admin.subs.title':    'Pending submissions',
+      'admin.subs.refresh':  'Refresh',
+      'admin.subs.empty':    'No pending submissions.',
+      'admin.subs.approve':  'Approve',
+      'admin.subs.reject':   'Reject',
+      'admin.subs.approved': 'Approved',
+      'admin.subs.rejected': 'Rejected',
+      'admin.sugs.title':    'Suggestions inbox',
+      'admin.sugs.showResolved': 'Show resolved',
+      'admin.sugs.empty':    'No suggestions.',
+      'admin.sugs.open':     'open',
+      'admin.sugs.resolved': 'resolved {when}',
+      'admin.sugs.markResolved': 'Mark resolved',
+      'admin.sugs.reopen':   'Reopen',
+      'admin.sugs.markedResolved': 'Marked resolved',
+      'admin.sugs.reopened': 'Reopened',
+      'admin.hide.title':    'Hide a review',
+      'admin.hide.label':    'Review ID (UUID)',
+      'admin.hide.placeholder': 'paste review id',
+      'admin.hide.button':   'Hide review',
+      'admin.hide.empty':    'Paste a review ID.',
+      'admin.hide.toast':    'Review hidden',
+    },
+    zh: {
+      // Nav
+      'nav.browse':      '浏览',
+      'nav.rankings':    '排行榜',
+      'nav.submit':      '添加老师',
+      'nav.suggestions': '建议',
+      'nav.menu':        '菜单',
+      // Footer
+      'footer.body':     'Rate BIPH 由学生独立运营，与北京君诚国际学校无任何关联。所有评价匿名提交并经过审核。<br/>请友善、诚实、具体。',
+      // Relative time
+      'time.today':      '今天',
+      'time.yesterday':  '昨天',
+      'time.dAgo':       '{n}天前',
+      'time.wAgo':       '{n}周前',
+      'time.moAgo':      '{n}个月前',
+      'time.yAgo':       '{n}年前',
+      'time.daysAgo':    '{n}天前',
+      'time.tomorrow':   '明天',
+      'time.inDays':     '{n}天后',
+      // Common
+      'common.cancel':   '取消',
+      'common.save':     '保存',
+      'common.saving':   '保存中…',
+      'common.somethingWentWrong': '出错了。',
+
+      // Home
+      'home.pageTitle':           'Rate BIPH — 匿名老师评价',
+      'home.hero.titleHtml':      '哪位老师，<em>说真的</em>？',
+      'home.hero.subtitle':       'BIPH 学生写的真实评价。匿名、不过滤、该夸的时候就夸。',
+      'home.search.placeholder':  '老师姓名…',
+      'home.search.go':           '搜索',
+      'home.chips.all':           '全部',
+      'home.empty.html':          '没找到匹配的老师。<a href="submit.html">添加一位 →</a>',
+      'home.loading':             '加载中…',
+      'home.card.overall':        '综合评分',
+      'home.card.noReviews':      '暂无评价',
+      'home.card.review':         '条评价',
+      'home.card.reviews':        '条评价',
+      'home.cursorHint':          '拖动你的鼠标',
+      'home.errLoading':          '加载失败：{msg}',
+
+      // Teacher detail
+      'teacher.pageTitle':        'Rate BIPH — 老师主页',
+      'teacher.back':             '← 返回名单',
+      'teacher.notFound':         '没找到这位老师。',
+      'teacher.review.heading':   '学生怎么说',
+      'teacher.review.sortLabel': '按点赞数排序',
+      'teacher.review.empty':     '还没有评价。来当第一个。',
+      'teacher.review.noComment': '没有评论 — 仅评分。',
+      'teacher.basedOn':          '基于 {n} 条匿名评价',
+      'teacher.basedOnSingular':  '基于 {n} 条匿名评价',
+      'teacher.distribution':     '教学质量评分分布',
+      'teacher.metrics.teaching_quality': '教学质量',
+      'teacher.metrics.test_difficulty':  '考试难度',
+      'teacher.metrics.homework_load':    '作业量',
+      'teacher.metrics.easygoingness':    '好相处程度',
+      'teacher.metrics.short.teaching_quality': '教学',
+      'teacher.metrics.short.test_difficulty':  '考试',
+      'teacher.metrics.short.homework_load':    '作业',
+      'teacher.metrics.short.easygoingness':    '相处',
+      'teacher.courses.add':         '+ 添加课程',
+      'teacher.courses.placeholder': '例如：AP 微积分 BC、初等微积分',
+      'teacher.courses.note':        '用逗号分隔。保存后无法修改。',
+      'teacher.courses.errEmpty':    '至少填一门课程。',
+      'teacher.courses.errSave':     '保存失败。',
+      'teacher.courses.saved':       '课程已保存。',
+      'teacher.form.heading':        '写一条评价',
+      'teacher.form.commentPlaceholder': '这门课实际上怎么样？打分、节奏、老师风格，任何能帮到下一届学生的具体细节…',
+      'teacher.form.submit':         '匿名发布',
+      'teacher.form.submitting':     '发布中…',
+      'teacher.form.posted':         '已发布。感谢你的评价。',
+      'teacher.form.missing':        '请给「{label}」打分。',
+      'teacher.already.heading':     '你已经评价过这位老师',
+      'teacher.already.ledeHtml':    '你在 {when} 给出了 <strong>{rating}/5</strong> 的评分。{again}可以再发一条评价。',
+      'teacher.voteFail':            '点赞/点踩保存失败。',
+
+      // Rankings
+      'rank.pageTitle':           'Rate BIPH — 排行榜',
+      'rank.eyebrow':             '排行榜',
+      'rank.headingHtml':         '老师 <em>排行榜</em>。',
+      'rank.lede':                '按学生评分排序。只显示至少 3 条评价的老师 — 单条评价不足以参与排名。',
+      'rank.empty.heading':       '评价数还不够',
+      'rank.empty.body':          '等到几位老师攒够 3 条以上评价，就会出现在这里。',
+      'rank.review':              '条评价',
+      'rank.reviews':             '条评价',
+      'rank.metric.overall.label':  '综合',
+      'rank.metric.overall.note':   '四项指标的平均值。默认的「整体最好」视图。',
+      'rank.metric.teaching.label': '教学质量',
+      'rank.metric.teaching.note':  '学生觉得真的把课讲明白了的老师。',
+      'rank.metric.easy.label':     '好相处',
+      'rank.metric.easy.note':      '氛围放松、不严苛。排名高 = 课堂轻松。',
+      'rank.metric.tests.label':    '考试最难',
+      'rank.metric.tests.note':     '评分越高 = 考试越难。如果你想选个虐自己的程度，可以参考。',
+      'rank.metric.homework.label': '作业最多',
+      'rank.metric.homework.note':  '评分越高 = 作业越重。如果你已经被作业淹没，可以参考。',
+
+      // Submit
+      'sub.pageTitle':       'Rate BIPH — 添加老师',
+      'sub.eyebrow':         '没找到这位老师？',
+      'sub.headingHtml':     '添加一位老师到 <em>名单</em>。',
+      'sub.lede':            '提交后由学生管理员审核，通常一天内会出现在网站上。不收照片，不收个人联系方式 — 只要基本信息。',
+      'sub.name.label':      '老师姓名',
+      'sub.name.hint':       '学校里使用的全名',
+      'sub.name.placeholder':'例如：Daniel Huang',
+      'sub.subject.label':   '学科',
+      'sub.subject.placeholder': '或者自己输入一个学科…',
+      'sub.courses.label':   '课程',
+      'sub.courses.hint':    '可选。用逗号分隔。',
+      'sub.courses.placeholder': '例如：AP 微积分 BC、初等微积分',
+      'sub.submit':          '提交审核',
+      'sub.sending':         '提交中…',
+      'sub.errShort':        '老师姓名太短了。',
+      'sub.success.title':   '已提交审核 ✓',
+      'sub.success.body':    '谢谢 — 学生管理员会看一下。审核通过后，',
+      'sub.success.bodyTail':' 会出现在名单里。',
+      'sub.success.again':   '再提交一位',
+      'sub.success.back':    '返回名单',
+
+      // Suggestions
+      'sug.pageTitle':       'Rate BIPH — 建议',
+      'sug.eyebrow':         '给网站提点想法',
+      'sug.headingHtml':     '欢迎 <em>提建议</em>。',
+      'sug.lede':            'Bug 反馈、缺失的老师、想要的功能、感觉不对劲的地方都行。学生管理员会看。你的建议是私密的 — 只有管理员账号能看到。',
+      'sug.body.label':      '你的建议',
+      'sug.body.hint':       '匿名。至少 10 个字符。',
+      'sug.body.placeholder':'写得具体些我们才能真的去改 — 该改什么、哪里坏了、希望多一个什么功能…',
+      'sug.send':            '发送建议',
+      'sug.sending':         '发送中…',
+      'sug.errShort':        '至少写 10 个字符，这样才好处理。',
+      'sug.success.title':   '已发送 ✓',
+      'sug.success.body':    '谢谢你写来。管理员会读到。建议只对管理员账号可见，其他学生看不到。',
+      'sug.success.again':   '再发一条',
+      'sug.success.back':    '返回名单',
+
+      // Admin
+      'admin.pageTitle':     'Rate BIPH — 管理',
+      'admin.eyebrow':       '审核',
+      'admin.heading':       '管理',
+      'admin.lede':          '学生管理员的工具，需要 token。用于审核老师提交、隐藏单条评价。',
+      'admin.token.label':   '管理员 token',
+      'admin.token.placeholder': '粘贴管理员 token',
+      'admin.unlock':        '解锁',
+      'admin.invalid':       'Token 无效。',
+      'admin.subs.title':    '待审核提交',
+      'admin.subs.refresh':  '刷新',
+      'admin.subs.empty':    '没有待审核的提交。',
+      'admin.subs.approve':  '通过',
+      'admin.subs.reject':   '拒绝',
+      'admin.subs.approved': '已通过',
+      'admin.subs.rejected': '已拒绝',
+      'admin.sugs.title':    '建议收件箱',
+      'admin.sugs.showResolved': '显示已处理',
+      'admin.sugs.empty':    '没有建议。',
+      'admin.sugs.open':     '未处理',
+      'admin.sugs.resolved': '已处理 {when}',
+      'admin.sugs.markResolved': '标为已处理',
+      'admin.sugs.reopen':   '重新打开',
+      'admin.sugs.markedResolved': '已标为已处理',
+      'admin.sugs.reopened': '已重新打开',
+      'admin.hide.title':    '隐藏一条评价',
+      'admin.hide.label':    '评价 ID（UUID）',
+      'admin.hide.placeholder': '粘贴评价 id',
+      'admin.hide.button':   '隐藏评价',
+      'admin.hide.empty':    '请粘贴评价 ID。',
+      'admin.hide.toast':    '评价已隐藏',
+    },
+  };
+
+  function getLang() {
+    const v = (typeof localStorage !== 'undefined' && localStorage.getItem('rb.lang')) || '';
+    return v === 'zh' ? 'zh' : 'en';
+  }
+  function t(key, params) {
+    const dict = I18N[getLang()] || I18N.en;
+    let s = dict[key];
+    if (s == null) s = I18N.en[key];
+    if (s == null) return key;
+    if (params) {
+      Object.keys(params).forEach(k => {
+        s = s.replace(new RegExp('\\{' + k + '\\}', 'g'), String(params[k]));
+      });
+    }
+    return s;
+  }
+  function setLang(lang) {
+    if (lang !== 'en' && lang !== 'zh') return;
+    try { localStorage.setItem('rb.lang', lang); } catch (_) {}
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    applyI18n();
+    document.dispatchEvent(new CustomEvent('rb:lang', { detail: { lang } }));
+  }
+  function applyI18n() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+      el.innerHTML = t(el.getAttribute('data-i18n-html'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      el.title = t(el.getAttribute('data-i18n-title'));
+    });
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+      el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
+    });
+    // Page <title>
+    const pt = document.documentElement.getAttribute('data-i18n-page-title');
+    if (pt) document.title = t(pt);
+    // Update language toggle button label
+    const langBtns = document.querySelectorAll('[data-lang-toggle]');
+    langBtns.forEach(b => {
+      const cur = getLang();
+      b.textContent = cur === 'zh' ? 'EN' : '中文';
+      b.setAttribute('aria-label', cur === 'zh' ? 'Switch to English' : '切换到中文');
+    });
+  }
+
   // ——— Avatar helpers (hash name -> color from warm palette)
   const AVATAR_COLORS = [
     'oklch(0.85 0.08 70)',
@@ -143,11 +539,11 @@
     const d = new Date(iso);
     if (isNaN(d)) return '';
     const days = Math.floor((Date.now() - d.getTime()) / 86400000);
-    if (days < 1) return 'today';
-    if (days < 7) return `${days}d ago`;
-    if (days < 30) return `${Math.floor(days / 7)}w ago`;
-    if (days < 365) return `${Math.floor(days / 30)}mo ago`;
-    return `${Math.floor(days / 365)}y ago`;
+    if (days < 1) return t('time.today');
+    if (days < 7) return t('time.dAgo', { n: days });
+    if (days < 30) return t('time.wAgo', { n: Math.floor(days / 7) });
+    if (days < 365) return t('time.moAgo', { n: Math.floor(days / 30) });
+    return t('time.yAgo', { n: Math.floor(days / 365) });
   }
 
   // ——— Turnstile loader (resilient: if sitekey missing, Cloudflare blocked,
@@ -202,21 +598,31 @@
     tryRender();
   }
 
-  // ——— Topnav helper (logo + links)
+  // ——— Topnav helper (logo + links + language toggle)
   // Desktop: inline link row. Mobile (≤640px): hamburger button + collapsible
   // panel. The hamburger / panel elements are always in the DOM; CSS shows
   // them only below 640px. JS just toggles aria-expanded.
   function renderTopnav(active) {
     const host = document.querySelector('[data-topnav]');
     if (!host) return;
-    const link = (href, id, label) =>
-      `<a href="${href}" class="topnav__link"${active===id?' aria-current="page"':''}>${label}</a>`;
+    const link = (href, id, key) =>
+      `<a href="${href}" class="topnav__link"${active===id?' aria-current="page"':''} data-i18n="${key}">${t(key)}</a>`;
     const links = [
-      link('index.html',       'home',        'Browse'),
-      link('rankings.html',    'rankings',    'Rankings'),
-      link('submit.html',      'submit',      'Add a teacher'),
-      link('suggestions.html', 'suggestions', 'Suggestions'),
+      link('index.html',       'home',        'nav.browse'),
+      link('rankings.html',    'rankings',    'nav.rankings'),
+      link('submit.html',      'submit',      'nav.submit'),
+      link('suggestions.html', 'suggestions', 'nav.suggestions'),
     ].join('');
+    // Language toggle — shown in THREE positions so it's always reachable:
+    // 1. Inline in the desktop link row (hidden on mobile via .topnav__links display:none)
+    // 2. Standalone in the top bar on mobile, next to the hamburger (desktop hides it)
+    // 3. Inside the mobile hamburger panel (for users who've already opened it)
+    // All three share `data-lang-toggle` and get wired to the same setLang flip.
+    const cur = getLang();
+    const langLabel = cur === 'zh' ? 'EN' : '中文';
+    const langAria  = cur === 'zh' ? 'Switch to English' : '切换到中文';
+    const langBtnInline = `<button type="button" class="topnav__lang" data-lang-toggle aria-label="${langAria}">${langLabel}</button>`;
+    const langBtnMobile = `<button type="button" class="topnav__lang topnav__lang--mobile" data-lang-toggle aria-label="${langAria}">${langLabel}</button>`;
     host.innerHTML = `
       <div class="topnav">
         <div class="topnav__inner">
@@ -230,12 +636,13 @@
             </span>
             <span class="logo__word">Rate <em>BIPH</em></span>
           </a>
-          <div class="topnav__links">${links}</div>
-          <button class="topnav__toggle" type="button" aria-label="Menu" aria-expanded="false" data-topnav-toggle>
+          <div class="topnav__links">${links}${langBtnInline}</div>
+          ${langBtnMobile}
+          <button class="topnav__toggle" type="button" data-i18n-aria-label="nav.menu" aria-label="${t('nav.menu')}" aria-expanded="false" data-topnav-toggle>
             <span></span><span></span><span></span>
           </button>
         </div>
-        <div class="topnav__panel" data-topnav-panel hidden>${links}</div>
+        <div class="topnav__panel" data-topnav-panel hidden>${links}${langBtnInline}</div>
       </div>`;
     const toggle = host.querySelector('[data-topnav-toggle]');
     const panel = host.querySelector('[data-topnav-panel]');
@@ -253,20 +660,31 @@
         });
       });
     }
+    // Wire every language toggle (top bar + mobile panel).
+    host.querySelectorAll('[data-lang-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setLang(getLang() === 'zh' ? 'en' : 'zh');
+      });
+    });
   }
 
   function renderFooter() {
     const host = document.querySelector('[data-footer]');
     if (!host) return;
     host.innerHTML = `<footer class="footer">
-      <div>Rate BIPH is student-run and independent of Beijing International Private High. Reviews are anonymous and moderated.<br/>
-      Be kind. Be honest. Be specific.</div>
+      <div data-i18n-html="footer.body">${t('footer.body')}</div>
     </footer>`;
   }
 
-  window.RB = { api, renderStars, avatarEl, initials, avatarColor, toast, relDate, mountTurnstile, renderTopnav, renderFooter };
+  window.RB = {
+    api, renderStars, avatarEl, initials, avatarColor, toast, relDate,
+    mountTurnstile, renderTopnav, renderFooter,
+    t, getLang, setLang, applyI18n,
+  };
   document.addEventListener('DOMContentLoaded', () => {
+    document.documentElement.lang = getLang() === 'zh' ? 'zh-CN' : 'en';
     renderTopnav(document.body.dataset.page);
     renderFooter();
+    applyI18n();
   });
 })();

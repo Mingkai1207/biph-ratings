@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-i18n-page-title="rank.pageTitle">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,9 +11,9 @@
   <div data-topnav></div>
 
   <main class="container container--narrow">
-    <div class="eyebrow">LEADERBOARD</div>
-    <h1 class="page-title serif">Teacher <em>rankings</em>.</h1>
-    <p class="page-lede">Sorted by student ratings. Only teachers with at least 3 reviews appear here — a single review isn't enough to rank on.</p>
+    <div class="eyebrow" data-i18n="rank.eyebrow">LEADERBOARD</div>
+    <h1 class="page-title serif" data-i18n-html="rank.headingHtml">Teacher <em>rankings</em>.</h1>
+    <p class="page-lede" data-i18n="rank.lede">Sorted by student ratings. Only teachers with at least 3 reviews appear here — a single review isn't enough to rank on.</p>
 
     <div class="ranking-controls">
       <div id="metricChips" class="chips"></div>
@@ -22,8 +22,8 @@
 
     <div id="rankingList" class="ranking-list"></div>
     <div id="rankingEmpty" class="empty" hidden>
-      <h2 class="serif">Not enough reviews yet</h2>
-      <div>Once a few teachers pick up 3+ reviews, they'll show up here.</div>
+      <h2 class="serif" data-i18n="rank.empty.heading">Not enough reviews yet</h2>
+      <div data-i18n="rank.empty.body">Once a few teachers pick up 3+ reviews, they'll show up here.</div>
     </div>
   </main>
 
@@ -33,14 +33,15 @@
   (function () {
     const MIN_REVIEWS = 3;
 
-    // For each metric: key on the teacher object, label, whether higher is "better" (just
-    // for the visual copy — the list still shows the raw number and lets the student judge).
+    // For each metric: key on the teacher object, i18n label/note keys.
+    // Labels and notes resolve through RB.t() at render time so a language
+    // toggle re-renders without re-fetching.
     const METRICS = [
-      { key: 'avg_rating',          label: 'Overall',          higherIs: 'better',  note: 'Average across all 4 metrics. The default "who\'s best overall" view.' },
-      { key: 'avg_teaching_quality',label: 'Teaching quality', higherIs: 'better',  note: 'Who students felt actually taught them the material well.' },
-      { key: 'avg_easygoingness',   label: 'Easygoing',        higherIs: 'better',  note: 'Relaxed vibe, not strict. Ranked high = chill class.' },
-      { key: 'avg_test_difficulty', label: 'Hardest tests',    higherIs: 'harder',  note: 'Higher rating = harder tests. Useful if you\'re choosing how much you want to suffer.' },
-      { key: 'avg_homework_load',   label: 'Most homework',    higherIs: 'harder',  note: 'Higher rating = heavier workload. Useful if you\'re already drowning.' },
+      { key: 'avg_rating',           labelKey: 'rank.metric.overall.label',  noteKey: 'rank.metric.overall.note'  },
+      { key: 'avg_teaching_quality', labelKey: 'rank.metric.teaching.label', noteKey: 'rank.metric.teaching.note' },
+      { key: 'avg_easygoingness',    labelKey: 'rank.metric.easy.label',     noteKey: 'rank.metric.easy.note'     },
+      { key: 'avg_test_difficulty',  labelKey: 'rank.metric.tests.label',    noteKey: 'rank.metric.tests.note'    },
+      { key: 'avg_homework_load',    labelKey: 'rank.metric.homework.label', noteKey: 'rank.metric.homework.note' },
     ];
 
     const state = { metric: METRICS[0], teachers: [] };
@@ -65,10 +66,13 @@
         const b = document.createElement('button');
         b.type = 'button';
         b.className = 'chip' + (m.key === state.metric.key ? ' chip--active' : '');
-        b.textContent = m.label;
+        b.textContent = RB.t(m.labelKey);
+        // Compare by metric key (data identity) not text — text changes between
+        // languages but the underlying chip mapping is stable.
+        b.dataset.metric = m.key;
         b.onclick = () => {
           state.metric = m;
-          [...host.children].forEach(c => c.classList.toggle('chip--active', c.textContent === m.label));
+          [...host.children].forEach(c => c.classList.toggle('chip--active', c.dataset.metric === m.key));
           render();
         };
         host.appendChild(b);
@@ -76,7 +80,7 @@
     }
 
     function render() {
-      document.getElementById('metricNote').textContent = state.metric.note;
+      document.getElementById('metricNote').textContent = RB.t(state.metric.noteKey);
       const key = state.metric.key;
       const eligible = state.teachers
         .filter(t => t.review_count >= MIN_REVIEWS && t[key] != null)
@@ -110,6 +114,7 @@
         const courses = (t.courses && t.courses.length)
           ? `<span class="ranking-row__courses">${escape(t.courses.slice(0, 2).join(' · '))}${t.courses.length > 2 ? '…' : ''}</span>`
           : '';
+        const reviewWord = t.review_count === 1 ? RB.t('rank.review') : RB.t('rank.reviews');
         row.innerHTML = `
           <div class="ranking-row__rank">
             <span class="ranking-row__num">#${displayRank}</span>
@@ -121,11 +126,17 @@
           </div>
           <div class="ranking-row__score">
             <div class="ranking-row__value">${rounded.toFixed(2)}<small>/5</small></div>
-            <div class="ranking-row__count">${t.review_count} review${t.review_count === 1 ? '' : 's'}</div>
+            <div class="ranking-row__count">${t.review_count} ${reviewWord}</div>
           </div>`;
         host.appendChild(row);
       });
     }
+
+    // Re-render chips + rows when language toggles.
+    document.addEventListener('rb:lang', () => {
+      renderChips();
+      if (state.teachers.length) render();
+    });
 
     init();
   })();

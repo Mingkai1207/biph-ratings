@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-i18n-page-title="teacher.pageTitle">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,7 +11,7 @@
   <div data-topnav></div>
 
   <main class="container container--narrow">
-    <a href="index.html" class="crumb">← Back to roster</a>
+    <a href="index.html" class="crumb" data-i18n="teacher.back">← Back to roster</a>
 
     <section class="profile-hero" id="hero">
       <div class="profile-hero__left" id="heroLeft"></div>
@@ -23,11 +23,11 @@
     <section class="panel-accent" id="reviewPanel"></section>
 
     <div class="reviews-head">
-      <h2 class="serif">What students said</h2>
-      <span class="review__date">most liked first</span>
+      <h2 class="serif" data-i18n="teacher.review.heading">What students said</h2>
+      <span class="review__date" data-i18n="teacher.review.sortLabel">most liked first</span>
     </div>
     <div id="reviewList" class="reviews-list"></div>
-    <div id="reviewEmpty" class="empty" hidden>No reviews yet. Be the first.</div>
+    <div id="reviewEmpty" class="empty" hidden data-i18n="teacher.review.empty">No reviews yet. Be the first.</div>
   </main>
 
   <div data-footer></div>
@@ -37,12 +37,16 @@
     const id = new URLSearchParams(location.search).get('id');
     if (!id) { location.href = 'index.html'; return; }
 
+    // Labels are looked up via RB.t() at render time so the toggle re-renders
+    // them. `short` is used in the per-review metric badges (cramped space).
     const METRICS = [
-      { key: 'teaching_quality', label: 'Teaching quality' },
-      { key: 'test_difficulty',  label: 'Test difficulty' },
-      { key: 'homework_load',    label: 'Homework load' },
-      { key: 'easygoingness',    label: 'Easygoingness' },
+      { key: 'teaching_quality' },
+      { key: 'test_difficulty'  },
+      { key: 'homework_load'    },
+      { key: 'easygoingness'    },
     ];
+    const metricLabel      = (k) => RB.t('teacher.metrics.' + k);
+    const metricLabelShort = (k) => RB.t('teacher.metrics.short.' + k);
 
     const state = {
       teacher: null,
@@ -54,7 +58,7 @@
       try {
         state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
       } catch (e) {
-        document.querySelector('main').innerHTML = '<div class="empty">Teacher not found.</div>';
+        document.querySelector('main').innerHTML = `<div class="empty">${RB.t('teacher.notFound')}</div>`;
         return;
       }
       renderHero();
@@ -62,6 +66,18 @@
       renderReviewPanel();
       loadReviews();
     }
+
+    // Cache last fetched review list so we can re-render on lang toggle
+    // without re-fetching.
+    let lastReviews = null;
+
+    document.addEventListener('rb:lang', () => {
+      if (!state.teacher) return;
+      renderHero();
+      renderStats();
+      renderReviewPanel();
+      if (lastReviews) renderReviews(lastReviews);
+    });
 
     function escape(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
@@ -71,7 +87,7 @@
       const hasCourses = t.courses && t.courses.length;
       const coursesLine = hasCourses
         ? `<div class="profile-hero__courses">${escape(t.courses.join(' · '))}</div>`
-        : `<button type="button" class="profile-hero__courses-add" data-add-courses>+ Add courses</button>`;
+        : `<button type="button" class="profile-hero__courses-add" data-add-courses>${RB.t('teacher.courses.add')}</button>`;
       left.innerHTML = `
         <div class="profile-hero__meta">
           <div data-avatar></div>
@@ -87,12 +103,15 @@
 
       const right = document.getElementById('heroRight');
       const avg = t.avg_rating;
+      const basedOn = (t.review_count === 1)
+        ? RB.t('teacher.basedOnSingular', { n: t.review_count })
+        : RB.t('teacher.basedOn',         { n: t.review_count });
       right.innerHTML = `
         <div class="profile-hero__big">
           ${avg != null ? avg.toFixed(2) : '—'}<small>/5</small>
         </div>
         <div data-hero-stars></div>
-        <div class="profile-hero__count">based on ${t.review_count} anonymous review${t.review_count === 1 ? '' : 's'}</div>`;
+        <div class="profile-hero__count">${basedOn}</div>`;
       RB.renderStars(right.querySelector('[data-hero-stars]'), avg || 0, { size: 22 });
     }
 
@@ -106,10 +125,10 @@
       editor.className = 'profile-hero__courses-editor';
       editor.innerHTML = `
         <input type="text" class="profile-hero__courses-input" maxlength="300"
-          placeholder="e.g. AP Calculus BC, Precalculus" />
-        <button type="button" class="btn btn--accent btn--sm" data-save-courses>Save</button>
-        <button type="button" class="btn btn--ghost btn--sm" data-cancel-courses>Cancel</button>
-        <div class="profile-hero__courses-note">Comma-separated. This locks once saved.</div>
+          placeholder="${RB.t('teacher.courses.placeholder')}" />
+        <button type="button" class="btn btn--accent btn--sm" data-save-courses>${RB.t('common.save')}</button>
+        <button type="button" class="btn btn--ghost btn--sm" data-cancel-courses>${RB.t('common.cancel')}</button>
+        <div class="profile-hero__courses-note">${RB.t('teacher.courses.note')}</div>
         <div class="profile-hero__courses-err" hidden></div>`;
       host.appendChild(editor);
       const input = editor.querySelector('input');
@@ -118,21 +137,21 @@
       const save = async () => {
         const v = input.value.trim();
         err.hidden = true;
-        if (!v) { err.textContent = 'Enter at least one course.'; err.hidden = false; return; }
+        if (!v) { err.textContent = RB.t('teacher.courses.errEmpty'); err.hidden = false; return; }
         const saveBtn = editor.querySelector('[data-save-courses]');
-        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        saveBtn.disabled = true; saveBtn.textContent = RB.t('common.saving');
         try {
           await RB.api(`/api/teachers/${encodeURIComponent(id)}/courses`, {
             method: 'POST',
             body: JSON.stringify({ courses: v }),
           });
-          RB.toast('Courses saved.');
+          RB.toast(RB.t('teacher.courses.saved'));
           state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
           renderHero();
         } catch (e) {
-          err.textContent = e.data?.detail || e.message || 'Could not save.';
+          err.textContent = e.data?.detail || e.message || RB.t('teacher.courses.errSave');
           err.hidden = false;
-          saveBtn.disabled = false; saveBtn.textContent = 'Save';
+          saveBtn.disabled = false; saveBtn.textContent = RB.t('common.save');
         }
       };
       editor.querySelector('[data-save-courses]').addEventListener('click', save);
@@ -161,14 +180,14 @@
       const metrics = METRICS.map(m => {
         const v = t['avg_' + m.key];
         return `<div class="metric">
-          <div class="metric__label">${m.label}</div>
+          <div class="metric__label">${metricLabel(m.key)}</div>
           <div class="metric__value">${v != null ? v.toFixed(2) : '—'}</div>
         </div>`;
       }).join('');
 
       el.innerHTML = `
         <div class="stats-block__left">
-          <h3 class="serif">Teaching quality distribution</h3>
+          <h3 class="serif">${RB.t('teacher.distribution')}</h3>
           ${bars}
         </div>
         <div class="stats-block__right">
@@ -188,14 +207,14 @@
 
     function renderReviewForm(panel) {
       panel.innerHTML = `
-        <h2 class="serif">Write a review</h2>
+        <h2 class="serif">${RB.t('teacher.form.heading')}</h2>
         <div class="rating-rows" id="ratingRows"></div>
         <textarea id="comment" class="textarea" rows="5"
-          placeholder="What's the class actually like? Grading, pace, personality, anything specific that'd help the next student…"></textarea>
+          placeholder="${RB.t('teacher.form.commentPlaceholder')}"></textarea>
         <div class="turnstile-slot" id="turnstile"></div>
         <div class="form-foot">
           <div id="formStatus" class="form-foot__status"></div>
-          <button id="submitBtn" class="btn btn--accent btn--lg">Post anonymously</button>
+          <button id="submitBtn" class="btn btn--accent btn--lg">${RB.t('teacher.form.submit')}</button>
         </div>`;
       renderRatingRows();
       RB.mountTurnstile(document.getElementById('turnstile'), (t) => { state.turnstileToken = t; });
@@ -209,18 +228,20 @@
       const msSince = Date.now() - created.getTime();
       const daysSince = Math.max(0, Math.floor(msSince / 86400000));
       const daysLeft = Math.max(1, cooldownDays - daysSince);
-      const whenStr = daysSince === 0 ? 'today' : daysSince === 1 ? 'yesterday' : `${daysSince} days ago`;
-      const againStr = daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`;
+      const whenStr =
+        daysSince === 0 ? RB.t('time.today') :
+        daysSince === 1 ? RB.t('time.yesterday') :
+        RB.t('time.daysAgo', { n: daysSince });
+      const againStr =
+        daysLeft === 1 ? RB.t('time.tomorrow') :
+        RB.t('time.inDays', { n: daysLeft });
 
       panel.innerHTML = `
-        <h2 class="serif">You already reviewed this teacher</h2>
-        <p class="review-notice__lede">
-          You posted ${whenStr} with a rating of <strong>${avg.toFixed(1)}/5</strong>.
-          You can post another review ${againStr}.
-        </p>
+        <h2 class="serif">${RB.t('teacher.already.heading')}</h2>
+        <p class="review-notice__lede">${RB.t('teacher.already.ledeHtml', { when: whenStr, rating: avg.toFixed(1), again: againStr })}</p>
         <div class="review-notice__stars" data-my-stars></div>
         <div class="review-notice__metrics">
-          ${METRICS.map(m => `<span class="metric-badge">${m.label.split(' ')[0]} <strong>${mine[m.key]}</strong></span>`).join('')}
+          ${METRICS.map(m => `<span class="metric-badge">${metricLabelShort(m.key)} <strong>${mine[m.key]}</strong></span>`).join('')}
         </div>
         ${mine.comment ? `<div class="review-notice__comment">${escape(mine.comment)}</div>` : ''}`;
       RB.renderStars(panel.querySelector('[data-my-stars]'), avg, { size: 28 });
@@ -234,7 +255,7 @@
         const row = document.createElement('div');
         row.className = 'rating-row';
         row.innerHTML = `
-          <div class="rating-row__label">${m.label}</div>
+          <div class="rating-row__label">${metricLabel(m.key)}</div>
           <div data-row-stars></div>`;
         host.appendChild(row);
         const rowStars = row.querySelector('[data-row-stars]');
@@ -252,6 +273,7 @@
     async function loadReviews() {
       try {
         const data = await RB.api(`/api/teachers/${encodeURIComponent(id)}/reviews?limit=200`);
+        lastReviews = data.reviews;
         renderReviews(data.reviews);
       } catch (e) {
         document.getElementById('reviewEmpty').hidden = false;
@@ -274,9 +296,9 @@
             <span data-review-stars></span>
             <span class="review__date">${RB.relDate(r.created_at)}</span>
           </div>
-          ${r.comment ? `<div class="review__body">${escape(r.comment)}</div>` : '<div class="review__body review__body--empty">No comment — rating only.</div>'}
+          ${r.comment ? `<div class="review__body">${escape(r.comment)}</div>` : `<div class="review__body review__body--empty">${RB.t('teacher.review.noComment')}</div>`}
           <div class="review__metrics">
-            ${METRICS.map(m => `<span class="metric-badge">${m.label.split(' ')[0]} <strong>${r[m.key]}</strong></span>`).join('')}
+            ${METRICS.map(m => `<span class="metric-badge">${metricLabelShort(m.key)} <strong>${r[m.key]}</strong></span>`).join('')}
           </div>
           <div class="review__votes" data-votes></div>`;
         RB.renderStars(el.querySelector('[data-review-stars]'), reviewAvg, { size: 16 });
@@ -340,7 +362,7 @@
           state.likes = prev.likes;
           state.dislikes = prev.dislikes;
           state.myVote = prev.myVote;
-          RB.toast(e.data?.message || e.message || 'Could not save your vote.');
+          RB.toast(e.data?.message || e.message || RB.t('teacher.voteFail'));
         } finally {
           state.busy = false;
           paint();
@@ -354,10 +376,10 @@
       status.className = 'form-foot__status';
       status.textContent = '';
       const missing = METRICS.find(m => !state.ratings[m.key]);
-      if (missing) { status.textContent = `Pick a rating for "${missing.label}".`; status.classList.add('form-foot__status--err'); return; }
+      if (missing) { status.textContent = RB.t('teacher.form.missing', { label: metricLabel(missing.key) }); status.classList.add('form-foot__status--err'); return; }
       const comment = document.getElementById('comment').value.trim();
       const btn = document.getElementById('submitBtn');
-      btn.disabled = true; btn.textContent = 'Posting…';
+      btn.disabled = true; btn.textContent = RB.t('teacher.form.submitting');
       try {
         await RB.api(`/api/teachers/${encodeURIComponent(id)}/reviews`, {
           method: 'POST',
@@ -367,7 +389,7 @@
             turnstile_token: state.turnstileToken,
           }),
         });
-        RB.toast('Posted. Thanks for reviewing.');
+        RB.toast(RB.t('teacher.form.posted'));
         Object.keys(state.ratings).forEach(k => state.ratings[k] = 0);
         state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
         renderHero(); renderStats(); renderReviewPanel(); loadReviews();
@@ -381,11 +403,11 @@
             return;
           } catch (_) { /* fall through */ }
         }
-        status.textContent = e.data?.message || e.message || 'Something went wrong.';
+        status.textContent = e.data?.message || e.message || RB.t('common.somethingWentWrong');
         status.classList.add('form-foot__status--err');
       } finally {
         const stillThere = document.getElementById('submitBtn');
-        if (stillThere) { stillThere.disabled = false; stillThere.textContent = 'Post anonymously'; }
+        if (stillThere) { stillThere.disabled = false; stillThere.textContent = RB.t('teacher.form.submit'); }
       }
     }
 

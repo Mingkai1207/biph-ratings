@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-i18n-page-title="sug.pageTitle">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,17 +11,18 @@
   <div data-topnav></div>
 
   <main class="container container--narrow">
-    <div class="eyebrow">IDEAS FOR THE SITE</div>
-    <h1 class="page-title serif">Suggestions <em>welcome</em>.</h1>
-    <p class="page-lede">Bug reports, missing teachers, features you want, things that feel off. Read by a student moderator. Your suggestion is private — only the admin account can see it.</p>
+    <div class="eyebrow" data-i18n="sug.eyebrow">IDEAS FOR THE SITE</div>
+    <h1 class="page-title serif" data-i18n-html="sug.headingHtml">Suggestions <em>welcome</em>.</h1>
+    <p class="page-lede" data-i18n="sug.lede">Bug reports, missing teachers, features you want, things that feel off. Read by a student moderator. Your suggestion is private — only the admin account can see it.</p>
 
     <div id="formCard" class="form-card">
       <div class="field">
         <div class="field__row">
-          <label class="field__label" for="body">Your suggestion</label>
-          <span class="field__hint">Anonymous. At least 10 characters.</span>
+          <label class="field__label" for="body" data-i18n="sug.body.label">Your suggestion</label>
+          <span class="field__hint" data-i18n="sug.body.hint">Anonymous. At least 10 characters.</span>
         </div>
         <textarea id="body" class="textarea" rows="7"
+          data-i18n-placeholder="sug.body.placeholder"
           placeholder="Be specific so we can actually act on it — what should change, what's broken, what you wish existed…"></textarea>
       </div>
 
@@ -29,17 +30,17 @@
 
       <div id="formStatus" class="form-status"></div>
       <div class="form-actions">
-        <button id="submitBtn" class="btn btn--accent btn--lg">Send suggestion</button>
-        <a href="index.html" class="btn btn--ghost btn--lg">Cancel</a>
+        <button id="submitBtn" class="btn btn--accent btn--lg" data-i18n="sug.send">Send suggestion</button>
+        <a href="index.html" class="btn btn--ghost btn--lg" data-i18n="common.cancel">Cancel</a>
       </div>
     </div>
 
     <div id="successCard" class="panel-accent" hidden>
-      <div class="panel-accent__title serif">Sent ✓</div>
-      <div class="panel-accent__sub">Thanks for writing in. The moderator will read this. Suggestions are only visible to the admin account, not to other students.</div>
+      <div class="panel-accent__title serif" data-i18n="sug.success.title">Sent ✓</div>
+      <div class="panel-accent__sub" data-i18n="sug.success.body">Thanks for writing in. The moderator will read this. Suggestions are only visible to the admin account, not to other students.</div>
       <div class="form-actions">
-        <button id="againBtn" class="btn btn--primary">Send another</button>
-        <a href="index.html" class="btn btn--ghost">Back to roster</a>
+        <button id="againBtn" class="btn btn--primary" data-i18n="sug.success.again">Send another</button>
+        <a href="index.html" class="btn btn--ghost" data-i18n="sug.success.back">Back to roster</a>
       </div>
     </div>
   </main>
@@ -55,12 +56,12 @@
       const status = document.getElementById('formStatus');
       status.className = 'form-status';
       if (body.length < 10) {
-        status.textContent = 'Write at least 10 characters so we can act on it.';
+        status.textContent = RB.t('sug.errShort');
         status.classList.add('form-status--err');
         return;
       }
       const btn = document.getElementById('submitBtn');
-      btn.disabled = true; btn.textContent = 'Sending…';
+      btn.disabled = true; btn.textContent = RB.t('sug.sending');
       try {
         await RB.api('/api/suggestions', {
           method: 'POST',
@@ -69,10 +70,10 @@
         document.getElementById('formCard').hidden = true;
         document.getElementById('successCard').hidden = false;
       } catch (e) {
-        status.textContent = e.data?.message || e.message || 'Something went wrong.';
+        status.textContent = e.data?.message || e.message || RB.t('common.somethingWentWrong');
         status.classList.add('form-status--err');
       } finally {
-        btn.disabled = false; btn.textContent = 'Send suggestion';
+        btn.disabled = false; btn.textContent = RB.t('sug.send');
       }
     }
 
