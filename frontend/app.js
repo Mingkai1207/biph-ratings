@@ -42,6 +42,9 @@
       // Relative time
       'time.today':      'today',
       'time.yesterday':  'yesterday',
+      'time.justNow':    'just now',
+      'time.mAgo':       '{n}m ago',
+      'time.hAgo':       '{n}h ago',
       'time.dAgo':       '{n}d ago',
       'time.wAgo':       '{n}w ago',
       'time.moAgo':      '{n}mo ago',
@@ -235,6 +238,9 @@
       // Relative time
       'time.today':      '今天',
       'time.yesterday':  '昨天',
+      'time.justNow':    '刚刚',
+      'time.mAgo':       '{n}分钟前',
+      'time.hAgo':       '{n}小时前',
       'time.dAgo':       '{n}天前',
       'time.wAgo':       '{n}周前',
       'time.moAgo':      '{n}个月前',
@@ -629,10 +635,17 @@
     if (!iso) return '';
     const d = new Date(iso);
     if (isNaN(d)) return '';
-    const days = Math.floor((Date.now() - d.getTime()) / 86400000);
-    if (days < 1) return t('time.today');
-    if (days < 7) return t('time.dAgo', { n: days });
-    if (days < 30) return t('time.wAgo', { n: Math.floor(days / 7) });
+    // Clamp to 0 so a client with a clock behind the server's timestamp
+    // doesn't render "-3m ago".
+    const ms = Math.max(0, Date.now() - d.getTime());
+    const mins = Math.floor(ms / 60000);
+    const hours = Math.floor(ms / 3600000);
+    const days = Math.floor(ms / 86400000);
+    if (mins < 1)   return t('time.justNow');
+    if (mins < 60)  return t('time.mAgo', { n: mins });
+    if (hours < 24) return t('time.hAgo', { n: hours });
+    if (days < 7)   return t('time.dAgo', { n: days });
+    if (days < 30)  return t('time.wAgo', { n: Math.floor(days / 7) });
     if (days < 365) return t('time.moAgo', { n: Math.floor(days / 30) });
     return t('time.yAgo', { n: Math.floor(days / 365) });
   }
