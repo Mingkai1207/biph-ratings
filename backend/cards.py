@@ -193,9 +193,11 @@ def _compose_card(
     draw.line([(content_x, rule_y), (content_x + content_w, rule_y)],
               fill=LINE, width=2)
 
-    # ─── Stats block (fixed top so everything below lines up regardless of
-    # how tall the name ended up)
-    stats_y = 720
+    # ─── Stats (left column) — anchored dynamically below the rule so
+    # the composition stays tight regardless of name height. The QR
+    # panel below vertically centers on this block, so they read as a
+    # paired row instead of stats-on-top / QR-floating-in-corner.
+    stats_y = rule_y + 70
     if rating is not None:
         big_font = _load_font(SERIF, 180)
         rating_str = f"{rating:.2f}"
@@ -215,38 +217,58 @@ def _compose_card(
         rc_text = f"based on {review_count} anonymous review{'s' if review_count != 1 else ''}"
         draw.text((content_x, stars_y + 90), rc_text,
                   font=rc_font, fill=INK_SOFT)
+        stats_bottom = stars_y + 90 + 28
     else:
         no_data_font = _load_font(SERIF, 72)
         draw.text((content_x, stats_y + 30), "No reviews yet",
                   font=no_data_font, fill=INK_MUTE)
+        stats_bottom = stats_y + 30 + 72
 
-    # ─── CTA block: WTA chip on the left (vertically centered with QR),
-    # QR pinned bottom-right. The site URL + tagline already sit in the
-    # header, so no left-of-QR caption is needed here.
+    # ─── QR panel (right column). Caption integrated INSIDE the panel at
+    # the top so the corner reads as one cohesive object and doesn't
+    # crowd the card's bottom edge. Panel is vertically centered on the
+    # stats block so the two feel paired.
     qr_size = 260
-    qr_pad = 24
-    qr_x = W - MARGIN - PAD - qr_size
-    qr_y = H - MARGIN - PAD - qr_size
-    draw.rounded_rectangle(
-        [(qr_x - qr_pad, qr_y - qr_pad),
-         (qr_x + qr_size + qr_pad, qr_y + qr_size + qr_pad)],
-        radius=18, fill=(255, 255, 255), outline=LINE, width=2,
-    )
-    qr_img = _make_qr(qr_url, box_size=11, border=0, fg=INK, bg=BG_CARD)
-    qr_img = qr_img.resize((qr_size, qr_size), Image.NEAREST)
-    img.paste(qr_img, (qr_x, qr_y), qr_img)
+    qr_pad_x = 26
+    qr_pad_top = 48     # extra top padding holds the caption
+    qr_pad_bottom = 26
+    panel_w = qr_size + 2 * qr_pad_x
+    panel_h = qr_size + qr_pad_top + qr_pad_bottom
 
-    # "Scan to read reviews" label under QR — small caption, centered on
-    # the QR card itself. Fits inside the card's bottom padding.
-    cap_font = _load_font(SANS, 22)
+    stats_center = (stats_y + stats_bottom) // 2
+    panel_top = stats_center - panel_h // 2
+    # Clamp so the panel never escapes the card's content area.
+    min_panel_top = MARGIN + PAD + 240  # below the header/identity zone
+    max_panel_bottom = H - MARGIN - PAD
+    if panel_top < min_panel_top:
+        panel_top = min_panel_top
+    if panel_top + panel_h > max_panel_bottom:
+        panel_top = max_panel_bottom - panel_h
+    panel_bottom = panel_top + panel_h
+    panel_right = W - MARGIN - PAD
+    panel_left = panel_right - panel_w
+
+    draw.rounded_rectangle(
+        [(panel_left, panel_top), (panel_right, panel_bottom)],
+        radius=20, fill=(255, 255, 255), outline=LINE, width=2,
+    )
+    # Caption at top of panel
+    cap_font = _load_font(SANS, 20)
     cap_text = "Scan to read reviews"
     cap_w = cap_font.getlength(cap_text)
-    cap_x = qr_x + (qr_size - cap_w) / 2
-    cap_y = qr_y + qr_size + qr_pad + 14
+    cap_x = panel_left + (panel_w - cap_w) / 2
+    cap_y = panel_top + 16
     draw.text((cap_x, cap_y), cap_text, font=cap_font, fill=INK_SOFT)
+    # QR below caption
+    qr_img = _make_qr(qr_url, box_size=11, border=0, fg=INK, bg=(255, 255, 255))
+    qr_img = qr_img.resize((qr_size, qr_size), Image.NEAREST)
+    qr_x = panel_left + qr_pad_x
+    qr_y = panel_top + qr_pad_top
+    img.paste(qr_img, (qr_x, qr_y), qr_img)
 
-    # WTA chip — left of QR, vertically centered with QR so the bottom
-    # zone reads as a clean two-column row.
+    # ─── WTA chip — below the stats block on the left, tied to the
+    # stats column. The horizontal constraint is now the QR panel's
+    # left edge instead of the old QR corner position.
     if wta_percent is not None and wta_count >= 3:
         chip_padx = 32
         chip_pady = 18
@@ -257,11 +279,9 @@ def _compose_card(
         pct_w = wta_num_font.getlength(pct_text)
         label_w = wta_label_font.getlength(label_text)
         chip_w = pct_w + 24 + label_w + chip_padx * 2
-        max_chip_w = qr_x - qr_pad - content_x - 20
-        # Prefer stacked-label layout if the single-line chip overflows.
+        max_chip_w = panel_left - content_x - 30
         stacked = chip_w > max_chip_w
         if stacked:
-            # "would take again" on two lines next to the %
             label_text_l1 = "would take"
             label_text_l2 = "again"
             label_font2 = _load_font(SANS_BOLD, 26)
@@ -270,8 +290,9 @@ def _compose_card(
             label_w = max(l1_w, l2_w)
             chip_w = pct_w + 20 + label_w + chip_padx * 2
         chip_h = wta_num_font.size + chip_pady * 2
-        chip_y_center = qr_y + qr_size / 2
-        chip_y = int(chip_y_center - chip_h / 2)
+        # Sit just below stats, but never below the QR panel's bottom
+        # edge (otherwise the chip drifts into empty space).
+        chip_y = min(stats_bottom + 40, panel_bottom - chip_h)
         draw.rounded_rectangle(
             [(content_x, chip_y), (content_x + chip_w, chip_y + chip_h)],
             radius=chip_h // 2, fill=ACCENT_BG,
