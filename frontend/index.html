@@ -231,13 +231,13 @@
     window.addEventListener('touchend',    onTouchEnd, { passive: true });
     window.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
-    // Desktop/tablet: 1.5x the handoff baseline (21/42/36667).
-    // Mobile (≤640, matching styles.css breakpoint): leave the original
-    // 14/28/55000 so the narrow viewport doesn't get crowded.
+    // Desktop/tablet: ~2.25x the handoff baseline (32/63/24444).
+    // Mobile (≤640, matching styles.css breakpoint): ~1.5x the baseline
+    // (21/42/36667) so the narrow viewport fills without crowding.
     var isMobile = W <= 640;
     var target = isMobile
-      ? Math.max(14, Math.min(28, Math.round(W * H / 55000)))
-      : Math.max(21, Math.min(42, Math.round(W * H / 36667)));
+      ? Math.max(21, Math.min(42, Math.round(W * H / 36667)))
+      : Math.max(32, Math.min(63, Math.round(W * H / 24444)));
 
     function makeFaller(top) {
       var side = Math.random() < 0.5 ? 'L' : 'R';
