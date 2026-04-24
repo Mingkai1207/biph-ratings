@@ -1192,3 +1192,79 @@ body[data-page="home"] .container {
   .topnav__toggle { display: none !important; }
   .topnav__panel  { display: none !important; }
 }
+
+/* ——— "Would take again" — yes/no chip group on the review form.
+   Sits between the 4 star rows and the comment textarea. Optional —
+   null value leaves both chips inactive and the question doesn't count
+   toward the teacher's %. */
+.wta-group {
+  margin: 6px 0 16px;
+  display: grid;
+  gap: 10px;
+}
+.wta-group__label {
+  font-size: 14px;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+.wta-group__chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.wta-chip {
+  appearance: none;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-card);
+  color: var(--ink-soft);
+  padding: 8px 20px;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  min-width: 88px;
+  transition: border-color 0.12s ease, color 0.12s ease,
+              background 0.12s ease, transform 0.08s ease;
+}
+.wta-chip:hover { border-color: var(--ink-soft); color: var(--ink); }
+.wta-chip:active { transform: scale(0.97); }
+.wta-chip--active {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  color: var(--bg);
+}
+.wta-chip--active:hover { color: var(--bg); border-color: var(--accent-ink); }
+
+/* "Would take again" stat block in the teacher stats panel. Gets a small
+   subtitle under the %, and a faded look when there's nothing to show yet. */
+.metric--wta { grid-template-columns: 1fr auto; align-items: start; }
+.metric--wta .metric__note {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--ink-mute);
+  margin-top: -4px;
+  letter-spacing: 0.02em;
+}
+.metric--wta-empty .metric__value { color: var(--ink-mute); }
+
+/* Review-level badge: "would take again" / "wouldn't". Same .metric-badge
+   base as the rating badges, recolored by intent. */
+.metric-badge--wta-yes {
+  background: oklch(0.92 0.06 145);
+  color: oklch(0.32 0.08 145);
+}
+.metric-badge--wta-no {
+  background: oklch(0.93 0.04 30);
+  color: oklch(0.42 0.10 30);
+}
+
+/* Home-page card: tiny "% would take again" line between subject and foot.
+   Only renders when we have ≥3 responses (see index.html). */
+.card__wta {
+  font-size: 12px;
+  color: var(--accent-ink);
+  margin-top: 6px;
+  letter-spacing: -0.005em;
+}

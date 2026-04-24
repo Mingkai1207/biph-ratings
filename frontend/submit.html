@@ -53,25 +53,35 @@
   <script src="app.js"></script>
   <script>
   (function () {
-    const state = { subject: '', turnstileToken: null };
+    const state = { subject: '', subjects: [], turnstileToken: null };
 
     async function loadSubjects() {
-      const subs = await RB.api('/api/subjects');
+      state.subjects = await RB.api('/api/subjects');
+      renderSubjectChips();
+    }
+
+    function renderSubjectChips() {
       const host = document.getElementById('subjectChips');
       host.innerHTML = '';
-      subs.forEach(s => {
+      state.subjects.forEach(s => {
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'chip';
-        b.textContent = s;
+        b.className = 'chip' + (s === state.subject ? ' chip--active' : '');
+        // Display uses RB.localizeSubject; the canonical English value is
+        // kept on data-subject so the "active" logic survives lang toggle.
+        b.dataset.subject = s;
+        b.textContent = RB.localizeSubject(s);
         b.onclick = () => {
           state.subject = s;
           document.getElementById('subjectCustom').value = '';
-          [...host.children].forEach(c => c.classList.toggle('chip--active', c.textContent === s));
+          [...host.children].forEach(c => c.classList.toggle('chip--active', c.dataset.subject === s));
         };
         host.appendChild(b);
       });
     }
+
+    // Relabel chips when the language toggles without losing the active state.
+    document.addEventListener('rb:lang', renderSubjectChips);
 
     document.getElementById('subjectCustom').addEventListener('input', (e) => {
       state.subject = e.target.value.trim();

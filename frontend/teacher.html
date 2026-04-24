@@ -51,6 +51,9 @@
     const state = {
       teacher: null,
       ratings: { teaching_quality: 0, test_difficulty: 0, homework_load: 0, easygoingness: 0 },
+      // null = reviewer hasn't answered (kept null on the wire so it doesn't
+      // count toward the teacher's %). true/false once they pick a chip.
+      wouldTakeAgain: null,
       turnstileToken: null,
     };
 
@@ -92,7 +95,7 @@
         <div class="profile-hero__meta">
           <div data-avatar></div>
           <div>
-            <div class="profile-hero__subject">${escape(t.subject || '—')}</div>
+            <div class="profile-hero__subject">${escape(RB.localizeSubject(t.subject) || '—')}</div>
             ${coursesLine}
           </div>
         </div>
@@ -185,6 +188,22 @@
         </div>`;
       }).join('');
 
+      // Would-take-again — only shows a % once we have at least one response.
+      // Otherwise we show a subdued "not enough responses yet" so the slot
+      // doesn't look empty.
+      const wtaCount = t.wta_count || 0;
+      const wtaValue = (t.wta_percent != null)
+        ? `${t.wta_percent}<small>%</small>`
+        : '—';
+      const wtaNote = wtaCount > 0
+        ? RB.t(wtaCount === 1 ? 'teacher.wta.statsCountOne' : 'teacher.wta.statsCount', { n: wtaCount })
+        : RB.t('teacher.wta.statsNone');
+      const wtaBlock = `<div class="metric metric--wta${wtaCount === 0 ? ' metric--wta-empty' : ''}">
+          <div class="metric__label">${RB.t('teacher.wta.statsLabel')}</div>
+          <div class="metric__value">${wtaValue}</div>
+          <div class="metric__note">${wtaNote}</div>
+        </div>`;
+
       el.innerHTML = `
         <div class="stats-block__left">
           <h3 class="serif">${RB.t('teacher.distribution')}</h3>
@@ -192,6 +211,7 @@
         </div>
         <div class="stats-block__right">
           ${metrics}
+          ${wtaBlock}
         </div>`;
     }
 
@@ -209,6 +229,13 @@
       panel.innerHTML = `
         <h2 class="serif">${RB.t('teacher.form.heading')}</h2>
         <div class="rating-rows" id="ratingRows"></div>
+        <div class="wta-group" id="wtaGroup">
+          <div class="wta-group__label">${RB.t('teacher.wta.question')}</div>
+          <div class="wta-group__chips">
+            <button type="button" class="wta-chip" data-wta="yes">${RB.t('teacher.wta.yes')}</button>
+            <button type="button" class="wta-chip" data-wta="no">${RB.t('teacher.wta.no')}</button>
+          </div>
+        </div>
         <textarea id="comment" class="textarea" rows="5"
           placeholder="${RB.t('teacher.form.commentPlaceholder')}"></textarea>
         <div class="turnstile-slot" id="turnstile"></div>
@@ -217,8 +244,24 @@
           <button id="submitBtn" class="btn btn--accent btn--lg">${RB.t('teacher.form.submit')}</button>
         </div>`;
       renderRatingRows();
+      renderWtaChips();
       RB.mountTurnstile(document.getElementById('turnstile'), (t) => { state.turnstileToken = t; });
       document.getElementById('submitBtn').addEventListener('click', submit);
+    }
+
+    function renderWtaChips() {
+      const group = document.getElementById('wtaGroup');
+      if (!group) return;
+      group.querySelectorAll('.wta-chip').forEach(btn => {
+        const v = btn.dataset.wta === 'yes';
+        btn.classList.toggle('wta-chip--active', state.wouldTakeAgain === v);
+        btn.setAttribute('aria-pressed', String(state.wouldTakeAgain === v));
+        btn.onclick = () => {
+          // Click the already-selected chip to clear (back to null / unanswered).
+          state.wouldTakeAgain = (state.wouldTakeAgain === v) ? null : v;
+          renderWtaChips();
+        };
+      });
     }
 
     function renderAlreadyReviewed(panel, mine) {
@@ -236,12 +279,18 @@
         daysLeft === 1 ? RB.t('time.tomorrow') :
         RB.t('time.inDays', { n: daysLeft });
 
+      const wtaBadge = (mine.would_take_again === 1 || mine.would_take_again === true)
+        ? `<span class="metric-badge metric-badge--wta-yes">${RB.t('teacher.wta.badgeYes')}</span>`
+        : (mine.would_take_again === 0 || mine.would_take_again === false)
+          ? `<span class="metric-badge metric-badge--wta-no">${RB.t('teacher.wta.badgeNo')}</span>`
+          : '';
       panel.innerHTML = `
         <h2 class="serif">${RB.t('teacher.already.heading')}</h2>
         <p class="review-notice__lede">${RB.t('teacher.already.ledeHtml', { when: whenStr, rating: avg.toFixed(1), again: againStr })}</p>
         <div class="review-notice__stars" data-my-stars></div>
         <div class="review-notice__metrics">
           ${METRICS.map(m => `<span class="metric-badge">${metricLabelShort(m.key)} <strong>${mine[m.key]}</strong></span>`).join('')}
+          ${wtaBadge}
         </div>
         ${mine.comment ? `<div class="review-notice__comment">${escape(mine.comment)}</div>` : ''}`;
       RB.renderStars(panel.querySelector('[data-my-stars]'), avg, { size: 28 });
@@ -291,6 +340,11 @@
         el.className = 'review';
         el.dataset.reviewId = r.id;
         const reviewAvg = (r.teaching_quality + r.test_difficulty + r.homework_load + r.easygoingness) / 4;
+        const wtaBadge = (r.would_take_again === 1 || r.would_take_again === true)
+          ? `<span class="metric-badge metric-badge--wta-yes">${RB.t('teacher.wta.badgeYes')}</span>`
+          : (r.would_take_again === 0 || r.would_take_again === false)
+            ? `<span class="metric-badge metric-badge--wta-no">${RB.t('teacher.wta.badgeNo')}</span>`
+            : '';
         el.innerHTML = `
           <div class="review__top">
             <span data-review-stars></span>
@@ -299,6 +353,7 @@
           ${r.comment ? `<div class="review__body">${escape(r.comment)}</div>` : `<div class="review__body review__body--empty">${RB.t('teacher.review.noComment')}</div>`}
           <div class="review__metrics">
             ${METRICS.map(m => `<span class="metric-badge">${metricLabelShort(m.key)} <strong>${r[m.key]}</strong></span>`).join('')}
+            ${wtaBadge}
           </div>
           <div class="review__votes" data-votes></div>`;
         RB.renderStars(el.querySelector('[data-review-stars]'), reviewAvg, { size: 16 });
@@ -385,12 +440,14 @@
           method: 'POST',
           body: JSON.stringify({
             ...state.ratings,
+            would_take_again: state.wouldTakeAgain,
             comment: comment || null,
             turnstile_token: state.turnstileToken,
           }),
         });
         RB.toast(RB.t('teacher.form.posted'));
         Object.keys(state.ratings).forEach(k => state.ratings[k] = 0);
+        state.wouldTakeAgain = null;
         state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
         renderHero(); renderStats(); renderReviewPanel(); loadReviews();
       } catch (e) {

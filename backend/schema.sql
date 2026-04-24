@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS reviews (
   test_difficulty    INTEGER NOT NULL CHECK (test_difficulty  BETWEEN 1 AND 5),
   homework_load      INTEGER NOT NULL CHECK (homework_load    BETWEEN 1 AND 5),
   easygoingness      INTEGER NOT NULL CHECK (easygoingness    BETWEEN 1 AND 5),
+  -- Nullable: older imported reviews + reviewers who skip the question don't
+  -- pollute the yes/no count. 1 = would take again, 0 = wouldn't.
+  would_take_again   INTEGER CHECK (would_take_again IN (0, 1)),
   comment            TEXT,
   created_at         TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
   ip_hash            TEXT,

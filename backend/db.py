@@ -16,6 +16,7 @@ def init_db():
     for table, column, ctype in (
         ("teachers", "courses", "TEXT"),
         ("teacher_submissions", "courses", "TEXT"),
+        ("reviews", "would_take_again", "INTEGER CHECK (would_take_again IN (0, 1))"),
     ):
         try:
             conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ctype}")

@@ -65,6 +65,9 @@ class ReviewIn(BaseModel):
     test_difficulty: Rating
     homework_load: Rating
     easygoingness: Rating
+    # Optional yes/no: null = reviewer skipped the question, so it won't count
+    # toward the teacher's % (matches RMP behavior where this is a separate stat).
+    would_take_again: Optional[bool] = None
     comment: Optional[str] = None
     turnstile_token: Optional[str] = None
 
@@ -122,6 +125,11 @@ def teacher_row_to_dict(row):
     metric_avgs = [row["avg_tq"], row["avg_td"], row["avg_hl"], row["avg_eg"]]
     present = [v for v in metric_avgs if v is not None]
     overall = round(sum(present) / len(present), 2) if present else None
+    # "Would take again": only computed from reviews where the reviewer
+    # actually answered. wta_count = how many yes-or-no answers we have.
+    wta_count = row["wta_count"] if "wta_count" in row.keys() else 0
+    wta_yes = row["wta_yes"] if "wta_yes" in row.keys() else 0
+    wta_percent = round(100.0 * wta_yes / wta_count) if wta_count else None
     return {
         "id": row["id"],
         "name": row["name"],
@@ -133,6 +141,8 @@ def teacher_row_to_dict(row):
         "avg_homework_load": round(row["avg_hl"], 2) if row["avg_hl"] is not None else None,
         "avg_easygoingness": round(row["avg_eg"], 2) if row["avg_eg"] is not None else None,
         "review_count": row["review_count"],
+        "wta_percent": wta_percent,
+        "wta_count": wta_count,
     }
 
 
@@ -143,7 +153,9 @@ TEACHER_STATS_SELECT = """
       AVG(CASE WHEN r.is_visible = 1 THEN r.test_difficulty  END) AS avg_td,
       AVG(CASE WHEN r.is_visible = 1 THEN r.homework_load    END) AS avg_hl,
       AVG(CASE WHEN r.is_visible = 1 THEN r.easygoingness    END) AS avg_eg,
-      COALESCE(SUM(CASE WHEN r.is_visible = 1 THEN 1 ELSE 0 END), 0) AS review_count
+      COALESCE(SUM(CASE WHEN r.is_visible = 1 THEN 1 ELSE 0 END), 0) AS review_count,
+      COALESCE(SUM(CASE WHEN r.is_visible = 1 AND r.would_take_again IS NOT NULL THEN 1 ELSE 0 END), 0) AS wta_count,
+      COALESCE(SUM(CASE WHEN r.is_visible = 1 AND r.would_take_again = 1 THEN 1 ELSE 0 END), 0) AS wta_yes
     FROM teachers t
     LEFT JOIN reviews r ON r.teacher_id = t.id
     WHERE t.is_visible = 1
@@ -205,7 +217,7 @@ def get_teacher(teacher_id: str, request: Request):
         # it's fine to show the rating back to them (they wrote it).
         my_review_row = conn.execute(
             """SELECT teaching_quality, test_difficulty, homework_load, easygoingness,
-                      comment, created_at
+                      would_take_again, comment, created_at
                FROM reviews
                WHERE teacher_id = ? AND ip_hash = ? AND created_at > ?
                ORDER BY created_at DESC
@@ -240,7 +252,7 @@ def list_reviews(
         # back with NULL counts that we COALESCE to 0.
         rows = conn.execute(
             """SELECT r.id, r.teaching_quality, r.test_difficulty, r.homework_load, r.easygoingness,
-                      r.comment, r.created_at,
+                      r.would_take_again, r.comment, r.created_at,
                       COALESCE(v.likes, 0) AS likes,
                       COALESCE(v.dislikes, 0) AS dislikes,
                       mv.vote AS my_vote
@@ -325,16 +337,19 @@ def post_review(teacher_id: str, body: ReviewIn, request: Request):
     enforce_rate_limit(iph, teacher_id, comment)
 
     review_id = str(uuid.uuid4())
+    # None => unanswered; bool => 0/1. Keeping null in the DB so unanswered
+    # doesn't count toward the % — matches the CHECK constraint on the column.
+    wta = None if body.would_take_again is None else (1 if body.would_take_again else 0)
     with get_conn() as conn:
         conn.execute(
             """INSERT INTO reviews
                (id, teacher_id, teaching_quality, test_difficulty, homework_load, easygoingness,
-                comment, ip_hash, source)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'user')""",
+                would_take_again, comment, ip_hash, source)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'user')""",
             (
                 review_id, teacher_id,
                 body.teaching_quality, body.test_difficulty, body.homework_load, body.easygoingness,
-                comment, iph,
+                wta, comment, iph,
             ),
         )
     return {"ok": True, "id": review_id}

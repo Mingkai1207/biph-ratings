@@ -70,6 +70,7 @@
       'home.card.reviews':        'reviews',
       'home.cursorHint':          'drag your cursor',
       'home.errLoading':          'Could not load teachers: {msg}',
+      'home.card.wta':            '{n}% would take again',
 
       // Teacher detail
       'teacher.pageTitle':        'Rate BIPH — teacher profile',
@@ -105,6 +106,16 @@
       'teacher.already.heading':     'You already reviewed this teacher',
       'teacher.already.ledeHtml':    'You posted {when} with a rating of <strong>{rating}/5</strong>. You can post another review {again}.',
       'teacher.voteFail':            'Could not save your vote.',
+      'teacher.wta.question':        'Would you take this teacher again?',
+      'teacher.wta.yes':             'Yes',
+      'teacher.wta.no':              'No',
+      'teacher.wta.skip':            'Skip',
+      'teacher.wta.statsLabel':      'Would take again',
+      'teacher.wta.statsCount':      '{n} said',
+      'teacher.wta.statsCountOne':   '{n} said',
+      'teacher.wta.statsNone':       'Not enough responses yet',
+      'teacher.wta.badgeYes':        'Would take again',
+      'teacher.wta.badgeNo':         "Wouldn't take again",
 
       // Rankings
       'rank.pageTitle':           'Rate BIPH — rankings',
@@ -236,6 +247,7 @@
       'home.card.reviews':        '条评价',
       'home.cursorHint':          '拖动你的鼠标',
       'home.errLoading':          '加载失败：{msg}',
+      'home.card.wta':            '{n}% 愿意再选',
 
       // Teacher detail
       'teacher.pageTitle':        'Rate BIPH — 老师主页',
@@ -271,6 +283,16 @@
       'teacher.already.heading':     '你已经评价过这位老师',
       'teacher.already.ledeHtml':    '你在 {when} 给出了 <strong>{rating}/5</strong> 的评分。{again}可以再发一条评价。',
       'teacher.voteFail':            '点赞/点踩保存失败。',
+      'teacher.wta.question':        '你愿意再选这位老师的课吗？',
+      'teacher.wta.yes':             '愿意',
+      'teacher.wta.no':              '不愿意',
+      'teacher.wta.skip':            '跳过',
+      'teacher.wta.statsLabel':      '愿意再选',
+      'teacher.wta.statsCount':      '{n} 人回答',
+      'teacher.wta.statsCountOne':   '{n} 人回答',
+      'teacher.wta.statsNone':       '回答还不够',
+      'teacher.wta.badgeYes':        '愿意再选',
+      'teacher.wta.badgeNo':         '不会再选',
 
       // Rankings
       'rank.pageTitle':           'Rate BIPH — 排行榜',
@@ -363,6 +385,43 @@
       'admin.hide.toast':    '评价已隐藏',
     },
   };
+
+  // Subject labels are stored in the DB in English (e.g. "Math", "Chemistry").
+  // We translate only for display, never on the wire — filter params, teacher
+  // submissions, and admin views all keep the English value so the DB stays
+  // canonical. Subjects NOT in this map (user-typed or new additions) fall
+  // through untranslated, which is the correct behavior.
+  const SUBJECT_I18N = {
+    zh: {
+      'Arts':                  '艺术',
+      'Arts/Art History':      '艺术 / 艺术史',
+      'Band':                  '乐队',
+      'Biology':               '生物',
+      'Chemistry':             '化学',
+      'Chinese':               '中文',
+      'Choir':                 '合唱',
+      'Computer Science':      '计算机科学',
+      'Dean':                  '教务',
+      'Drama':                 '戏剧',
+      'Economics':             '经济',
+      'English':               '英语',
+      'Environmental Science': '环境科学',
+      'History':               '历史',
+      'Math':                  '数学',
+      'Other':                 '其他',
+      'Physics':               '物理',
+      'STEM':                  'STEM',
+      'Sports':                '体育',
+      'Statistics':            '统计',
+    },
+  };
+  function localizeSubject(s) {
+    if (!s) return s;
+    const lang = getLang();
+    if (lang === 'en') return s;
+    const map = SUBJECT_I18N[lang];
+    return (map && map[s]) || s;
+  }
 
   function getLang() {
     const v = (typeof localStorage !== 'undefined' && localStorage.getItem('rb.lang')) || '';
@@ -680,7 +739,7 @@
   window.RB = {
     api, renderStars, avatarEl, initials, avatarColor, toast, relDate,
     mountTurnstile, renderTopnav, renderFooter,
-    t, getLang, setLang, applyI18n,
+    t, getLang, setLang, applyI18n, localizeSubject,
   };
   document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.lang = getLang() === 'zh' ? 'zh-CN' : 'en';

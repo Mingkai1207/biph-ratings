@@ -70,8 +70,10 @@
       state.subjects.forEach(s => {
         const b = document.createElement('button');
         b.className = 'chip' + (s === state.subject ? ' chip--active' : '');
-        // Only the 'All' chip is translated. Subject names are user content.
-        b.textContent = s === 'All' ? RB.t('home.chips.all') : s;
+        // 'All' is translated via i18n; known English subjects pass through
+        // RB.localizeSubject (user-typed ones fall through untranslated).
+        // The filter value on state.subject stays English either way.
+        b.textContent = s === 'All' ? RB.t('home.chips.all') : RB.localizeSubject(s);
         b.onclick = () => { state.subject = s; renderChips(); loadTeachers(); };
         chipsHost.appendChild(b);
       });
@@ -124,6 +126,11 @@
           ? escape(firstCourse)
           : (avg != null ? RB.t('home.card.overall') : RB.t('home.card.noReviews'));
         const reviewWord = t.review_count === 1 ? RB.t('home.card.review') : RB.t('home.card.reviews');
+        // Only show the %-would-take-again line once we have at least 3
+        // responses — a single "yes" showing 100% is misleading.
+        const wtaLine = (t.wta_count >= 3 && t.wta_percent != null)
+          ? `<div class="card__wta">${RB.t('home.card.wta', { n: t.wta_percent })}</div>`
+          : '';
         card.innerHTML = `
           <div class="card__top">
             <div data-avatar></div>
@@ -134,8 +141,9 @@
           </div>
           <div>
             <div class="card__name">${escape(t.name)}</div>
-            <div class="card__subject">${escape(t.subject || '—')}</div>
+            <div class="card__subject">${escape(RB.localizeSubject(t.subject) || '—')}</div>
           </div>
+          ${wtaLine}
           <div class="card__foot">
             <span data-stars></span>
             <span class="review__date">${footMeta}</span>
