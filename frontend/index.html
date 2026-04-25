@@ -246,9 +246,14 @@
 
     function renderSmartResponse(resp) {
       const lang = (RB.getLang && RB.getLang()) === 'zh' ? 'zh' : 'en';
-      const explain = lang === 'zh' ? resp.explanation_zh : resp.explanation_en;
-      const prefix = resp.fallback ? RB.t('home.smart.fallback') + ' ' : '';
-      showSmartBanner(prefix + explain);
+      // When the backend falls back, it already returns a "smart search
+      // unavailable" message in both languages — use the localized frontend
+      // copy instead so we get one clean sentence, not two saying the same
+      // thing back to back.
+      const explain = resp.fallback
+        ? RB.t('home.smart.fallback')
+        : (lang === 'zh' ? resp.explanation_zh : resp.explanation_en);
+      showSmartBanner(explain);
       if (!resp.teachers || !resp.teachers.length) {
         empty.hidden = false;
         empty.textContent = RB.t('home.smart.empty');
