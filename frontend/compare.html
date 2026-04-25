@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en" data-i18n-page-title="compare.pageTitle">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rate BIPH — compare teachers</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
+</head>
+<body data-page="compare">
+  <div data-topnav></div>
+
+  <main class="container container--narrow">
+    <div class="eyebrow" data-i18n="compare.eyebrow">SIDE BY SIDE</div>
+    <h1 class="page-title serif" data-i18n-html="compare.headingHtml">Compare two <em>teachers</em>.</h1>
+    <p class="page-lede" data-i18n="compare.lede">Picking between two teachers for the same course? Stack their stats next to each other and decide.</p>
+
+    <div class="compare-pickers">
+      <div class="compare-picker">
+        <label for="selectA" class="compare-picker__label" data-i18n="compare.pickA">Teacher A</label>
+        <select id="selectA" class="compare-picker__select"></select>
+      </div>
+      <div class="compare-picker">
+        <label for="selectB" class="compare-picker__label" data-i18n="compare.pickB">Teacher B</label>
+        <select id="selectB" class="compare-picker__select"></select>
+      </div>
+    </div>
+
+    <div id="compareResult"></div>
+  </main>
+
+  <div data-footer></div>
+  <script src="app.js"></script>
+  <script>
+  (function () {
+    // 4 metrics in the same display order as teacher.html so a student
+    // skimming both pages doesn't have to remember a new ordering.
+    const METRICS = [
+      { key: 'teaching_quality' },
+      { key: 'test_difficulty'  },
+      { key: 'homework_load'    },
+      { key: 'easygoingness'    },
+    ];
+
+    const state = { teachers: [], a: null, b: null };
+
+    function escape(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+    async function init() {
+      try {
+        state.teachers = await RB.api('/api/teachers');
+      } catch (e) {
+        document.getElementById('compareResult').innerHTML =
+          `<div class="empty">${RB.t('common.loadError') || 'Could not load teachers.'}</div>`;
+        return;
+      }
+      // Alphabetical so picking is predictable. Stable sort across renders.
+      state.teachers.sort((x, y) => x.name.localeCompare(y.name));
+
+      // Hydrate from URL so a shared `compare.html?a=ID&b=ID` link lands ready.
+      const params = new URLSearchParams(location.search);
+      state.a = params.get('a') || null;
+      state.b = params.get('b') || null;
+
+      renderPickers();
+      render();
+    }
+
+    function renderPickers() {
+      const placeholder = `<option value="">${RB.t('compare.placeholder')}</option>`;
+      const options = state.teachers.map(t => {
+        const subj = t.subject ? ` · ${escape(t.subject)}` : '';
+        return `<option value="${escape(t.id)}">${escape(t.name)}${subj}</option>`;
+      }).join('');
+
+      const sa = document.getElementById('selectA');
+      const sb = document.getElementById('selectB');
+      sa.innerHTML = placeholder + options;
+      sb.innerHTML = placeholder + options;
+      if (state.a) sa.value = state.a;
+      if (state.b) sb.value = state.b;
+
+      sa.onchange = () => { state.a = sa.value || null; syncUrl(); render(); };
+      sb.onchange = () => { state.b = sb.value || null; syncUrl(); render(); };
+    }
+
+    function syncUrl() {
+      // Replace, not push, so the back button still goes to wherever the user
+      // came from rather than walking through every dropdown change.
+      const u = new URL(location.href);
+      if (state.a) u.searchParams.set('a', state.a); else u.searchParams.delete('a');
+      if (state.b) u.searchParams.set('b', state.b); else u.searchParams.delete('b');
+      history.replaceState(null, '', u.toString());
+    }
+
+    function findTeacher(id) {
+      return state.teachers.find(t => t.id === id) || null;
+    }
+
+    function render() {
+      const host = document.getElementById('compareResult');
+      const a = state.a ? findTeacher(state.a) : null;
+      const b = state.b ? findTeacher(state.b) : null;
+
+      if (!a || !b) {
+        host.innerHTML = `<div class="compare-empty">${escape(RB.t('compare.empty'))}</div>`;
+        return;
+      }
+      if (a.id === b.id) {
+        host.innerHTML = `<div class="compare-empty">${escape(RB.t('compare.same'))}</div>`;
+        return;
+      }
+
+      host.innerHTML = `
+        <div class="compare-grid">
+          ${renderHeaderCard(a)}
+          ${renderHeaderCard(b)}
+        </div>
+        <div class="compare-rows">
+          ${renderRow(RB.t('compare.row.overall'), a.avg_rating, b.avg_rating, 2)}
+          ${METRICS.map(m =>
+            renderRow(RB.t('teacher.metrics.' + m.key), a['avg_' + m.key], b['avg_' + m.key], 2)
+          ).join('')}
+          ${renderRow(RB.t('compare.row.wta'),
+                      a.wta_percent, b.wta_percent, 0, '%')}
+          ${renderRow(RB.t('compare.row.reviews'),
+                      a.review_count, b.review_count, 0)}
+        </div>`;
+
+      // Render star rows for the two header cards (uses the shared widget so
+      // half-stars and the empty state look identical to the rest of the site).
+      host.querySelectorAll('[data-stars]').forEach(el => {
+        RB.renderStars(el, parseFloat(el.dataset.stars) || 0, { size: 20 });
+      });
+    }
+
+    function renderHeaderCard(t) {
+      const overall = t.avg_rating != null ? t.avg_rating.toFixed(2) : '—';
+      const reviewWord = t.review_count === 1
+        ? (RB.t('rank.review')) : (RB.t('rank.reviews'));
+      const subj = t.subject ? escape(t.subject) : '—';
+      return `
+        <div class="compare-col">
+          <div class="compare-col__name serif">${escape(t.name)}</div>
+          <div class="compare-col__sub">${subj}</div>
+          <div class="compare-col__stars" data-stars="${t.avg_rating || 0}"></div>
+          <div class="compare-col__overall">
+            <span class="compare-col__num">${overall}</span><small>/5</small>
+            <span class="compare-col__count">${t.review_count} ${reviewWord}</span>
+          </div>
+          <a class="compare-col__link" href="teacher.html?id=${encodeURIComponent(t.id)}"
+             data-i18n="compare.viewProfile">View full profile →</a>
+        </div>`;
+    }
+
+    // a, b: numeric values (or null). decimals: how many to show. suffix: '%' or ''.
+    // We bold the larger value purely as visual contrast — no claim that
+    // bigger = "better", since that depends on the metric (higher
+    // teaching_quality is good, higher homework_load is more work).
+    function renderRow(label, a, b, decimals, suffix) {
+      const fmt = (v) => v == null
+        ? RB.t('compare.notEnough')
+        : (decimals ? v.toFixed(decimals) : Math.round(v)) + (suffix || '');
+      const aTxt = fmt(a);
+      const bTxt = fmt(b);
+      let aCls = '', bCls = '';
+      if (a != null && b != null) {
+        if (a > b) aCls = 'compare-row__val--high', bCls = 'compare-row__val--low';
+        else if (b > a) bCls = 'compare-row__val--high', aCls = 'compare-row__val--low';
+      }
+      return `
+        <div class="compare-row">
+          <span class="compare-row__label">${escape(label)}</span>
+          <span class="compare-row__val ${aCls}">${aTxt}</span>
+          <span class="compare-row__val ${bCls}">${bTxt}</span>
+        </div>`;
+    }
+
+    document.addEventListener('rb:lang', () => {
+      // Re-render placeholders + result text in the new language without
+      // re-fetching teachers.
+      renderPickers();
+      render();
+    });
+
+    init();
+  })();
+  </script>
+</body>
+</html>

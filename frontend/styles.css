@@ -1046,6 +1046,128 @@ body[data-page="home"] .container {
   user-select: none;
 }
 
+/* ——— Compare page (two-teacher side-by-side) */
+.compare-pickers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.compare-picker__label {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.compare-picker__select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--ink);
+  font-family: inherit;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+.compare-picker__select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.compare-empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--ink-mute);
+  background: var(--bg-card);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+}
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.compare-col {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.compare-col__name {
+  font-size: 24px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.compare-col__sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.compare-col__stars { margin: 4px 0 2px; }
+.compare-col__overall {
+  display: flex; align-items: baseline; gap: 10px;
+}
+.compare-col__num {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  color: var(--accent-ink);
+  letter-spacing: -0.02em;
+}
+.compare-col__overall small { color: var(--ink-mute); font-size: 13px; }
+.compare-col__count { font-size: 12px; color: var(--ink-mute); margin-left: auto; }
+.compare-col__link {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--accent-ink);
+  text-decoration: none;
+  align-self: flex-start;
+}
+.compare-col__link:hover { text-decoration: underline; }
+.compare-rows {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.compare-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 22px;
+}
+.compare-row + .compare-row { border-top: 1px dashed var(--line); }
+.compare-row__label {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.compare-row__val {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  text-align: right;
+}
+/* The higher value gets full accent-ink color; the lower one fades. Visual
+   contrast only — does not imply which is "better" for that metric. */
+.compare-row__val--high { color: var(--accent-ink); font-weight: 500; }
+.compare-row__val--low  { color: var(--ink-mute); }
+
+@media (max-width: 640px) {
+  .compare-pickers { grid-template-columns: 1fr; }
+  .compare-grid    { grid-template-columns: 1fr; }
+  .compare-row     { grid-template-columns: 1fr 1fr 1fr; padding: 12px 16px; gap: 8px; }
+  .compare-row__val { font-size: 18px; }
+}
+
 /* ——— Star canvas (full-page falling stars + constellation + cursor crown)
    Replaces the old .rb-trail DOM approach. One fixed <canvas> pinned to the
    viewport, animation driven by a single RAF loop in index.html. Script mount

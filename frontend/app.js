@@ -34,6 +34,7 @@
       // Nav
       'nav.browse':      'Browse',
       'nav.rankings':    'Rankings',
+      'nav.compare':     'Compare',
       'nav.submit':      'Add a teacher',
       'nav.suggestions': 'Suggestions',
       'nav.menu':        'Menu',
@@ -156,6 +157,22 @@
       'rank.metric.homework.label': 'Most homework',
       'rank.metric.homework.note':  "Higher rating = heavier workload. Useful if you're already drowning.",
 
+      // Compare
+      'compare.pageTitle':   'Rate BIPH — compare teachers',
+      'compare.eyebrow':     'SIDE BY SIDE',
+      'compare.headingHtml': 'Compare two <em>teachers</em>.',
+      'compare.lede':        "Picking between two teachers for the same course? Stack their stats next to each other and decide.",
+      'compare.pickA':       'Teacher A',
+      'compare.pickB':       'Teacher B',
+      'compare.placeholder': 'Pick a teacher…',
+      'compare.viewProfile': 'View full profile →',
+      'compare.empty':       'Pick two teachers above to see them side by side.',
+      'compare.same':        'Pick two different teachers.',
+      'compare.row.overall': 'Overall',
+      'compare.row.reviews': 'Reviews',
+      'compare.row.wta':     'Would take again',
+      'compare.notEnough':   '—',
+
       // Submit
       'sub.pageTitle':       'Rate BIPH — add a teacher',
       'sub.eyebrow':         "CAN'T FIND SOMEONE?",
@@ -230,6 +247,7 @@
       // Nav
       'nav.browse':      '浏览',
       'nav.rankings':    '排行榜',
+      'nav.compare':     '对比',
       'nav.submit':      '添加老师',
       'nav.suggestions': '建议',
       'nav.menu':        '菜单',
@@ -351,6 +369,22 @@
       'rank.metric.tests.note':     '评分越高 = 考试越难。如果你想选个虐自己的程度，可以参考。',
       'rank.metric.homework.label': '作业最多',
       'rank.metric.homework.note':  '评分越高 = 作业越重。如果你已经被作业淹没，可以参考。',
+
+      // Compare
+      'compare.pageTitle':   'Rate BIPH — 对比老师',
+      'compare.eyebrow':     '左右对比',
+      'compare.headingHtml': '对比两位<em>老师</em>。',
+      'compare.lede':        '在同一门课的两位老师之间纠结？把他们的数据放在一起，自己判断。',
+      'compare.pickA':       '老师 A',
+      'compare.pickB':       '老师 B',
+      'compare.placeholder': '选择一位老师…',
+      'compare.viewProfile': '查看完整资料 →',
+      'compare.empty':       '请在上方选择两位老师，即可对比查看。',
+      'compare.same':        '请选择两位不同的老师。',
+      'compare.row.overall': '总评',
+      'compare.row.reviews': '评价数',
+      'compare.row.wta':     '愿意再选',
+      'compare.notEnough':   '—',
 
       // Submit
       'sub.pageTitle':       'Rate BIPH — 添加老师',
@@ -714,6 +748,7 @@
     const links = [
       link('index.html',       'home',        'nav.browse'),
       link('rankings.html',    'rankings',    'nav.rankings'),
+      link('compare.html',     'compare',     'nav.compare'),
       link('submit.html',      'submit',      'nav.submit'),
       link('suggestions.html', 'suggestions', 'nav.suggestions'),
     ].join('');
