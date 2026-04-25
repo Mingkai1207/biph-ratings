@@ -669,6 +669,20 @@ def admin_reopen_suggestion(sug_id: str, authorization: Optional[str] = Header(d
     return {"ok": True}
 
 
+@app.post("/api/admin/sync-base44")
+def admin_sync_base44(authorization: Optional[str] = Header(default=None)):
+    """One-shot pull from the base44 reference site to pick up reviews
+    students still post there. Idempotent via legacy_id, so re-running is
+    safe — only new rows get inserted. Returns before/after counts so the
+    caller can see what changed."""
+    require_admin(authorization)
+    from .seed import sync_from_base44
+    try:
+        return sync_from_base44()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"base44 sync failed: {e}")
+
+
 # ——— Static frontend (single-origin hosting, no CORS headache for v1)
 if FRONTEND_DIR.is_dir():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
