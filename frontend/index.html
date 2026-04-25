@@ -30,17 +30,23 @@
             <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
           </svg>
           <input id="q" data-i18n-placeholder="home.search.placeholder" placeholder="Teacher name…" autocomplete="off" />
+          <!-- Smart search lives inside the bar as a peer to Go: same input,
+               two submit modes. Icon-only keeps the bar compact; the editorial
+               hint below the bar explains what it does. -->
+          <button class="searchbar__smart" type="button" id="smartBtn"
+                  data-i18n-aria-label="home.search.smartAria"
+                  data-i18n-title="home.search.smartHint"
+                  aria-label="Ask in plain English"
+                  title="Ask in plain English: 'best math teacher', 'easiest tests', 'who gives the most homework'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2l1.6 4.4L18 8l-4.4 1.6L12 14l-1.6-4.4L6 8l4.4-1.6L12 2zm6.5 11l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6zM5.5 14l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7L5.5 14z"/>
+            </svg>
+          </button>
           <button class="btn btn--primary" type="submit" data-i18n="home.search.go">Go</button>
         </form>
-        <!-- Smart search lives below the bar so it reads as a distinct
-             affordance, not a tertiary button. Stays visible on mobile. -->
-        <button type="button" class="smart-cta" id="smartBtn"
-                data-i18n-title="home.search.smartHint"
-                title="Ask in plain English: 'best math teacher', 'easiest tests', 'who gives the most homework'">
-          <span class="smart-cta__star">✨</span>
-          <span class="smart-cta__label" data-i18n="home.search.smart">Smart search</span>
-          <span class="smart-cta__hint" data-i18n="home.search.smartHint">Ask in plain English</span>
-        </button>
+        <p class="hero__smart-hint serif" data-i18n-html="home.search.smartHintHtml">
+          <em>Or just ask:</em> <span class="hero__smart-hint__eg">"best math teacher"</span> · <span class="hero__smart-hint__eg">"easiest tests"</span> · <span class="hero__smart-hint__eg">"who gives the most homework"</span>
+        </p>
       </div>
     </section>
 
