@@ -287,7 +287,7 @@
           .map(function (s) { return { s: s, d: Math.hypot(s.x - mouse.x, s.y - mouse.y) }; })
           .filter(function (p) { return p.d < LINE_R; })
           .sort(function (a, b) { return a.d - b.d; })
-          .slice(0, 3);
+          .slice(0, 6);
         ctx.strokeStyle = LINE_COL; ctx.lineWidth = 1;
         for (var j = 0; j < near.length; j++) {
           ctx.globalAlpha = (1 - near[j].d / LINE_R) * 0.6;
