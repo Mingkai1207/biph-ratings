@@ -57,9 +57,21 @@ CREATE TABLE IF NOT EXISTS review_votes (
   PRIMARY KEY (review_id, ip_hash)
 );
 
+-- AI smart-search audit + rate limit. We log every parsed search so we can
+-- (a) cap per-IP daily volume against the Groq free tier and (b) review
+-- which queries actually got asked when tuning the system prompt.
+CREATE TABLE IF NOT EXISTS ai_search_log (
+  id          TEXT PRIMARY KEY,
+  ip_hash     TEXT,
+  query       TEXT NOT NULL,
+  parsed      TEXT,           -- JSON of the structured filter, NULL if Groq failed
+  created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_reviews_teacher_created ON reviews(teacher_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_teachers_name ON teachers(name);
 CREATE INDEX IF NOT EXISTS idx_teachers_subject ON teachers(subject);
 CREATE INDEX IF NOT EXISTS idx_submissions_status ON teacher_submissions(status);
 CREATE INDEX IF NOT EXISTS idx_suggestions_resolved_created ON suggestions(is_resolved, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_review_votes_review ON review_votes(review_id);
+CREATE INDEX IF NOT EXISTS idx_ai_search_iph_created ON ai_search_log(ip_hash, created_at DESC);

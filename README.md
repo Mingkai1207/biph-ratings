@@ -102,8 +102,11 @@ gh repo create Mingkai1207/biph-ratings --public --source=. --push
    | `IP_HASH_SALT` | another long random string |
    | `ALLOWED_ORIGIN` | `https://ratebiph.com` |
    | `BIPH_DB_PATH` | `/data/biph.db` |
+   | `GROQ_API_KEY` | (optional — enables ✨ Smart search) |
 
 4. **Settings → Volumes → New Volume** → mount path `/data`, size `1 GB`. This keeps the SQLite DB across deploys.
+
+   To enable smart search, sign up at [console.groq.com](https://console.groq.com), create a free API key, and paste it as `GROQ_API_KEY`. The free tier (1000 req/day on Llama 3.3 70B as of 2026) is plenty. The site degrades to keyword search if the key is missing or Groq is down.
 
 5. Edit `frontend/config.js` and push — set `TURNSTILE_SITEKEY` to the real site key. `API_BASE` stays empty (same-origin).
 

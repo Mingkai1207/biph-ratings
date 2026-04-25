@@ -197,6 +197,47 @@ def list_teachers(
     return [teacher_row_to_dict(r) for r in rows]
 
 
+class AISearchIn(BaseModel):
+    query: str = Field(min_length=2, max_length=200)
+
+
+@app.post("/api/search")
+def ai_search(payload: AISearchIn, request: Request):
+    """Smart search: parse natural language → structured filter → SQL.
+    Falls back to keyword search if Groq is unreachable so the user always
+    gets *something* back rather than a 500."""
+    from . import aisearch
+
+    iph = hash_ip(client_ip(request))
+    aisearch.enforce_ai_rate_limit(iph)
+
+    try:
+        parsed = aisearch.parse_query(payload.query)
+        teachers = aisearch.execute_search(parsed)
+        aisearch.log_search(iph, payload.query, parsed)
+        return {
+            "teachers": teachers,
+            "explanation_en": parsed["explanation_en"],
+            "explanation_zh": parsed["explanation_zh"],
+            "parsed": parsed,
+            "fallback": False,
+        }
+    except SpamError:
+        raise
+    except Exception:
+        # Groq down / quota / parse failure — degrade to keyword search so
+        # the UI doesn't dead-end. We still log the attempt for analytics.
+        aisearch.log_search(iph, payload.query, None)
+        teachers = list_teachers(q=payload.query, subject=None)
+        return {
+            "teachers": teachers,
+            "explanation_en": "Smart search unavailable; showing keyword matches.",
+            "explanation_zh": "智能搜索暂不可用；以下是关键词匹配结果。",
+            "parsed": None,
+            "fallback": True,
+        }
+
+
 @app.get("/api/teachers/{teacher_id}")
 def get_teacher(teacher_id: str, request: Request):
     sql = TEACHER_STATS_SELECT + " AND t.id = ? GROUP BY t.id"

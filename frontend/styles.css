@@ -310,6 +310,69 @@ body[data-page="home"] .container {
   font-size: 15px; padding: 12px 0;
 }
 .searchbar svg { flex-shrink: 0; }
+/* Smart-search CTA — sits below the regular searchbar as a distinct
+   secondary affordance. Outline + accent text, fills with accent on hover. */
+.smart-cta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  color: var(--accent-ink);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.smart-cta:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+.smart-cta:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.smart-cta__star { font-size: 14px; }
+.smart-cta__label { font-weight: 500; }
+.smart-cta__hint {
+  color: var(--ink-mute);
+  font-size: 13px;
+}
+@media (max-width: 480px) {
+  .smart-cta__hint { display: none; }
+}
+
+/* Smart-search status banner. Sits between the hero and the chips when a
+   smart search is active. Soft accent treatment so it reads as a note, not
+   an alert. */
+.smart-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin: 16px 0 12px;
+  background: var(--accent-bg);
+  border: 1px solid oklch(0.78 0.08 40 / 0.4);
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: var(--accent-ink);
+}
+.smart-banner__icon { font-size: 16px; flex-shrink: 0; }
+.smart-banner__text { flex: 1; line-height: 1.4; }
+.smart-banner__clear {
+  background: transparent;
+  border: none;
+  color: var(--accent-ink);
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.smart-banner__clear:hover { opacity: 0.7; }
 
 /* ——— Chips */
 .chips {

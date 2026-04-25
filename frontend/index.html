@@ -32,8 +32,27 @@
           <input id="q" data-i18n-placeholder="home.search.placeholder" placeholder="Teacher name…" autocomplete="off" />
           <button class="btn btn--primary" type="submit" data-i18n="home.search.go">Go</button>
         </form>
+        <!-- Smart search lives below the bar so it reads as a distinct
+             affordance, not a tertiary button. Stays visible on mobile. -->
+        <button type="button" class="smart-cta" id="smartBtn"
+                data-i18n-title="home.search.smartHint"
+                title="Ask in plain English: 'best math teacher', 'easiest tests', 'who gives the most homework'">
+          <span class="smart-cta__star">✨</span>
+          <span class="smart-cta__label" data-i18n="home.search.smart">Smart search</span>
+          <span class="smart-cta__hint" data-i18n="home.search.smartHint">Ask in plain English</span>
+        </button>
       </div>
     </section>
+
+    <!-- Smart-search explanation banner. Hidden until the user runs a smart
+         query. Shows what the AI parsed and a "clear" button to return to
+         the normal browse view. -->
+    <div class="smart-banner" id="smartBanner" hidden>
+      <span class="smart-banner__icon">✨</span>
+      <span class="smart-banner__text" id="smartBannerText"></span>
+      <button type="button" class="smart-banner__clear" id="smartClear"
+              data-i18n="home.smart.clear">Clear smart search</button>
+    </div>
 
     <div class="chips" id="chips"></div>
 
@@ -56,7 +75,7 @@
     // 'All' is a special sentinel — never translated as data, but rendered
     // through RB.t('home.chips.all') when displayed. We keep state.subject
     // as 'All' (the canonical key) so the URL filter logic stays untouched.
-    let state = { q: '', subject: 'All', subjects: ['All'] };
+    let state = { q: '', subject: 'All', subjects: ['All'], smart: false };
     let debounce;
 
     async function loadSubjects() {
@@ -163,11 +182,84 @@
     function escape(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
     qInput.addEventListener('input', () => {
+      // Typing in the box implicitly drops out of smart-search mode — the
+      // user is editing a regular query now.
+      if (state.smart) clearSmart({ skipReload: true });
       state.q = qInput.value.trim();
       clearTimeout(debounce);
       debounce = setTimeout(loadTeachers, 200);
     });
     form.addEventListener('submit', (e) => { e.preventDefault(); state.q = qInput.value.trim(); loadTeachers(); });
+
+    // ——— Smart search wiring
+    const smartBtn = document.getElementById('smartBtn');
+    const smartBanner = document.getElementById('smartBanner');
+    const smartBannerText = document.getElementById('smartBannerText');
+    const smartClearBtn = document.getElementById('smartClear');
+    let lastSmartResponse = null;
+
+    function showSmartBanner(text) {
+      smartBannerText.textContent = text;
+      smartBanner.hidden = false;
+    }
+
+    function clearSmart({ skipReload } = {}) {
+      state.smart = false;
+      lastSmartResponse = null;
+      smartBanner.hidden = true;
+      if (!skipReload) loadTeachers();
+    }
+
+    async function runSmartSearch() {
+      const q = qInput.value.trim();
+      if (q.length < 2) return;
+      state.smart = true;
+      loading.hidden = false;
+      empty.hidden = true;
+      grid.innerHTML = '';
+      loading.textContent = RB.t('home.smart.loading');
+      try {
+        const resp = await RB.api('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q }),
+        });
+        lastSmartResponse = resp;
+        renderSmartResponse(resp);
+      } catch (e) {
+        // Fall back to a regular keyword search so the user still sees
+        // teachers — never leave the screen empty after pressing the button.
+        showSmartBanner(RB.t('home.smart.error'));
+        state.smart = false;
+        loadTeachers();
+      } finally {
+        loading.hidden = true;
+        loading.textContent = RB.t('home.loading');
+      }
+    }
+
+    function renderSmartResponse(resp) {
+      const lang = (RB.getLang && RB.getLang()) === 'zh' ? 'zh' : 'en';
+      const explain = lang === 'zh' ? resp.explanation_zh : resp.explanation_en;
+      const prefix = resp.fallback ? RB.t('home.smart.fallback') + ' ' : '';
+      showSmartBanner(prefix + explain);
+      if (!resp.teachers || !resp.teachers.length) {
+        empty.hidden = false;
+        empty.textContent = RB.t('home.smart.empty');
+        lastRows = [];
+        return;
+      }
+      lastRows = resp.teachers;
+      renderGrid(resp.teachers);
+    }
+
+    smartBtn.addEventListener('click', runSmartSearch);
+    smartClearBtn.addEventListener('click', () => clearSmart());
+
+    // Re-localize the banner on language toggle without re-querying Groq.
+    document.addEventListener('rb:lang', () => {
+      if (state.smart && lastSmartResponse) renderSmartResponse(lastSmartResponse);
+    });
 
     loadSubjects();
     loadTeachers();
