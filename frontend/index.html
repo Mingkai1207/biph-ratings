@@ -351,9 +351,37 @@
     var stars = [];
     var last = performance.now();
 
+    // Stars must not enter the central content column (search bar, cards).
+    // We compute the no-fly zone from the actual <main.container> rect each
+    // frame so it tracks scroll, resize, and any layout the CSS does on home.
+    // ZONE_PAD adds a small breathing gap so stars halt just before the
+    // content edge instead of clipping it.
+    var mainEl = document.querySelector('main.container');
+    var ZONE_PAD = 12;
+    function getZone() {
+      if (!mainEl) return null;
+      var r = mainEl.getBoundingClientRect();
+      // Ignore degenerate / off-screen rects (pre-layout, hidden tab, etc.)
+      if (r.width < 40 || r.height < 40) return null;
+      return {
+        left:   r.left   - ZONE_PAD,
+        right:  r.right  + ZONE_PAD,
+        top:    r.top    - ZONE_PAD,
+        bottom: r.bottom + ZONE_PAD,
+      };
+    }
+
+    // How long a star must sit pinned to the zone boundary before it starts
+    // fading out. Without this, attracted stars pile up against the edge and
+    // crowd it as more keep falling. Recycle keeps the population fresh.
+    var STUCK_BEFORE_FADE = 3.0;     // seconds
+    var FADE_RATE = 0.6;             // alpha per second
+
     function loop(now) {
       var dt = Math.min((now - last) / 1000, 0.05); last = now;
       while (stars.length < target) stars.push(makeFaller(stars.length > target * 0.4));
+
+      var zone = getZone();
 
       ctx.clearRect(0, 0, W, H);
 
@@ -369,9 +397,48 @@
           }
         }
         s.vy += 22 * dt; s.vx *= 0.95;
-        s.x += s.vx * dt * 8; s.y += s.vy * dt * 2.5;
+
+        var nx = s.x + s.vx * dt * 8;
+        var ny = s.y + s.vy * dt * 2.5;
+
+        // No-fly zone clamp. If the star's next position would land inside
+        // the central content rect, snap it back to the nearest edge and
+        // zero the offending velocity component so it pins at the boundary
+        // instead of jittering through it.
+        var blocked = false;
+        if (zone && nx > zone.left && nx < zone.right && ny > zone.top && ny < zone.bottom) {
+          var dl = nx - zone.left;
+          var dr = zone.right - nx;
+          var dT = ny - zone.top;
+          var dB = zone.bottom - ny;
+          var minE = Math.min(dl, dr, dT, dB);
+          if (minE === dl)      { nx = zone.left;   if (s.vx > 0) s.vx = 0; }
+          else if (minE === dr) { nx = zone.right;  if (s.vx < 0) s.vx = 0; }
+          else if (minE === dT) { ny = zone.top;    if (s.vy > 0) s.vy = 0; }
+          else                  { ny = zone.bottom; if (s.vy < 0) s.vy = 0; }
+          blocked = true;
+        }
+
+        s.x = nx;
+        s.y = ny;
         s.rot += s.vrot * dt;
-        if (s.y > H + 30 || s.x < -40 || s.x > W + 40) Object.assign(s, makeFaller(true));
+
+        // Stuck-at-boundary fade: after STUCK_BEFORE_FADE seconds against
+        // the wall, alpha bleeds down so the star recycles. Free movement
+        // resets the timer.
+        if (blocked) {
+          s.stuckTime = (s.stuckTime || 0) + dt;
+          if (s.stuckTime > STUCK_BEFORE_FADE) {
+            s.alpha -= FADE_RATE * dt;
+          }
+        } else {
+          s.stuckTime = 0;
+        }
+
+        if (s.y > H + 30 || s.x < -40 || s.x > W + 40 || s.alpha <= 0.02) {
+          Object.assign(s, makeFaller(true));
+          s.stuckTime = 0;
+        }
       }
 
       if (mouse.inside) {
