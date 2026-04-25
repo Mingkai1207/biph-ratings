@@ -60,7 +60,7 @@
 
       // Home
       'home.pageTitle':           'Rate BIPH — anonymous teacher reviews',
-      'home.hero.titleHtml':      'Which teacher, <em>honestly</em>?',
+      'home.hero.titleHtml':      'How is the teacher, <em>honestly</em>?',
       'home.hero.subtitle':       'Real reviews from BIPH students. Anonymous, unfiltered, kind when deserved.',
       'home.search.placeholder':  'Teacher name…',
       'home.search.go':           'Go',
@@ -256,7 +256,7 @@
 
       // Home
       'home.pageTitle':           'Rate BIPH — 匿名老师评价',
-      'home.hero.titleHtml':      '哪位老师，<em>说真的</em>？',
+      'home.hero.titleHtml':      '这位老师怎么样，<em>说真的</em>？',
       'home.hero.subtitle':       'BIPH 学生写的真实评价。匿名、不过滤、该夸的时候就夸。',
       'home.search.placeholder':  '老师姓名…',
       'home.search.go':           '搜索',
