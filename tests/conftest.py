@@ -18,6 +18,9 @@ _TMP_DB = Path(tempfile.gettempdir()) / f"biph-test-{uuid.uuid4().hex}.db"
 os.environ["BIPH_DB_PATH"] = str(_TMP_DB)
 os.environ.setdefault("ADMIN_TOKEN", "test-admin-token")
 os.environ["TURNSTILE_ENABLED"] = "0"  # skip Cloudflare verification in tests
+# Disable the background base44 sync loop in tests so we don't make outbound
+# HTTP calls during the suite (the loop only starts when interval > 0).
+os.environ["BASE44_SYNC_INTERVAL_SEC"] = "0"
 
 import pytest
 from fastapi.testclient import TestClient

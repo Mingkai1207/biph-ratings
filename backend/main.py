@@ -1,3 +1,4 @@
+import asyncio
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -27,6 +28,13 @@ ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "dev-admin-token")
 ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "*")
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 
+# Auto-sync interval. Default 24h; set BASE44_SYNC_INTERVAL_SEC=0 to disable
+# (useful for tests + local dev where you don't want background HTTP traffic).
+BASE44_SYNC_INTERVAL_SEC = int(os.environ.get("BASE44_SYNC_INTERVAL_SEC", "86400"))
+# Wait this long after boot before the first sync, so a redeploy doesn't
+# immediately hammer base44 every time we push code.
+BASE44_SYNC_INITIAL_DELAY_SEC = int(os.environ.get("BASE44_SYNC_INITIAL_DELAY_SEC", "300"))
+
 # Single-origin hosting means CORS rarely matters, but set a sensible default list:
 # the prod domain + its www alias. Override with ALLOWED_ORIGIN env for custom setups.
 DEFAULT_ALLOWED = ["https://ratebiph.com", "https://www.ratebiph.com"]
@@ -51,6 +59,39 @@ app.add_middleware(
 @app.on_event("startup")
 def _startup():
     init_db()
+
+
+@app.on_event("startup")
+async def _start_base44_sync_loop():
+    """Kick off the background base44 sync loop. Skipped when interval=0
+    (tests + local dev) so pytest doesn't make outbound HTTP calls."""
+    if BASE44_SYNC_INTERVAL_SEC > 0:
+        asyncio.create_task(_base44_sync_loop())
+
+
+async def _base44_sync_loop():
+    """Daily idempotent pull from base44. sync_from_base44 is synchronous
+    (urllib + sqlite), so we run it in the default executor to keep the
+    event loop responsive while a sync is in flight (~10-30s per pull).
+
+    Failures are caught and logged so a transient base44 outage or DB
+    hiccup doesn't kill the loop — we just try again next interval."""
+    from .seed import sync_from_base44
+
+    await asyncio.sleep(BASE44_SYNC_INITIAL_DELAY_SEC)
+    while True:
+        try:
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, sync_from_base44)
+            print(
+                f"[base44 auto-sync] +{result['reviews_added']} reviews, "
+                f"+{result['teachers_added']} teachers "
+                f"(now {result['reviews_after']} / {result['teachers_after']})"
+            )
+        except Exception as e:
+            # Single-line log so it's grep-able in Railway's log viewer.
+            print(f"[base44 auto-sync] FAILED: {type(e).__name__}: {e}")
+        await asyncio.sleep(BASE44_SYNC_INTERVAL_SEC)
 
 
 @app.exception_handler(SpamError)
