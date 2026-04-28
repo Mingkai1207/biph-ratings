@@ -398,6 +398,10 @@ body[data-page="home"] .container {
   opacity: 0.7;
 }
 .smart-banner__clear:hover { opacity: 1; text-decoration: underline; }
+/* Same specificity gotcha as .searchbar__smart — explicit `display` rules
+   beat the UA stylesheet's [hidden] rule. Restore expected behavior. */
+.smart-banner[hidden] { display: none; }
+.hero__smart-hint[hidden] { display: none; }
 
 /* ——— Chips */
 .chips {
