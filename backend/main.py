@@ -303,9 +303,15 @@ def ai_search(payload: AISearchIn, request: Request):
         }
     except SpamError:
         raise
-    except Exception:
-        # Groq down / quota / parse failure — degrade to keyword search so
-        # the UI doesn't dead-end. We still log the attempt for analytics.
+    except Exception as e:
+        # LLM down / quota / parse failure — degrade to keyword search so
+        # the UI doesn't dead-end. Log loudly so we can fix the underlying
+        # provider issue (this used to swallow silently and hide config bugs).
+        import logging
+        logging.exception(
+            "[smart-search] %s fallback (provider=%s) on query=%r: %s",
+            type(e).__name__, aisearch.active_provider(), payload.query[:80], e,
+        )
         aisearch.log_search(iph, payload.query, None)
         teachers = list_teachers(q=payload.query, subject=None)
         return {
