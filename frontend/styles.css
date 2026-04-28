@@ -338,6 +338,10 @@ body[data-page="home"] .container {
   outline-offset: 2px;
 }
 .searchbar__smart svg { display: block; }
+/* Class selector (.searchbar__smart) outranks the UA `[hidden]` rule, so the
+   hidden attribute alone leaves the button visible. Restore the expected
+   behavior with this higher-specificity override. */
+.searchbar__smart[hidden] { display: none; }
 
 /* Editorial hint under the searchbar — serif italic to match the hero
    "honestly?" treatment, soft accent ink. Examples in quotes look like
