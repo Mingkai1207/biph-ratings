@@ -626,3 +626,29 @@ def test_admin_regenerate_preserves_native_user_reviews(client, seeded_teacher):
             "SELECT id FROM reviews WHERE id = ?", (user_id,),
         ).fetchone()
     assert survived is not None
+
+
+# ——— Maintenance mode middleware
+
+
+def test_maintenance_mode_off_normal_traffic_flows(client):
+    """When MAINTENANCE_MODE is off (default in tests), public routes work."""
+    r = client.get("/api/health")
+    assert r.status_code == 200
+
+
+def test_maintenance_mode_on_serves_maintenance_for_public_routes(client, monkeypatch):
+    """Flip the flag → public requests get a 503 with the maintenance HTML.
+    /api/health and /api/admin/* must keep working so Railway's healthcheck
+    + admin tools survive the outage."""
+    import backend.main as _m
+    monkeypatch.setattr(_m, "MAINTENANCE_MODE", True)
+    r_public = client.get("/api/teachers")
+    assert r_public.status_code == 503
+    assert "维护中" in r_public.text or "Maintenance" in r_public.text
+    r_health = client.get("/api/health")
+    assert r_health.status_code == 200
+    r_admin = client.get(
+        "/api/admin/stats", headers={"Authorization": "Bearer test-admin-token"},
+    )
+    assert r_admin.status_code == 200

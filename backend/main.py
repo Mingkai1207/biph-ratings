@@ -65,6 +65,14 @@ BASE44_SYNC_INITIAL_DELAY_SEC = int(os.environ.get("BASE44_SYNC_INITIAL_DELAY_SE
 # affordance. After the window expires the review locks in like normal.
 REVOKE_WINDOW_SECONDS = 60
 
+# Maintenance mode: when MAINTENANCE_MODE=1 in env, every public route serves
+# a maintenance page instead of the real content. Admin routes still work
+# (so I can still run regenerate / stats / etc.) so we can iterate while the
+# site is dark to students. Toggle on Railway: `railway variables --set
+# MAINTENANCE_MODE=1` to take it down, `--set MAINTENANCE_MODE=0` to bring
+# it back.
+MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "0") == "1"
+
 # Single-origin hosting means CORS rarely matters, but set a sensible default list:
 # the prod domain + its www alias. Override with ALLOWED_ORIGIN env for custom setups.
 DEFAULT_ALLOWED = ["https://ratebiph.com", "https://www.ratebiph.com"]
@@ -84,6 +92,80 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+
+_MAINTENANCE_HTML = """<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rate BIPH — 维护中 / Maintenance</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: ui-serif, Georgia, "Songti SC", serif;
+      background: oklch(0.96 0.02 75);
+      color: oklch(0.25 0.02 60);
+    }
+    .box {
+      max-width: 480px;
+      padding: 48px 32px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 38px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      margin: 0 0 18px;
+    }
+    h1 em { color: oklch(0.55 0.12 40); font-style: italic; }
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: oklch(0.42 0.02 60);
+      margin: 0 0 12px;
+    }
+    .small {
+      margin-top: 28px;
+      font-size: 13px;
+      color: oklch(0.55 0.02 60);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Rate BIPH 正在<em>整理中</em></h1>
+    <p>站点临时下线，正在调整内容质量。</p>
+    <p>The site is temporarily down while we polish things.</p>
+    <p class="small">回头见。Back soon.</p>
+  </div>
+</body>
+</html>
+"""
+
+
+@app.middleware("http")
+async def _maintenance_gate(request, call_next):
+    """When MAINTENANCE_MODE is on, every non-admin route serves a 503
+    maintenance page. Admin routes still pass through so we can keep using
+    /api/admin/* (stats, regenerate-reviews, etc.) while the site is dark
+    to students. Health check also passes so Railway doesn't restart us."""
+    if not MAINTENANCE_MODE:
+        return await call_next(request)
+    path = request.url.path
+    if path.startswith("/api/admin/") or path == "/api/health":
+        return await call_next(request)
+    return Response(
+        content=_MAINTENANCE_HTML,
+        status_code=503,
+        media_type="text/html; charset=utf-8",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.on_event("startup")
