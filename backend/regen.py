@@ -93,8 +93,8 @@ _FRAGS_EASY_LOW = [
 
 # Generic openers / connectors / closings. Sometimes empty so the comment
 # starts directly with a fragment (more natural than always prefixing).
-_OPENERS = ["", "", "", "", "整体来说", "讲真", "感觉", "我觉得",
-            "整体感觉", "上过一年", "上过他/她课", "选了之后"]
+_OPENERS = ["", "", "", "", "", "", "整体来说", "讲真", "感觉", "我觉得",
+            "整体感觉", "上过一年", "上过这个课", "选了之后", "选了一学期"]
 _CONNECTORS = ["，", "，", "。", "，但是", "，不过", "，而且",
                "。另外，", "。还有，", " ", "，"]
 _CLOSINGS = ["", "", "", "", "", "整体推荐", "想试试可以选", "看自己情况",
