@@ -27,12 +27,30 @@ from typing import Any
 from .db import get_conn
 from .spam import SpamError
 
+# LLM providers: prefer OpenAI when its key is set (better quality on edge
+# queries), otherwise fall back to Groq (free + fast). Both speak the same
+# OpenAI-compatible chat-completions API, so the call shape is identical.
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
 # Llama 3.3 70B is on Groq's free tier (1000 req/day, 30 RPM as of 2026).
 # Override via env if you want to A/B another model.
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_TIMEOUT_SEC = 8
+
+LLM_TIMEOUT_SEC = 12  # OpenAI can be a touch slower than Groq, give some headroom
+
+
+def active_provider() -> str | None:
+    """Which LLM provider we're going to call. Returns None when no keys are
+    configured — the caller should fall back to keyword search in that case."""
+    if OPENAI_API_KEY:
+        return "openai"
+    if GROQ_API_KEY:
+        return "groq"
+    return None
 
 # Per-IP daily cap for smart search. Leaves plenty of headroom under Groq's
 # 1000/day free quota even with many concurrent users on the site.
@@ -148,40 +166,53 @@ def log_search(ip_hash: str, query: str, parsed: dict | None) -> None:
         )
 
 
-def call_groq(query: str) -> dict:
-    """Make the actual Groq call. Returns the parsed JSON dict from the
-    model's response. Raises on transport / auth / parse failure — caller
-    decides whether to fall back to keyword search."""
-    if not GROQ_API_KEY:
-        raise RuntimeError("GROQ_API_KEY not set")
-
+def _call_openai_compatible(url: str, key: str, model: str, query: str) -> dict:
+    """Shared helper for OpenAI-style chat-completions endpoints. Both OpenAI
+    and Groq use this exact request shape, so we only need one impl. Returns
+    the parsed JSON dict from the model's response. Raises on transport /
+    auth / parse failure — caller decides whether to fall back."""
     body = json.dumps({
-        "model": GROQ_MODEL,
+        "model": model,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": query},
         ],
         # JSON mode: the model is forced to emit valid JSON. Saves us a
-        # markdown-fence stripping step + makes the failure mode "Groq
-        # rejects with 400" rather than "model returned prose".
+        # markdown-fence stripping step + makes the failure mode "API rejects
+        # with 400" rather than "model returned prose".
         "response_format": {"type": "json_object"},
         "temperature": 0,
         "max_tokens": 400,
     }).encode()
 
     req = urllib.request.Request(
-        GROQ_URL,
+        url,
         data=body,
         method="POST",
         headers={
-            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Authorization": f"Bearer {key}",
             "Content-Type": "application/json",
         },
     )
-    with urllib.request.urlopen(req, timeout=GROQ_TIMEOUT_SEC) as resp:
+    with urllib.request.urlopen(req, timeout=LLM_TIMEOUT_SEC) as resp:
         data = json.loads(resp.read().decode())
     text = data["choices"][0]["message"]["content"]
     return json.loads(text)
+
+
+def call_llm(query: str) -> dict:
+    """Provider-aware call. Picks OpenAI if its key is set, else Groq.
+    Raises RuntimeError when neither is configured."""
+    provider = active_provider()
+    if provider == "openai":
+        return _call_openai_compatible(OPENAI_URL, OPENAI_API_KEY, OPENAI_MODEL, query)
+    if provider == "groq":
+        return _call_openai_compatible(GROQ_URL, GROQ_API_KEY, GROQ_MODEL, query)
+    raise RuntimeError("No LLM API key configured (set OPENAI_API_KEY or GROQ_API_KEY)")
+
+
+# Backwards-compat alias — older callers/tests may still reference call_groq.
+call_groq = call_llm
 
 
 def validate_parsed(p: Any) -> dict:
@@ -220,8 +251,10 @@ def validate_parsed(p: Any) -> dict:
 
 
 def parse_query(query: str) -> dict:
-    """End-to-end parse: call Groq, validate the response. Raises on failure."""
-    raw = call_groq(query)
+    """End-to-end parse: call the active LLM provider, validate the response.
+    Raises on failure — the caller decides whether to fall back to keyword
+    search."""
+    raw = call_llm(query)
     return validate_parsed(raw)
 
 

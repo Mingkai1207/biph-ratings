@@ -72,7 +72,7 @@ def seeded_ranking_teachers():
 def test_search_ranks_descending_when_groq_returns_rank_intent(client, seeded_ranking_teachers, monkeypatch):
     """User asks 'best math teacher' → Groq returns rank intent → DB returns
     teachers sorted by rating desc. The high-rated teacher must come first."""
-    monkeypatch.setattr(aisearch, "call_groq", lambda q: {
+    monkeypatch.setattr(aisearch, "call_llm", lambda q: {
         "intent": "rank",
         "sort_by": "avg_rating",
         "order": "desc",
@@ -94,7 +94,7 @@ def test_search_ranks_descending_when_groq_returns_rank_intent(client, seeded_ra
 
 def test_search_ranks_ascending_when_groq_returns_asc(client, seeded_ranking_teachers, monkeypatch):
     """'teacher with the most bad comments' → asc order → low-rated first."""
-    monkeypatch.setattr(aisearch, "call_groq", lambda q: {
+    monkeypatch.setattr(aisearch, "call_llm", lambda q: {
         "intent": "rank",
         "sort_by": "avg_rating",
         "order": "asc",
@@ -116,7 +116,7 @@ def test_search_falls_back_to_keyword_when_groq_fails(client, seeded_ranking_tea
     teachers from a keyword search rather than 500-ing."""
     def boom(q):
         raise RuntimeError("Groq unreachable")
-    monkeypatch.setattr(aisearch, "call_groq", boom)
+    monkeypatch.setattr(aisearch, "call_llm", boom)
 
     r = client.post("/api/search", json={"query": "HighRated"})
     assert r.status_code == 200
@@ -138,7 +138,7 @@ def test_search_rate_limit_returns_429(client, monkeypatch):
     with db.get_conn() as conn:
         conn.execute("DELETE FROM ai_search_log")
 
-    monkeypatch.setattr(aisearch, "call_groq", lambda q: {
+    monkeypatch.setattr(aisearch, "call_llm", lambda q: {
         "intent": "rank",
         "sort_by": "avg_rating",
         "order": "desc",
@@ -153,3 +153,34 @@ def test_search_rate_limit_returns_429(client, monkeypatch):
     over = client.post("/api/search", json={"query": "anything"})
     assert over.status_code == 429
     assert over.json()["error"] == "rate_limited"
+
+
+# ——— Provider selection (OpenAI vs Groq) ——————————————————————
+
+def test_active_provider_prefers_openai_when_both_keys_set(monkeypatch):
+    """OpenAI > Groq when both keys are present. Order matters because OpenAI
+    typically gives better edge-query parsing than Llama 3.3 70B on Groq."""
+    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "sk-test-openai")
+    monkeypatch.setattr(aisearch, "GROQ_API_KEY", "gsk-test-groq")
+    assert aisearch.active_provider() == "openai"
+
+
+def test_active_provider_falls_back_to_groq_when_only_groq_set(monkeypatch):
+    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "")
+    monkeypatch.setattr(aisearch, "GROQ_API_KEY", "gsk-test-groq")
+    assert aisearch.active_provider() == "groq"
+
+
+def test_active_provider_returns_none_when_no_keys(monkeypatch):
+    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "")
+    monkeypatch.setattr(aisearch, "GROQ_API_KEY", "")
+    assert aisearch.active_provider() is None
+
+
+def test_call_llm_raises_when_no_provider(monkeypatch):
+    """Without a key configured we don't silently call something — the caller
+    needs to know so it can fall back to keyword search."""
+    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "")
+    monkeypatch.setattr(aisearch, "GROQ_API_KEY", "")
+    with pytest.raises(RuntimeError, match="No LLM API key"):
+        aisearch.call_llm("anything")
