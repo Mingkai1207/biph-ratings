@@ -985,13 +985,14 @@ def admin_stats(authorization: Optional[str] = Header(default=None)):
 
 
 class RegenIn(BaseModel):
-    """Input to the one-shot regenerate-reviews flow. dry_run=true previews
-    the plan without touching the DB; the corpus comes back in the response
-    body so the caller can save it as a backup before re-running with
-    dry_run=false."""
+    """Input to the regenerate-reviews flow. Source-agnostic — a re-run that
+    refreshes the AI-generated corpus passes source='ai_generated', the
+    initial run from base44 passed source='imported_biph_insights'. dry_run
+    previews without writing."""
     target_total: int = Field(default=1000, ge=10, le=5000)
     dry_run: bool = True
     seed: Optional[int] = None
+    source: str = Field(default="imported_biph_insights")
 
 
 @app.post("/api/admin/regenerate-reviews")
@@ -1015,22 +1016,41 @@ def admin_regenerate_reviews(
     require_admin(authorization)
     from . import regen
 
+    if body.source not in ("imported_biph_insights", "ai_generated"):
+        raise HTTPException(
+            status_code=400,
+            detail="source must be 'imported_biph_insights' or 'ai_generated'",
+        )
+
     with get_conn() as conn:
         rows = [dict(r) for r in conn.execute(
             """SELECT id, teacher_id, teaching_quality, test_difficulty,
                       homework_load, easygoingness, would_take_again, comment,
                       created_at, source
-               FROM reviews WHERE source = 'imported_biph_insights'"""
+               FROM reviews WHERE source = ?""",
+            (body.source,),
         ).fetchall()]
 
         if not rows:
             raise HTTPException(
                 status_code=400,
-                detail="No base44 reviews found — nothing to regenerate from",
+                detail=f"No reviews with source='{body.source}' — nothing to regenerate from",
             )
 
-        generated = regen.generate_reviews(rows, body.target_total, seed=body.seed)
-        plan = regen.plan_per_teacher(regen._build_per_teacher_corpus(rows), body.target_total)
+        # Pull teacher subjects so the generator can add subject-specific
+        # lexical texture ("essay 反馈很认真" only on English teachers, etc.).
+        teacher_subjects = {
+            r["id"]: r["subject"]
+            for r in conn.execute("SELECT id, subject FROM teachers").fetchall()
+        }
+        generated = regen.generate_reviews(
+            rows, body.target_total, seed=body.seed,
+            teacher_subjects=teacher_subjects,
+        )
+        plan = regen.plan_per_teacher(
+            regen._build_per_teacher_corpus(rows, teacher_subjects=teacher_subjects),
+            body.target_total,
+        )
 
         if body.dry_run:
             return {
@@ -1046,7 +1066,7 @@ def admin_regenerate_reviews(
         # an implicit transaction — if any INSERT below raises, the DELETE
         # gets rolled back automatically.
         n_deleted = conn.execute(
-            "DELETE FROM reviews WHERE source = 'imported_biph_insights'"
+            "DELETE FROM reviews WHERE source = ?", (body.source,),
         ).rowcount
         for g in generated:
             conn.execute(
