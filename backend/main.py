@@ -314,10 +314,19 @@ def ai_search(payload: AISearchIn, request: Request):
         )
         aisearch.log_search(iph, payload.query, None)
         teachers = list_teachers(q=payload.query, subject=None)
+        # Distinguish "we deliberately throttled" from "upstream broke" so
+        # the UI can show a calmer message — the former is just "try again
+        # in a sec," not "smart search is down."
+        if isinstance(e, aisearch.LLMRateLimited):
+            en_msg = "Smart search is busy right now — keyword results below. Try again in a minute."
+            zh_msg = "智能搜索现在忙不过来，先给你关键词匹配结果。一分钟后再试一下。"
+        else:
+            en_msg = "Smart search unavailable; showing keyword matches."
+            zh_msg = "智能搜索暂不可用；以下是关键词匹配结果。"
         return {
             "teachers": teachers,
-            "explanation_en": "Smart search unavailable; showing keyword matches.",
-            "explanation_zh": "智能搜索暂不可用；以下是关键词匹配结果。",
+            "explanation_en": en_msg,
+            "explanation_zh": zh_msg,
             "parsed": None,
             "fallback": True,
         }

@@ -196,6 +196,33 @@ def test_call_llm_raises_when_no_provider(monkeypatch):
         aisearch.call_llm("anything")
 
 
+def test_outbound_rpm_cap_blocks_burst(monkeypatch):
+    """If we've already burned LLM_RPM_CAP outbound calls in the last minute,
+    the next call must short-circuit with LLMRateLimited rather than firing
+    another doomed upstream request. Critical for staying under Gemini free
+    tier's 15 RPM ceiling."""
+    monkeypatch.setattr(aisearch, "LLM_RPM_CAP", 3)
+    monkeypatch.setattr(aisearch, "_llm_call_timestamps", [])
+    # Simulate three calls landing right now
+    import time
+    now = time.monotonic()
+    aisearch._llm_call_timestamps.extend([now, now, now])
+    with pytest.raises(aisearch.LLMRateLimited):
+        aisearch._check_outbound_rpm()
+
+
+def test_outbound_rpm_cap_recovers_after_window(monkeypatch):
+    """Old timestamps (>60s) get pruned, allowing new calls."""
+    monkeypatch.setattr(aisearch, "LLM_RPM_CAP", 3)
+    monkeypatch.setattr(aisearch, "_llm_call_timestamps", [])
+    import time
+    long_ago = time.monotonic() - 120.0  # 2 minutes back
+    aisearch._llm_call_timestamps.extend([long_ago, long_ago, long_ago])
+    aisearch._check_outbound_rpm()  # should succeed
+    # Stale entries pruned, the new one is the only survivor.
+    assert len(aisearch._llm_call_timestamps) == 1
+
+
 def test_call_llm_routes_to_gemini_when_gemini_key_set(monkeypatch):
     """When Gemini is active, call_llm must dispatch to _call_gemini, not the
     OpenAI-compatible helper (the request shape is incompatible)."""

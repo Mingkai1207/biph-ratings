@@ -47,6 +47,38 @@ GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 LLM_TIMEOUT_SEC = 12  # remote LLMs vary; give all of them headroom
 
+# Global outbound rate limiter: cap requests-per-minute to the LLM so a burst
+# of frontend traffic doesn't blow through the upstream provider's per-minute
+# quota. Gemini free tier is 15 RPM on gemini-2.0-flash; we cap at 12 to keep
+# headroom for direct curl checks + the user's friend's other tools sharing
+# the same key. When we'd exceed the cap, we raise a sentinel error and the
+# /api/search handler falls back to keyword search — same UX as a transient
+# upstream failure.
+LLM_RPM_CAP = int(os.environ.get("LLM_RPM_CAP", "12"))
+_llm_call_timestamps: list[float] = []  # in-process bucket; resets on redeploy
+
+
+class LLMRateLimited(Exception):
+    """Raised when our outbound call would exceed LLM_RPM_CAP. Caller should
+    fall back to keyword search rather than burning a real upstream call."""
+
+
+def _check_outbound_rpm() -> None:
+    """Token-bucket-ish check: prune timestamps older than 60s, then refuse
+    if we already have LLM_RPM_CAP entries in the window."""
+    import time
+    now = time.monotonic()
+    cutoff = now - 60.0
+    # Mutate in place — single uvicorn worker, no lock needed for our scale.
+    while _llm_call_timestamps and _llm_call_timestamps[0] < cutoff:
+        _llm_call_timestamps.pop(0)
+    if len(_llm_call_timestamps) >= LLM_RPM_CAP:
+        raise LLMRateLimited(
+            f"Outbound LLM cap reached: {LLM_RPM_CAP} req/min. "
+            f"Falling back to keyword search."
+        )
+    _llm_call_timestamps.append(now)
+
 
 def active_provider() -> str | None:
     """Which LLM provider we're going to call. Returns None when no keys are
@@ -268,8 +300,14 @@ def _call_gemini(query: str) -> dict:
 
 def call_llm(query: str) -> dict:
     """Provider-aware call. Picks Gemini > OpenAI > Groq based on which key
-    is set. Raises RuntimeError when none is configured."""
+    is set. Raises RuntimeError when none is configured. Raises
+    LLMRateLimited when our outbound RPM cap would be exceeded — caller
+    should fall back to keyword search."""
     provider = active_provider()
+    # Rate limit OURSELVES before we burn a real upstream call. Most upstream
+    # 429s come from per-minute caps (Gemini free tier is 15 RPM); staying
+    # well under that ceiling keeps the few requests we DO send working.
+    _check_outbound_rpm()
     if provider == "gemini":
         return _call_gemini(query)
     if provider == "openai":
