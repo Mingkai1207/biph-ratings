@@ -425,3 +425,50 @@ def test_teacher_detail_includes_review_id_and_revoke_window(client, seeded_teac
     assert mr is not None
     assert mr["id"] == rid
     assert mr["revoke_window_seconds"] == 60
+
+
+# ——— Multi-token admin auth
+#
+# We support a primary ADMIN_TOKEN plus an additional comma-separated
+# ADMIN_TOKENS list so multiple humans can have their own credentials
+# without sharing one. require_admin must accept any token from either
+# source (and reject everything else).
+
+
+def test_admin_accepts_multiple_tokens(client, seeded_teacher, monkeypatch):
+    """A token in ADMIN_TOKENS authenticates the same as ADMIN_TOKEN."""
+    import backend.main as _m
+    monkeypatch.setattr(_m, "ADMIN_TOKENS", {"primary-tok", "secondary-tok"})
+    # Both tokens succeed.
+    for tok in ("primary-tok", "secondary-tok"):
+        r = client.post(
+            f"/api/admin/teachers/{seeded_teacher}/edit",
+            json={"name": "Renamed via " + tok},
+            headers={"Authorization": f"Bearer {tok}"},
+        )
+        assert r.status_code == 200, f"token {tok} should be accepted"
+    # An unrelated token still fails.
+    r = client.post(
+        f"/api/admin/teachers/{seeded_teacher}/edit",
+        json={"name": "Should not stick"},
+        headers={"Authorization": "Bearer not-in-set"},
+    )
+    assert r.status_code == 401
+
+
+def test_admin_token_parser_unions_both_env_vars(monkeypatch):
+    """_parse_admin_tokens combines ADMIN_TOKEN (single) and ADMIN_TOKENS
+    (comma-separated). Whitespace and empty entries are dropped."""
+    import backend.main as _m
+    monkeypatch.setenv("ADMIN_TOKEN", "alpha")
+    monkeypatch.setenv("ADMIN_TOKENS", "beta, gamma ,, delta")
+    got = _m._parse_admin_tokens()
+    assert got == {"alpha", "beta", "gamma", "delta"}
+
+
+def test_admin_token_parser_falls_back_to_dev_default(monkeypatch):
+    """Neither env var set → dev-only default so local runs work."""
+    import backend.main as _m
+    monkeypatch.delenv("ADMIN_TOKEN", raising=False)
+    monkeypatch.delenv("ADMIN_TOKENS", raising=False)
+    assert _m._parse_admin_tokens() == {"dev-admin-token"}

@@ -24,7 +24,32 @@ from .spam import (
     verify_turnstile,
 )
 
-ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "dev-admin-token")
+def _parse_admin_tokens() -> set:
+    """Build the set of accepted admin tokens from env. Two sources, both
+    optional, unioned together so the existing single ADMIN_TOKEN keeps
+    working alongside the multi-token ADMIN_TOKENS list:
+
+      ADMIN_TOKEN   = "primary-token"                  (single, legacy)
+      ADMIN_TOKENS  = "tok-1,tok-2,tok-3"              (multi, comma-sep)
+
+    If neither is set we fall back to a dev-only default so local runs
+    don't 401 every admin request."""
+    tokens = set()
+    single = os.environ.get("ADMIN_TOKEN", "").strip()
+    if single:
+        tokens.add(single)
+    multi = os.environ.get("ADMIN_TOKENS", "").strip()
+    if multi:
+        for piece in multi.split(","):
+            t = piece.strip()
+            if t:
+                tokens.add(t)
+    if not tokens:
+        tokens.add("dev-admin-token")
+    return tokens
+
+
+ADMIN_TOKENS = _parse_admin_tokens()
 ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "*")
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 
@@ -648,7 +673,7 @@ def require_admin(authorization: Optional[str]):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing admin token")
     token = authorization.split(" ", 1)[1].strip()
-    if token != ADMIN_TOKEN:
+    if token not in ADMIN_TOKENS:
         raise HTTPException(status_code=401, detail="Invalid admin token")
 
 
