@@ -154,11 +154,18 @@ async def _maintenance_gate(request, call_next):
     """When MAINTENANCE_MODE is on, every non-admin route serves a 503
     maintenance page. Admin routes still pass through so we can keep using
     /api/admin/* (stats, regenerate-reviews, etc.) while the site is dark
-    to students. Health check also passes so Railway doesn't restart us."""
+    to students. Health check also passes so Railway doesn't restart us.
+
+    Preview bypass: an admin can pass `?preview=<admin_token>` on any URL
+    to see the real site through the maintenance gate. Lets us QA changes
+    before flipping MAINTENANCE_MODE off for everyone."""
     if not MAINTENANCE_MODE:
         return await call_next(request)
     path = request.url.path
     if path.startswith("/api/admin/") or path == "/api/health":
+        return await call_next(request)
+    preview_token = request.query_params.get("preview", "")
+    if preview_token and preview_token in ADMIN_TOKENS:
         return await call_next(request)
     return Response(
         content=_MAINTENANCE_HTML,
@@ -1064,6 +1071,41 @@ def admin_stats(authorization: Optional[str] = Header(default=None)):
         },
         "teachers": {"total": teach_total, "visible": teach_visible},
     }
+
+
+class DeleteBySourceIn(BaseModel):
+    """Bulk-delete reviews by source. Allowed sources are the imported and
+    AI-generated buckets — never `user` (those are real submissions and
+    must be protected from accidental wipe via this endpoint)."""
+    source: str
+    dry_run: bool = True
+
+
+@app.post("/api/admin/delete-reviews-by-source")
+def admin_delete_reviews_by_source(
+    body: DeleteBySourceIn, authorization: Optional[str] = Header(default=None),
+):
+    """Wipe every review with the given source. Native `user` reviews are
+    explicitly NOT allowed through this endpoint — they're real student
+    submissions and require a more deliberate path to delete. dry_run
+    returns the count without touching anything."""
+    require_admin(authorization)
+    if body.source not in ("imported_biph_insights", "ai_generated"):
+        raise HTTPException(
+            status_code=400,
+            detail="source must be 'imported_biph_insights' or 'ai_generated'. "
+                   "Native 'user' reviews can't be bulk-deleted through this route.",
+        )
+    with get_conn() as conn:
+        n = conn.execute(
+            "SELECT COUNT(*) AS n FROM reviews WHERE source = ?", (body.source,),
+        ).fetchone()["n"]
+        if body.dry_run:
+            return {"dry_run": True, "would_delete": n, "source": body.source}
+        deleted = conn.execute(
+            "DELETE FROM reviews WHERE source = ?", (body.source,),
+        ).rowcount
+    return {"dry_run": False, "deleted": deleted, "source": body.source}
 
 
 class RegenIn(BaseModel):

@@ -652,3 +652,73 @@ def test_maintenance_mode_on_serves_maintenance_for_public_routes(client, monkey
         "/api/admin/stats", headers={"Authorization": "Bearer test-admin-token"},
     )
     assert r_admin.status_code == 200
+
+
+# ——— Bulk delete by source
+
+
+def test_admin_delete_by_source_requires_auth(client):
+    r = client.post(
+        "/api/admin/delete-reviews-by-source",
+        json={"source": "ai_generated", "dry_run": False},
+    )
+    assert r.status_code == 401
+
+
+def test_admin_delete_by_source_protects_user_reviews(client):
+    """Native user reviews must never be bulk-deletable through this route."""
+    r = client.post(
+        "/api/admin/delete-reviews-by-source",
+        json={"source": "user", "dry_run": False},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 400
+
+
+def test_admin_delete_by_source_dry_run(client, seeded_teacher):
+    _wipe_regen_residue()
+    _seed_base44_corpus(seeded_teacher, n=4)
+    r = client.post(
+        "/api/admin/delete-reviews-by-source",
+        json={"source": "imported_biph_insights", "dry_run": True},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    assert r.json()["would_delete"] == 4
+    from backend import db as _db
+    with _db.get_conn() as conn:
+        still_there = conn.execute(
+            "SELECT COUNT(*) AS n FROM reviews WHERE source = 'imported_biph_insights'"
+        ).fetchone()["n"]
+    assert still_there == 4
+
+
+def test_admin_delete_by_source_executes(client, seeded_teacher):
+    _wipe_regen_residue()
+    _seed_base44_corpus(seeded_teacher, n=3)
+    r = client.post(
+        "/api/admin/delete-reviews-by-source",
+        json={"source": "imported_biph_insights", "dry_run": False},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    assert r.json()["deleted"] == 3
+    from backend import db as _db
+    with _db.get_conn() as conn:
+        still_there = conn.execute(
+            "SELECT COUNT(*) AS n FROM reviews WHERE source = 'imported_biph_insights'"
+        ).fetchone()["n"]
+    assert still_there == 0
+
+
+def test_maintenance_preview_bypass_with_admin_token(client, monkeypatch):
+    """An admin token in ?preview=... query lets us see the real site
+    through the maintenance gate (for QA before flipping the flag off)."""
+    import backend.main as _m
+    monkeypatch.setattr(_m, "MAINTENANCE_MODE", True)
+    r_blocked = client.get("/api/teachers")
+    assert r_blocked.status_code == 503
+    r_allowed = client.get("/api/teachers?preview=test-admin-token")
+    assert r_allowed.status_code == 200
+    r_wrong = client.get("/api/teachers?preview=nope")
+    assert r_wrong.status_code == 503
