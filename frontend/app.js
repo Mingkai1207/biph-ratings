@@ -37,6 +37,7 @@
       'nav.compare':     'Compare',
       'nav.submit':      'Add a teacher',
       'nav.suggestions': 'Suggestions',
+      'nav.about':       'About',
       'nav.admin':       'Admin',
       'nav.menu':        'Menu',
       // Footer
@@ -220,6 +221,20 @@
       'sug.success.again':   'Send another',
       'sug.success.back':    'Back to roster',
 
+      // About / clarification
+      'about.pageTitle':       'Rate BIPH — about',
+      'about.eyebrow':         'A FEW THINGS UP FRONT',
+      'about.headingHtml':     'Why this <em>exists</em>.',
+      'about.lede':            'Two things to clarify so nobody walks in confused.',
+      'about.credit.title':    "Credit where it's due",
+      'about.credit.body1':    'This site builds on the original <strong>BIPH Insights</strong> — the no-code RateMyTeacher that earlier students put together on base44. The 962 reviews you see on day one were imported from there, with permission noted on my WeChat moments. Huge thanks to whoever started it.',
+      'about.credit.body2':    'I rebuilt it on a real domain (ratebiph.com, not a base44 subdomain) with a real backend because I wanted the experience to feel like a developed web product, not a hosted prototype. Faster pages, real search, anonymous reviews that actually scale, a proper mobile experience, smart search, comparison pages, shareable cards, daily auto-sync. Everything on this site is open source — read the code on <a href="https://github.com/Mingkai1207/biph-ratings" target="_blank" rel="noopener">GitHub</a>.',
+      'about.purpose.title':   'What this site is for',
+      'about.purpose.body1':   "This isn't a place to <strong>curse</strong> teachers. It's a place to share <strong>opinions</strong>, honestly and specifically, so the next class of students can pick courses with their eyes open.",
+      'about.purpose.body2':   'Be specific: <em>what</em> the teacher does well, <em>where</em> the class is hard, <em>how</em> the homework actually feels. "Sucks" tells nobody anything. "Tests are short but every question is a synthesis problem" tells the next student what to expect.',
+      'about.purpose.body3':   'Reviews that cross from opinion into personal attack get hidden. The bar isn\'t "is this nice" — it\'s "is this the truth, said respectfully."',
+      'about.cta':             'Back to the roster',
+
       // Admin
       'admin.pageTitle':     'Rate BIPH — admin',
       'admin.eyebrow':       'MODERATION',
@@ -283,6 +298,7 @@
       'nav.compare':     '对比',
       'nav.submit':      '添加老师',
       'nav.suggestions': '建议',
+      'nav.about':       '说明',
       'nav.admin':       '管理',
       'nav.menu':        '菜单',
       // Footer
@@ -465,6 +481,20 @@
       'sug.success.body':    '谢谢你写来。管理员会读到。建议只对管理员账号可见，其他学生看不到。',
       'sug.success.again':   '再发一条',
       'sug.success.back':    '返回名单',
+
+      // About / clarification
+      'about.pageTitle':       'Rate BIPH — 说明',
+      'about.eyebrow':         '先说几件事',
+      'about.headingHtml':     '为什么<em>做这个</em>。',
+      'about.lede':            '两件事先讲清楚，免得有人误会。',
+      'about.credit.title':    '该感谢的要感谢',
+      'about.credit.body1':    '本站脱胎于最初的 <strong>BIPH Insights</strong>——之前同学们在 base44 上搭的零代码版 RateMyTeacher。你看到的这 962 条初始评价就是从那边导入的，我也已经在朋友圈里说明过。感谢最初做这件事的人。',
+      'about.credit.body2':    '我之所以重新做了一遍，是因为想要一个真正的产品体验：自己的域名（ratebiph.com，而不是 base44 的子域名），真正的后端，更快的页面，能用的搜索，可扩展的匿名评价，像样的移动端体验，AI 智能搜索，老师对比，可分享的名片，每天自动同步。整站完全开源，代码在 <a href="https://github.com/Mingkai1207/biph-ratings" target="_blank" rel="noopener">GitHub</a> 上。',
+      'about.purpose.title':   '这个网站是干嘛的',
+      'about.purpose.body1':   '这里不是<strong>骂老师</strong>的地方，是诚实、具体地分享<strong>看法</strong>的地方，让下一届同学选课时能心里有数。',
+      'about.purpose.body2':   '具体一点：老师<em>哪里</em>讲得好，课程<em>哪里</em>难，作业<em>到底</em>是什么感觉。"垃圾"对任何人都没有信息量。"考试不长，但每题都是综合应用"才能让后面的人有所准备。',
+      'about.purpose.body3':   '从观点滑向人身攻击的评价会被隐藏。标准不是"够不够好听"，而是"是不是事实，说得是否得体"。',
+      'about.cta':             '返回名单',
 
       // Admin
       'admin.pageTitle':     'Rate BIPH — 管理',
@@ -817,6 +847,9 @@
       link('compare.html',     'compare',     'nav.compare'),
       link('submit.html',      'submit',      'nav.submit'),
       link('suggestions.html', 'suggestions', 'nav.suggestions'),
+      // About page is the credit + intent clarification — sits next to
+      // Suggestions because both are "meta" links (not part of the core flow).
+      link('about.html',       'about',       'nav.about'),
       // Admin link is always visible in the nav. Clicking lands on the
       // token-gated admin page — non-admins just see the login screen.
       link('admin.html',       'admin',       'nav.admin'),

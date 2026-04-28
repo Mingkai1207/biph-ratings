@@ -711,6 +711,51 @@ body[data-page="home"] .container {
   margin: 0 0 20px;
 }
 
+/* ——— About / clarification page */
+.about-section {
+  margin: 0 0 40px;
+  padding: 28px 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.about-section + .about-section { margin-top: 24px; }
+.about-section__title {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 14px;
+  color: var(--ink);
+  font-weight: 400;
+}
+.about-section__body {
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+.about-section__body:last-child { margin-bottom: 0; }
+.about-section__body strong { color: var(--accent-ink); font-weight: 600; }
+.about-section__body em { font-style: italic; color: var(--ink); }
+.about-section__body a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.about-section__body a:hover { text-decoration-thickness: 2px; }
+.about-foot {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0 24px;
+}
+@media (max-width: 640px) {
+  .about-section { padding: 22px 20px; }
+  .about-section__title { font-size: 24px; }
+  .about-section__body { font-size: 15px; }
+}
+
 .rating-rows { display: grid; gap: 12px; }
 .rating-row {
   display: grid;
