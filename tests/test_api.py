@@ -472,3 +472,41 @@ def test_admin_token_parser_falls_back_to_dev_default(monkeypatch):
     monkeypatch.delenv("ADMIN_TOKEN", raising=False)
     monkeypatch.delenv("ADMIN_TOKENS", raising=False)
     assert _m._parse_admin_tokens() == {"dev-admin-token"}
+
+
+# ——— Admin stats endpoint (count reviews / teachers / by-source breakdown)
+
+
+def test_admin_stats_requires_auth(client):
+    r = client.get("/api/admin/stats")
+    assert r.status_code == 401
+
+
+def test_admin_stats_returns_breakdown(client, seeded_teacher):
+    """Stats endpoint must report total + visible/hidden + by-source bucket
+    correctly. Seed two reviews of different sources and visibilities."""
+    import uuid as _uuid
+    from backend import db as _db
+    with _db.get_conn() as conn:
+        # 1 user review, visible
+        conn.execute(
+            "INSERT INTO reviews (id, teacher_id, teaching_quality, "
+            "test_difficulty, homework_load, easygoingness, comment, "
+            "is_visible, source) VALUES (?, ?, 5, 3, 2, 4, 'a', 1, 'user')",
+            (_uuid.uuid4().hex, seeded_teacher),
+        )
+        # 1 imported review, hidden
+        conn.execute(
+            "INSERT INTO reviews (id, teacher_id, teaching_quality, "
+            "test_difficulty, homework_load, easygoingness, comment, "
+            "is_visible, source) VALUES (?, ?, 4, 4, 4, 4, 'b', 0, 'imported_biph_insights')",
+            (_uuid.uuid4().hex, seeded_teacher),
+        )
+    r = client.get("/api/admin/stats", headers=ADMIN_HEADERS)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["reviews"]["total"] >= 2
+    assert "user" in data["reviews"]["by_source"]
+    assert "imported_biph_insights" in data["reviews"]["by_source"]
+    assert data["reviews"]["by_source"]["user"]["visible"] >= 1
+    assert data["reviews"]["by_source"]["imported_biph_insights"]["hidden"] >= 1

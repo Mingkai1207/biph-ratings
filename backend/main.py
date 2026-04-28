@@ -945,6 +945,45 @@ def admin_edit_teacher(
     }
 
 
+@app.get("/api/admin/stats")
+def admin_stats(authorization: Optional[str] = Header(default=None)):
+    """Lightweight breakdown of the review + teacher tables. Useful for
+    answering "how many imports vs. native reviews do we have right now"
+    without needing shell access to the Railway volume."""
+    require_admin(authorization)
+    with get_conn() as conn:
+        rev_total = conn.execute("SELECT COUNT(*) AS n FROM reviews").fetchone()["n"]
+        rev_visible = conn.execute(
+            "SELECT COUNT(*) AS n FROM reviews WHERE is_visible = 1"
+        ).fetchone()["n"]
+        rev_by_source = conn.execute(
+            """SELECT source, is_visible, COUNT(*) AS n
+               FROM reviews GROUP BY source, is_visible"""
+        ).fetchall()
+        teach_total = conn.execute("SELECT COUNT(*) AS n FROM teachers").fetchone()["n"]
+        teach_visible = conn.execute(
+            "SELECT COUNT(*) AS n FROM teachers WHERE is_visible = 1"
+        ).fetchone()["n"]
+    # Fold the (source, is_visible) cross-tab into a flat dict per source.
+    by_source: dict = {}
+    for r in rev_by_source:
+        bucket = by_source.setdefault(r["source"], {"visible": 0, "hidden": 0, "total": 0})
+        if r["is_visible"]:
+            bucket["visible"] += r["n"]
+        else:
+            bucket["hidden"] += r["n"]
+        bucket["total"] += r["n"]
+    return {
+        "reviews": {
+            "total": rev_total,
+            "visible": rev_visible,
+            "hidden": rev_total - rev_visible,
+            "by_source": by_source,
+        },
+        "teachers": {"total": teach_total, "visible": teach_visible},
+    }
+
+
 @app.post("/api/admin/sync-base44")
 def admin_sync_base44(authorization: Optional[str] = Header(default=None)):
     """One-shot pull from the base44 reference site to pick up reviews
