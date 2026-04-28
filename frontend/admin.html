@@ -68,20 +68,22 @@
         <div id="sugsEmpty" class="empty" hidden data-i18n="admin.sugs.empty">No suggestions.</div>
       </div>
 
-      <!-- TOOLS pane: hide-review form, plus future admin tools -->
+      <!-- TOOLS pane: browse-and-hide reviews. Admin sees teacher + ratings +
+           comment for each review and clicks Hide directly. Hidden reviews
+           stay in the list (faded) so a wrong hide can be reversed via Unhide. -->
       <div id="pane-tools" class="admin-pane">
         <div class="admin-pane__head">
-          <div class="serif admin-pane__title" data-i18n="admin.hide.title">Hide a review</div>
+          <div class="serif admin-pane__title" data-i18n="admin.tools.title">Browse reviews</div>
+          <p class="admin-pane__lede" data-i18n="admin.tools.lede">Newest first. Search teacher names or comment text. Click Hide on anything that needs to disappear from the public site — Unhide reverses it.</p>
         </div>
-        <div class="form-card">
-          <div class="field">
-            <div class="field__row"><label class="field__label" for="reviewId" data-i18n="admin.hide.label">Review ID (UUID)</label></div>
-            <input id="reviewId" class="input" data-i18n-placeholder="admin.hide.placeholder" placeholder="paste review id" />
-          </div>
-          <div id="hideStatus" class="form-status"></div>
-          <div class="form-actions">
-            <button id="hideBtn" class="btn btn--primary" data-i18n="admin.hide.button">Hide review</button>
-          </div>
+        <div class="admin-tools__controls">
+          <input id="reviewSearch" class="input" type="text"
+                 data-i18n-placeholder="admin.tools.search" placeholder="Search teacher or comment…" />
+        </div>
+        <div id="reviewsList" class="admin-reviews"></div>
+        <div id="reviewsEmpty" class="empty" hidden data-i18n="admin.tools.empty">No reviews match.</div>
+        <div class="admin-tools__foot">
+          <button id="reviewsLoadMore" class="btn btn--ghost btn--sm" hidden data-i18n="admin.tools.loadMore">Load more</button>
         </div>
       </div>
     </section>
@@ -276,10 +278,103 @@
       });
     }
 
+    // ——— Tools: browse-and-hide reviews
+    let reviewsState = { items: [], offset: 0, q: '', loading: false, hasMore: false };
+    let reviewSearchTimer = null;
+    const REVIEW_PAGE = 50;
+    const METRIC_KEYS = ['teaching_quality', 'test_difficulty', 'homework_load', 'easygoingness'];
+
+    async function loadReviews(reset) {
+      if (reviewsState.loading) return;
+      reviewsState.loading = true;
+      const offset = reset ? 0 : reviewsState.offset;
+      const params = new URLSearchParams({
+        limit: String(REVIEW_PAGE),
+        offset: String(offset),
+        include_hidden: 'true',
+      });
+      if (reviewsState.q) params.set('q', reviewsState.q);
+      try {
+        const data = await auth(`/api/admin/reviews?${params.toString()}`);
+        if (reset) reviewsState.items = data.reviews;
+        else reviewsState.items = reviewsState.items.concat(data.reviews);
+        reviewsState.offset = offset + data.reviews.length;
+        reviewsState.hasMore = data.has_more;
+        renderReviews();
+      } catch (e) {
+        RB.toast(e.message);
+      } finally {
+        reviewsState.loading = false;
+      }
+    }
+
+    function renderReviews() {
+      const host = document.getElementById('reviewsList');
+      const empty = document.getElementById('reviewsEmpty');
+      const more = document.getElementById('reviewsLoadMore');
+      host.innerHTML = '';
+      if (!reviewsState.items.length) {
+        empty.hidden = false; more.hidden = true; return;
+      }
+      empty.hidden = true;
+      more.hidden = !reviewsState.hasMore;
+      reviewsState.items.forEach(r => host.appendChild(buildReviewRow(r)));
+    }
+
+    function buildReviewRow(r) {
+      const row = document.createElement('div');
+      row.className = 'admin-review' + (r.is_visible ? '' : ' admin-review--hidden');
+      row.dataset.reviewId = r.id;
+      const when = RB.relDate(r.created_at) || '';
+      const subj = r.teacher_subject ? ` · ${escape(RB.localizeSubject(r.teacher_subject))}` : '';
+      const metrics = METRIC_KEYS.map(k => {
+        const label = RB.t('teacher.metrics.short.' + k);
+        return `<span class="admin-review__metric">${escape(label)} <strong>${r[k]}</strong></span>`;
+      }).join('');
+      const comment = (r.comment && r.comment.trim())
+        ? `<div class="admin-review__comment">${escape(r.comment)}</div>`
+        : `<div class="admin-review__comment admin-review__comment--empty">${RB.t('admin.tools.noComment')}</div>`;
+      const wta = (r.would_take_again === 1 || r.would_take_again === true)
+        ? `<span class="metric-badge metric-badge--wta-yes">${RB.t('teacher.wta.badgeYes')}</span>`
+        : (r.would_take_again === 0 || r.would_take_again === false)
+          ? `<span class="metric-badge metric-badge--wta-no">${RB.t('teacher.wta.badgeNo')}</span>`
+          : '';
+      const actionLabel = r.is_visible ? RB.t('admin.tools.hide') : RB.t('admin.tools.unhide');
+      const actionClass = r.is_visible ? 'btn--ghost' : 'btn--accent';
+      row.innerHTML = `
+        <div class="admin-review__head">
+          <div class="admin-review__avatar" data-avatar></div>
+          <div class="admin-review__who">
+            <a class="admin-review__name" href="teacher.html?id=${encodeURIComponent(r.teacher_id)}" target="_blank" rel="noopener">${escape(r.teacher_name)}</a>
+            <div class="admin-review__sub">${when}${subj}${r.is_visible ? '' : ` · <span class="admin-review__hidden-tag">${RB.t('admin.tools.hiddenTag')}</span>`}</div>
+          </div>
+          <button class="btn btn--sm ${actionClass}" data-act="toggle">${actionLabel}</button>
+        </div>
+        <div class="admin-review__metrics">${metrics}${wta}</div>
+        ${comment}`;
+      row.querySelector('[data-avatar]').replaceWith(RB.avatarEl(r.teacher_name, 36));
+      row.querySelector('[data-act="toggle"]').onclick = async () => {
+        const path = r.is_visible
+          ? `/api/admin/reviews/${r.id}/hide`
+          : `/api/admin/reviews/${r.id}/unhide`;
+        try {
+          await auth(path, { method: 'POST' });
+          r.is_visible = !r.is_visible;
+          RB.toast(r.is_visible ? RB.t('admin.tools.unhid') : RB.t('admin.tools.hid'));
+          // In-place re-render of just this row so scroll position is preserved.
+          row.replaceWith(buildReviewRow(r));
+        } catch (e) {
+          RB.toast(e.message);
+        }
+      };
+      return row;
+    }
+
     document.addEventListener('rb:lang', () => {
       if (lastSubs) renderSubs(lastSubs);
       if (lastSugs) renderSugs(lastSugs);
       if (lastTeachers) renderTeachers(lastTeachers, document.getElementById('teacherSearch').value || '');
+      if (reviewsState.items.length) renderReviews();
     });
 
     async function unlock() {
@@ -302,20 +397,22 @@
 
     document.getElementById('loginBtn').addEventListener('click', unlock);
     document.getElementById('token').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
-    document.getElementById('refreshBtn').addEventListener('click', () => { loadTeachers(); loadSubs(); loadSugs(); });
+    document.getElementById('refreshBtn').addEventListener('click', () => { loadTeachers(); loadSubs(); loadSugs(); loadReviews(true); });
     document.getElementById('showResolved').addEventListener('change', loadSugs);
-    document.getElementById('hideBtn').addEventListener('click', async () => {
-      const rid = document.getElementById('reviewId').value.trim();
-      const st = document.getElementById('hideStatus');
-      st.className = 'form-status';
-      if (!rid) { st.textContent = RB.t('admin.hide.empty'); st.classList.add('form-status--err'); return; }
-      try {
-        await auth(`/api/admin/reviews/${rid}/hide`, { method: 'POST' });
-        RB.toast(RB.t('admin.hide.toast'));
-        document.getElementById('reviewId').value = '';
-      } catch (e) {
-        st.textContent = e.message; st.classList.add('form-status--err');
-      }
+
+    document.getElementById('reviewSearch').addEventListener('input', (e) => {
+      // Debounce so we don't fire a request on every keystroke.
+      clearTimeout(reviewSearchTimer);
+      reviewSearchTimer = setTimeout(() => {
+        reviewsState.q = e.target.value.trim();
+        loadReviews(true);
+      }, 250);
+    });
+    document.getElementById('reviewsLoadMore').addEventListener('click', () => loadReviews(false));
+    // Lazy-load reviews on first click of the Tools tab so login isn't blocked
+    // by a 50-row fetch the admin may not need.
+    document.querySelector('.admin-tab[data-tab="tools"]').addEventListener('click', () => {
+      if (!reviewsState.items.length && !reviewsState.loading) loadReviews(true);
     });
 
     if (token) {

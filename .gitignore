@@ -7,11 +7,13 @@ __pycache__/
 venv/
 env/
 
-# SQLite database — never commit; Railway volume holds prod data
-backend/biph.db
-backend/biph.db-journal
-backend/biph.db-wal
-backend/biph.db-shm
+# SQLite database — never commit; Railway volume holds prod data.
+# Catch-all also covers backend/data.db that uvicorn creates when run
+# outside scripts/dev.sh, plus any future stray .db file.
+backend/*.db
+backend/*.db-journal
+backend/*.db-wal
+backend/*.db-shm
 
 # Timestamp for scripts/dev.sh auto-sync logic (local-only)
 backend/.last-prod-sync

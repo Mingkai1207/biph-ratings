@@ -676,6 +676,81 @@ def admin_hide_review(review_id: str, authorization: Optional[str] = Header(defa
     return {"ok": True}
 
 
+@app.post("/api/admin/reviews/{review_id}/unhide")
+def admin_unhide_review(review_id: str, authorization: Optional[str] = Header(default=None)):
+    """Reversibility for hide. Used when a hide was a mistake — admin
+    sees a hidden row in the browse list and clicks Unhide to restore it."""
+    require_admin(authorization)
+    with get_conn() as conn:
+        n = conn.execute(
+            "UPDATE reviews SET is_visible = 1 WHERE id = ?", (review_id,)
+        ).rowcount
+    if not n:
+        raise HTTPException(status_code=404, detail="Review not found")
+    return {"ok": True}
+
+
+@app.get("/api/admin/reviews")
+def admin_list_reviews(
+    authorization: Optional[str] = Header(default=None),
+    q: Optional[str] = Query(default=None, max_length=100),
+    include_hidden: bool = Query(default=True),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+):
+    """Browse-and-hide for the admin Tools tab. Replaces the old paste-UUID
+    flow so the moderator sees the actual review content (teacher name,
+    ratings, comment) before deciding to hide.
+
+    `q` matches teacher name OR comment text (case-insensitive substring).
+    `include_hidden=True` by default so admin can find what they hid and
+    unhide if needed. Newest first."""
+    require_admin(authorization)
+    where = []
+    params = []
+    if not include_hidden:
+        where.append("r.is_visible = 1")
+    if q:
+        like = f"%{q.lower()}%"
+        where.append("(LOWER(t.name) LIKE ? OR LOWER(COALESCE(r.comment, '')) LIKE ?)")
+        params.extend([like, like])
+    where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+    sql = f"""
+      SELECT r.id, r.teaching_quality, r.test_difficulty, r.homework_load,
+             r.easygoingness, r.would_take_again, r.comment, r.created_at,
+             r.is_visible,
+             t.id AS teacher_id, t.name AS teacher_name, t.subject AS teacher_subject
+      FROM reviews r
+      JOIN teachers t ON t.id = r.teacher_id
+      {where_sql}
+      ORDER BY r.created_at DESC
+      LIMIT ? OFFSET ?
+    """
+    params.extend([limit, offset])
+    with get_conn() as conn:
+        rows = conn.execute(sql, params).fetchall()
+    return {
+        "reviews": [
+            {
+                "id": r["id"],
+                "teaching_quality": r["teaching_quality"],
+                "test_difficulty": r["test_difficulty"],
+                "homework_load": r["homework_load"],
+                "easygoingness": r["easygoingness"],
+                "would_take_again": r["would_take_again"],
+                "comment": r["comment"],
+                "created_at": r["created_at"],
+                "is_visible": bool(r["is_visible"]),
+                "teacher_id": r["teacher_id"],
+                "teacher_name": r["teacher_name"],
+                "teacher_subject": r["teacher_subject"],
+            }
+            for r in rows
+        ],
+        "has_more": len(rows) == limit,
+    }
+
+
 @app.get("/api/admin/suggestions")
 def admin_list_suggestions(
     include_resolved: bool = Query(default=False),

@@ -173,3 +173,122 @@ def test_index_html_has_revalidate_cache_header(client):
     r = client.get("/index.html")
     assert r.status_code == 200
     assert "no-cache" in r.headers.get("cache-control", "")
+
+
+# ——— Admin browse-and-hide reviews
+#
+# The Tools tab used to take a UUID-paste — the admin had no way to see what
+# they were hiding. New flow: GET /api/admin/reviews returns reviews joined
+# with teacher info so the UI can render a browseable list, then the existing
+# hide endpoint + a new unhide endpoint flip visibility in either direction.
+
+
+def _seed_review(teacher_id, comment="ok", visible=True):
+    """Helper: insert one review on the given teacher and return its id."""
+    import uuid as _uuid
+    from backend import db as _db
+    rid = _uuid.uuid4().hex
+    with _db.get_conn() as conn:
+        conn.execute(
+            "INSERT INTO reviews (id, teacher_id, teaching_quality, "
+            "test_difficulty, homework_load, easygoingness, comment, "
+            "is_visible) VALUES (?, ?, 5, 3, 2, 4, ?, ?)",
+            (rid, teacher_id, comment, 1 if visible else 0),
+        )
+    return rid
+
+
+def test_admin_list_reviews_requires_auth(client):
+    r = client.get("/api/admin/reviews")
+    assert r.status_code == 401
+
+
+def test_admin_list_reviews_returns_teacher_info(client, seeded_teacher):
+    rid = _seed_review(seeded_teacher, comment="great class")
+    r = client.get("/api/admin/reviews", headers=ADMIN_HEADERS)
+    assert r.status_code == 200
+    rows = r.json()["reviews"]
+    mine = next((x for x in rows if x["id"] == rid), None)
+    assert mine is not None
+    assert mine["teacher_name"] == "Test Teacher"
+    assert mine["teacher_subject"] == "Math"
+    assert mine["teacher_id"] == seeded_teacher
+    assert mine["comment"] == "great class"
+    assert mine["is_visible"] is True
+
+
+def test_admin_list_reviews_includes_hidden_by_default(client, seeded_teacher):
+    rid = _seed_review(seeded_teacher, comment="hidden review", visible=False)
+    r = client.get("/api/admin/reviews", headers=ADMIN_HEADERS)
+    assert r.status_code == 200
+    ids = [x["id"] for x in r.json()["reviews"]]
+    assert rid in ids
+    me = next(x for x in r.json()["reviews"] if x["id"] == rid)
+    assert me["is_visible"] is False
+
+
+def test_admin_list_reviews_can_exclude_hidden(client, seeded_teacher):
+    rid = _seed_review(seeded_teacher, comment="hidden review", visible=False)
+    r = client.get(
+        "/api/admin/reviews?include_hidden=false", headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    ids = [x["id"] for x in r.json()["reviews"]]
+    assert rid not in ids
+
+
+def test_admin_list_reviews_filters_by_teacher_name(client, seeded_teacher):
+    """`q` must match teacher name (case-insensitive substring)."""
+    rid = _seed_review(seeded_teacher, comment="something")
+    r = client.get("/api/admin/reviews?q=test+teach", headers=ADMIN_HEADERS)
+    assert r.status_code == 200
+    assert any(x["id"] == rid for x in r.json()["reviews"])
+
+
+def test_admin_list_reviews_filters_by_comment_text(client, seeded_teacher):
+    rid = _seed_review(seeded_teacher, comment="UNIQUE_NEEDLE_42")
+    r = client.get("/api/admin/reviews?q=UNIQUE_NEEDLE", headers=ADMIN_HEADERS)
+    assert r.status_code == 200
+    rows = r.json()["reviews"]
+    assert len(rows) == 1
+    assert rows[0]["id"] == rid
+
+
+def test_admin_list_reviews_pagination(client, seeded_teacher):
+    """Pin the limit/offset contract — the admin UI's Load More relies on it."""
+    for i in range(3):
+        _seed_review(seeded_teacher, comment=f"page {i}")
+    page1 = client.get(
+        "/api/admin/reviews?limit=2&offset=0", headers=ADMIN_HEADERS,
+    ).json()
+    page2 = client.get(
+        "/api/admin/reviews?limit=2&offset=2", headers=ADMIN_HEADERS,
+    ).json()
+    assert len(page1["reviews"]) == 2
+    page1_ids = {x["id"] for x in page1["reviews"]}
+    page2_ids = {x["id"] for x in page2["reviews"]}
+    assert page1_ids.isdisjoint(page2_ids)
+
+
+def test_admin_unhide_review_requires_auth(client, seeded_teacher):
+    rid = _seed_review(seeded_teacher, visible=False)
+    r = client.post(f"/api/admin/reviews/{rid}/unhide")
+    assert r.status_code == 401
+
+
+def test_admin_unhide_review_restores_visibility(client, seeded_teacher):
+    rid = _seed_review(seeded_teacher, visible=False)
+    r = client.post(
+        f"/api/admin/reviews/{rid}/unhide", headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    # And it must show up in the public reviews list now.
+    public = client.get(f"/api/teachers/{seeded_teacher}/reviews").json()
+    assert any(x["id"] == rid for x in public["reviews"])
+
+
+def test_admin_unhide_review_404_for_missing(client):
+    r = client.post(
+        "/api/admin/reviews/does-not-exist/unhide", headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 404

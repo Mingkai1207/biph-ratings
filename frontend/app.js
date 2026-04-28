@@ -263,6 +263,18 @@
       'admin.teachers.saved':   'Saved {name}',
       'admin.teachers.error':   'Could not save: {msg}',
       'admin.teachers.subjectMissing': 'no subject',
+      // Admin · Tools (browse-and-hide reviews)
+      'admin.tools.title':      'Browse reviews',
+      'admin.tools.lede':       'Newest first. Search teacher names or comment text. Click Hide on anything that needs to disappear from the public site — Unhide reverses it.',
+      'admin.tools.search':     'Search teacher or comment…',
+      'admin.tools.empty':      'No reviews match.',
+      'admin.tools.loadMore':   'Load more',
+      'admin.tools.hide':       'Hide',
+      'admin.tools.unhide':     'Unhide',
+      'admin.tools.hid':        'Review hidden',
+      'admin.tools.unhid':      'Review restored',
+      'admin.tools.noComment':  '(no comment)',
+      'admin.tools.hiddenTag':  'hidden',
     },
     zh: {
       // Nav
@@ -497,6 +509,18 @@
       'admin.teachers.saved':   '已保存 {name}',
       'admin.teachers.error':   '保存失败：{msg}',
       'admin.teachers.subjectMissing': '未填科目',
+      // Admin · Tools (browse-and-hide reviews)
+      'admin.tools.title':      '浏览评价',
+      'admin.tools.lede':       '按时间倒序。可搜索老师姓名或评价内容。点击「隐藏」让评价从公开页面消失，「恢复」可撤回。',
+      'admin.tools.search':     '搜索老师或评价内容…',
+      'admin.tools.empty':      '没有匹配的评价。',
+      'admin.tools.loadMore':   '加载更多',
+      'admin.tools.hide':       '隐藏',
+      'admin.tools.unhide':     '恢复',
+      'admin.tools.hid':        '已隐藏',
+      'admin.tools.unhid':      '已恢复',
+      'admin.tools.noComment':  '（无评论）',
+      'admin.tools.hiddenTag':  '已隐藏',
     },
   };
 
