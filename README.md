@@ -1,6 +1,6 @@
 # Rate BIPH
 
-Anonymous teacher reviews for Beijing International Private High (BIPH). Live at **[ratebiph.com](https://ratebiph.com)**.
+Anonymous teacher reviews for BASIS International School Park Lane Harbour (BIPH). Live at **[ratebiph.com](https://ratebiph.com)**.
 
 Replaces the slow base44 no-code site (biphratemyteacher.base44.app) with real infrastructure we control.
 
