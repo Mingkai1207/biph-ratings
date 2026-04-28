@@ -149,6 +149,9 @@ _MAINTENANCE_HTML = """<!doctype html>
 """
 
 
+PREVIEW_COOKIE = "rb_preview"
+
+
 @app.middleware("http")
 async def _maintenance_gate(request, call_next):
     """When MAINTENANCE_MODE is on, every non-admin route serves a 503
@@ -156,17 +159,32 @@ async def _maintenance_gate(request, call_next):
     /api/admin/* (stats, regenerate-reviews, etc.) while the site is dark
     to students. Health check also passes so Railway doesn't restart us.
 
-    Preview bypass: an admin can pass `?preview=<admin_token>` on any URL
-    to see the real site through the maintenance gate. Lets us QA changes
-    before flipping MAINTENANCE_MODE off for everyone."""
+    Preview bypass: pass `?preview=<admin_token>` once. We set a session
+    cookie carrying the same token, and from then on every request from
+    that browser (including the JS XHRs that hit /api/teachers etc.)
+    sees the cookie and bypasses the gate. Lets an admin QA the live
+    site through the maintenance wall without flipping the flag off for
+    everyone."""
     if not MAINTENANCE_MODE:
         return await call_next(request)
     path = request.url.path
     if path.startswith("/api/admin/") or path == "/api/health":
         return await call_next(request)
     preview_token = request.query_params.get("preview", "")
-    if preview_token and preview_token in ADMIN_TOKENS:
-        return await call_next(request)
+    cookie_token = request.cookies.get(PREVIEW_COOKIE, "")
+    valid_query = preview_token and preview_token in ADMIN_TOKENS
+    valid_cookie = cookie_token and cookie_token in ADMIN_TOKENS
+    if valid_query or valid_cookie:
+        response = await call_next(request)
+        if valid_query:
+            # Promote the query-param token to a cookie so subsequent XHR
+            # calls (which won't carry the query param) keep bypassing.
+            response.set_cookie(
+                PREVIEW_COOKIE, preview_token,
+                httponly=True, samesite="lax", max_age=86400,
+                secure=request.url.scheme == "https",
+            )
+        return response
     return Response(
         content=_MAINTENANCE_HTML,
         status_code=503,

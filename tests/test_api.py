@@ -711,14 +711,23 @@ def test_admin_delete_by_source_executes(client, seeded_teacher):
     assert still_there == 0
 
 
-def test_maintenance_preview_bypass_with_admin_token(client, monkeypatch):
-    """An admin token in ?preview=... query lets us see the real site
-    through the maintenance gate (for QA before flipping the flag off)."""
+def test_maintenance_preview_bypass_with_admin_token(monkeypatch):
+    """An admin token in ?preview=... query bypasses the gate AND sets a
+    cookie so subsequent XHR calls (which won't carry the query param)
+    still get through. Each scenario uses a FRESH TestClient so cookies
+    from a prior bypass don't leak in."""
     import backend.main as _m
+    from fastapi.testclient import TestClient
+    from backend.main import app
     monkeypatch.setattr(_m, "MAINTENANCE_MODE", True)
-    r_blocked = client.get("/api/teachers")
-    assert r_blocked.status_code == 503
-    r_allowed = client.get("/api/teachers?preview=test-admin-token")
+    # No preview token → blocked.
+    assert TestClient(app).get("/api/teachers").status_code == 503
+    # Valid preview token in query → bypass + cookie set.
+    c1 = TestClient(app)
+    r_allowed = c1.get("/api/teachers?preview=test-admin-token")
     assert r_allowed.status_code == 200
-    r_wrong = client.get("/api/teachers?preview=nope")
-    assert r_wrong.status_code == 503
+    assert "rb_preview" in r_allowed.cookies
+    # Subsequent request from same client (no query, has cookie) → bypass.
+    assert c1.get("/api/teachers").status_code == 200
+    # Fresh client + wrong preview token → blocked.
+    assert TestClient(app).get("/api/teachers?preview=nope").status_code == 503
