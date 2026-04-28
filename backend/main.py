@@ -99,7 +99,7 @@ _MAINTENANCE_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rate BIPH — 维护中 / Maintenance</title>
+  <title>Rate BIPH — 暂停服务 / Paused</title>
   <style>
     body {
       margin: 0;
@@ -112,7 +112,7 @@ _MAINTENANCE_HTML = """<!doctype html>
       color: oklch(0.25 0.02 60);
     }
     .box {
-      max-width: 480px;
+      max-width: 520px;
       padding: 48px 32px;
       text-align: center;
     }
@@ -120,17 +120,22 @@ _MAINTENANCE_HTML = """<!doctype html>
       font-size: 38px;
       font-weight: 400;
       letter-spacing: -0.02em;
-      margin: 0 0 18px;
+      margin: 0 0 22px;
     }
     h1 em { color: oklch(0.55 0.12 40); font-style: italic; }
     p {
       font-size: 16px;
-      line-height: 1.6;
+      line-height: 1.7;
       color: oklch(0.42 0.02 60);
-      margin: 0 0 12px;
+      margin: 0 0 14px;
+    }
+    .en {
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid oklch(0.85 0.02 60);
     }
     .small {
-      margin-top: 28px;
+      margin-top: 26px;
       font-size: 13px;
       color: oklch(0.55 0.02 60);
       font-style: italic;
@@ -139,10 +144,14 @@ _MAINTENANCE_HTML = """<!doctype html>
 </head>
 <body>
   <div class="box">
-    <h1>Rate BIPH 正在<em>整理中</em></h1>
-    <p>站点临时下线，正在调整内容质量。</p>
-    <p>The site is temporarily down while we polish things.</p>
-    <p class="small">回头见。Back soon.</p>
+    <h1>Rate BIPH <em>暂停服务</em></h1>
+    <p>正在跟 <strong>BIPH Insights</strong> 原作者商讨网站合并的事。</p>
+    <p>具体怎么做，等 <strong>AP 考试结束</strong> 之后再商量。</p>
+    <div class="en">
+      <p>Currently in talks with the original BIPH Insights team about merging the two sites.</p>
+      <p>Details get figured out <strong>after AP exams</strong>.</p>
+    </div>
+    <p class="small">回头见。See you after AP.</p>
   </div>
 </body>
 </html>
