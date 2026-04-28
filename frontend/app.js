@@ -602,8 +602,14 @@
   }
 
   function getLang() {
+    // Saved preference always wins — once a visitor flips the toggle their
+    // choice persists across sessions.
     const v = (typeof localStorage !== 'undefined' && localStorage.getItem('rb.lang')) || '';
-    return v === 'zh' ? 'zh' : 'en';
+    if (v === 'en' || v === 'zh') return v;
+    // No saved choice yet. Default to Chinese — the audience is BIPH (a
+    // Beijing high school) so zh is the right cold-start. English visitors
+    // are one toggle click away and the choice sticks after that.
+    return 'zh';
   }
   function t(key, params) {
     const dict = I18N[getLang()] || I18N.en;
