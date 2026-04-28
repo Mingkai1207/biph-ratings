@@ -155,23 +155,32 @@ def test_search_rate_limit_returns_429(client, monkeypatch):
     assert over.json()["error"] == "rate_limited"
 
 
-# ——— Provider selection (OpenAI vs Groq) ——————————————————————
+# ——— Provider selection (Gemini > OpenAI > Groq) ——————————————
 
-def test_active_provider_prefers_openai_when_both_keys_set(monkeypatch):
-    """OpenAI > Groq when both keys are present. Order matters because OpenAI
-    typically gives better edge-query parsing than Llama 3.3 70B on Groq."""
+def test_active_provider_prefers_gemini_when_all_keys_set(monkeypatch):
+    """Priority order: Gemini > OpenAI > Groq."""
+    monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "AIza-test-gemini")
+    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "sk-test-openai")
+    monkeypatch.setattr(aisearch, "GROQ_API_KEY", "gsk-test-groq")
+    assert aisearch.active_provider() == "gemini"
+
+
+def test_active_provider_picks_openai_when_no_gemini(monkeypatch):
+    monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "")
     monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "sk-test-openai")
     monkeypatch.setattr(aisearch, "GROQ_API_KEY", "gsk-test-groq")
     assert aisearch.active_provider() == "openai"
 
 
 def test_active_provider_falls_back_to_groq_when_only_groq_set(monkeypatch):
+    monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "")
     monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "")
     monkeypatch.setattr(aisearch, "GROQ_API_KEY", "gsk-test-groq")
     assert aisearch.active_provider() == "groq"
 
 
 def test_active_provider_returns_none_when_no_keys(monkeypatch):
+    monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "")
     monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "")
     monkeypatch.setattr(aisearch, "GROQ_API_KEY", "")
     assert aisearch.active_provider() is None
@@ -180,7 +189,26 @@ def test_active_provider_returns_none_when_no_keys(monkeypatch):
 def test_call_llm_raises_when_no_provider(monkeypatch):
     """Without a key configured we don't silently call something — the caller
     needs to know so it can fall back to keyword search."""
+    monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "")
     monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "")
     monkeypatch.setattr(aisearch, "GROQ_API_KEY", "")
     with pytest.raises(RuntimeError, match="No LLM API key"):
         aisearch.call_llm("anything")
+
+
+def test_call_llm_routes_to_gemini_when_gemini_key_set(monkeypatch):
+    """When Gemini is active, call_llm must dispatch to _call_gemini, not the
+    OpenAI-compatible helper (the request shape is incompatible)."""
+    monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "AIza-test")
+    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "sk-also-set")
+    calls = {"gemini": 0, "openai_compat": 0}
+    def fake_gemini(q):
+        calls["gemini"] += 1
+        return {"intent": "rank"}
+    def fake_openai_compat(*a):
+        calls["openai_compat"] += 1
+        return {}
+    monkeypatch.setattr(aisearch, "_call_gemini", fake_gemini)
+    monkeypatch.setattr(aisearch, "_call_openai_compatible", fake_openai_compat)
+    aisearch.call_llm("anything")
+    assert calls == {"gemini": 1, "openai_compat": 0}
