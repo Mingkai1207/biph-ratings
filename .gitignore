@@ -35,3 +35,6 @@ node_modules/
 # Claude
 .claude/
 .gstack/
+
+# One-shot data backups (e.g. base44 corpus snapshot before regeneration)
+data/*.json
