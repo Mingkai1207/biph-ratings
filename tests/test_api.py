@@ -343,3 +343,85 @@ def test_admin_list_reviews_teacher_id_unknown_returns_empty(client):
     )
     assert r.status_code == 200
     assert r.json()["reviews"] == []
+
+
+# ——— Author revoke window
+#
+# After submission, the author has REVOKE_WINDOW_SECONDS to take their review
+# back (oops-undo, not edit). Verified by ip_hash match — no random caller
+# can delete a stranger's review even if they have the id. The teacher-detail
+# response also includes the review id + window so the UI can show a countdown.
+
+
+def _seed_review_with_ip(teacher_id, ip_hash, age_seconds=0, comment="ok"):
+    """Insert a review attributed to a given ip_hash and aged by N seconds.
+    Used to simulate "you just posted" vs "you posted 2 minutes ago"."""
+    import uuid as _uuid
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    from backend import db as _db
+    rid = _uuid.uuid4().hex
+    when = _dt.now(_tz.utc) - _td(seconds=age_seconds)
+    # Match sqlite default format: 'YYYY-MM-DD HH:MM:SS'
+    when_sql = when.strftime("%Y-%m-%d %H:%M:%S")
+    with _db.get_conn() as conn:
+        conn.execute(
+            "INSERT INTO reviews (id, teacher_id, teaching_quality, "
+            "test_difficulty, homework_load, easygoingness, comment, "
+            "ip_hash, is_visible, created_at) "
+            "VALUES (?, ?, 5, 3, 2, 4, ?, ?, 1, ?)",
+            (rid, teacher_id, comment, ip_hash, when_sql),
+        )
+    return rid
+
+
+def _my_ip_hash():
+    """Starlette's TestClient reports `host='testclient'` (literal string),
+    not 127.0.0.1. So the server hashes 'testclient' as the IP for every
+    request — match that here so the revoke auth check sees the request
+    as coming from the review's author."""
+    from backend.spam import hash_ip
+    return hash_ip("testclient")
+
+
+def test_revoke_review_succeeds_within_window(client, seeded_teacher):
+    rid = _seed_review_with_ip(seeded_teacher, _my_ip_hash(), age_seconds=5)
+    r = client.post(f"/api/reviews/{rid}/revoke")
+    assert r.status_code == 200
+    # And the review actually disappears from the public list.
+    listed = client.get(f"/api/teachers/{seeded_teacher}/reviews").json()
+    assert all(x["id"] != rid for x in listed["reviews"])
+
+
+def test_revoke_review_rejects_after_window(client, seeded_teacher):
+    """61 seconds old: window closed, must return 410."""
+    rid = _seed_review_with_ip(seeded_teacher, _my_ip_hash(), age_seconds=61)
+    r = client.post(f"/api/reviews/{rid}/revoke")
+    assert r.status_code == 410
+    # Still in the DB.
+    listed = client.get(f"/api/teachers/{seeded_teacher}/reviews").json()
+    assert any(x["id"] == rid for x in listed["reviews"])
+
+
+def test_revoke_review_rejects_wrong_ip(client, seeded_teacher):
+    """Review owned by some other ip_hash — current caller can't touch it."""
+    rid = _seed_review_with_ip(
+        seeded_teacher, ip_hash="not-the-callers-hash", age_seconds=5,
+    )
+    r = client.post(f"/api/reviews/{rid}/revoke")
+    assert r.status_code == 403
+
+
+def test_revoke_review_404_for_unknown_id(client):
+    r = client.post("/api/reviews/does-not-exist/revoke")
+    assert r.status_code == 404
+
+
+def test_teacher_detail_includes_review_id_and_revoke_window(client, seeded_teacher):
+    """The UI needs both to render the countdown button. Pin the contract."""
+    rid = _seed_review_with_ip(seeded_teacher, _my_ip_hash(), age_seconds=5)
+    r = client.get(f"/api/teachers/{seeded_teacher}")
+    assert r.status_code == 200
+    mr = r.json()["my_recent_review"]
+    assert mr is not None
+    assert mr["id"] == rid
+    assert mr["revoke_window_seconds"] == 60

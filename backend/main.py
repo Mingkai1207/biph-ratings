@@ -35,6 +35,11 @@ BASE44_SYNC_INTERVAL_SEC = int(os.environ.get("BASE44_SYNC_INTERVAL_SEC", "86400
 # immediately hammer base44 every time we push code.
 BASE44_SYNC_INITIAL_DELAY_SEC = int(os.environ.get("BASE44_SYNC_INITIAL_DELAY_SEC", "300"))
 
+# How long after submission the author can take their review back. Short on
+# purpose: this is a "oops, I misclicked a star" undo, not an edit-as-you-please
+# affordance. After the window expires the review locks in like normal.
+REVOKE_WINDOW_SECONDS = 60
+
 # Single-origin hosting means CORS rarely matters, but set a sensible default list:
 # the prod domain + its www alias. Override with ALLOWED_ORIGIN env for custom setups.
 DEFAULT_ALLOWED = ["https://ratebiph.com", "https://www.ratebiph.com"]
@@ -307,7 +312,7 @@ def get_teacher(teacher_id: str, request: Request):
         # two must agree. If admin hid the review the user still can't re-post, and
         # it's fine to show the rating back to them (they wrote it).
         my_review_row = conn.execute(
-            """SELECT teaching_quality, test_difficulty, homework_load, easygoingness,
+            """SELECT id, teaching_quality, test_difficulty, homework_load, easygoingness,
                       would_take_again, comment, created_at
                FROM reviews
                WHERE teacher_id = ? AND ip_hash = ? AND created_at > ?
@@ -323,6 +328,9 @@ def get_teacher(teacher_id: str, request: Request):
     if my_review_row:
         mr = dict(my_review_row)
         mr["cooldown_days"] = TEACHER_COOLDOWN_DAYS
+        # Tell the frontend the revoke window so the countdown UI is one
+        # source of truth (server). UI shows the button only inside this window.
+        mr["revoke_window_seconds"] = REVOKE_WINDOW_SECONDS
         d["my_recent_review"] = mr
     else:
         d["my_recent_review"] = None
@@ -517,6 +525,48 @@ def post_review(teacher_id: str, body: ReviewIn, request: Request):
             ),
         )
     return {"ok": True, "id": review_id}
+
+
+@app.post("/api/reviews/{review_id}/revoke")
+def revoke_review(review_id: str, request: Request):
+    """Author can take their own review back within REVOKE_WINDOW_SECONDS.
+    Verified by ip_hash match (same auth model as the cooldown check), so a
+    stranger can't delete someone else's review even if they have the id.
+    Hard-deletes — the user is undoing their own action, not the admin
+    hiding it."""
+    iph = hash_ip(client_ip(request))
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT ip_hash, created_at FROM reviews WHERE id = ?",
+            (review_id,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Review not found")
+        if row["ip_hash"] != iph:
+            # Don't reveal whether it exists vs. wrong author — same 403 either way.
+            raise HTTPException(status_code=403, detail="Not your review")
+        # SQLite stores timestamps as ISO strings via the schema default; parse
+        # tolerantly. created_at may or may not have a trailing 'Z'.
+        created_raw = row["created_at"]
+        try:
+            if isinstance(created_raw, str):
+                # 'YYYY-MM-DD HH:MM:SS' from sqlite default; treat as UTC.
+                created = datetime.fromisoformat(created_raw.replace("Z", "+00:00"))
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+            else:
+                created = created_raw
+        except Exception:
+            raise HTTPException(status_code=500, detail="Bad created_at")
+        age = (datetime.now(timezone.utc) - created).total_seconds()
+        if age > REVOKE_WINDOW_SECONDS:
+            raise HTTPException(
+                status_code=410,
+                detail=f"Revoke window expired ({REVOKE_WINDOW_SECONDS}s)",
+            )
+        conn.execute("DELETE FROM reviews WHERE id = ?", (review_id,))
+        # Vote rows are fk-cascaded by schema; no manual cleanup needed.
+    return {"ok": True}
 
 
 @app.post("/api/teachers/{teacher_id}/courses")

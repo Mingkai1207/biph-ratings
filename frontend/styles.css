@@ -917,6 +917,20 @@ body[data-page="home"] .container {
   line-height: 1.5;
   white-space: pre-wrap;
 }
+.review-notice__revoke {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed oklch(0.78 0.08 40 / 0.4);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.review-notice__revoke-hint {
+  font-size: 13px;
+  color: var(--ink-mute);
+  font-style: italic;
+}
 
 /* ——— Form page shared */
 .form-card {

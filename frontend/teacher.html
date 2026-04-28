@@ -321,10 +321,17 @@
       });
     }
 
+    // Holds the setInterval id for the revoke countdown so we can clear it
+    // when the panel re-renders or the window expires.
+    let revokeTimer = null;
+
     function renderAlreadyReviewed(panel, mine) {
+      // Tear down any pending countdown from a previous render before we
+      // build a new one. Otherwise repeated re-renders leak intervals.
+      if (revokeTimer) { clearInterval(revokeTimer); revokeTimer = null; }
       const avg = (mine.teaching_quality + mine.test_difficulty + mine.homework_load + mine.easygoingness) / 4;
       const cooldownDays = mine.cooldown_days || 7;
-      const created = new Date(mine.created_at);
+      const created = new Date(mine.created_at + (mine.created_at.endsWith('Z') ? '' : 'Z'));
       const msSince = Date.now() - created.getTime();
       const daysSince = Math.max(0, Math.floor(msSince / 86400000));
       const daysLeft = Math.max(1, cooldownDays - daysSince);
@@ -341,6 +348,21 @@
         : (mine.would_take_again === 0 || mine.would_take_again === false)
           ? `<span class="metric-badge metric-badge--wta-no">${RB.t('teacher.wta.badgeNo')}</span>`
           : '';
+
+      // Revoke window: only show the button if we're inside it (server is the
+      // source of truth — it'll reject a stale call with 410 even if the UI
+      // briefly disagrees due to clock drift).
+      const windowSec = mine.revoke_window_seconds || 60;
+      const secondsLeft = Math.max(0, windowSec - Math.floor(msSince / 1000));
+      const revokeBlock = (mine.id && secondsLeft > 0)
+        ? `<div class="review-notice__revoke">
+             <button type="button" class="btn btn--ghost btn--sm" data-revoke-btn>
+               ${RB.t('teacher.revoke.button', { n: secondsLeft })}
+             </button>
+             <span class="review-notice__revoke-hint">${RB.t('teacher.revoke.hint')}</span>
+           </div>`
+        : '';
+
       panel.innerHTML = `
         <h2 class="serif">${RB.t('teacher.already.heading')}</h2>
         <p class="review-notice__lede">${RB.t('teacher.already.ledeHtml', { when: whenStr, rating: avg.toFixed(1), again: againStr })}</p>
@@ -349,8 +371,43 @@
           ${METRICS.map(m => `<span class="metric-badge">${metricLabelShort(m.key)} <strong>${mine[m.key]}</strong></span>`).join('')}
           ${wtaBadge}
         </div>
-        ${mine.comment ? `<div class="review-notice__comment">${escape(mine.comment)}</div>` : ''}`;
+        ${mine.comment ? `<div class="review-notice__comment">${escape(mine.comment)}</div>` : ''}
+        ${revokeBlock}`;
       RB.renderStars(panel.querySelector('[data-my-stars]'), avg, { size: 28 });
+
+      // Wire the revoke button + tick the countdown every second.
+      const revokeBtn = panel.querySelector('[data-revoke-btn]');
+      if (revokeBtn) {
+        let remaining = secondsLeft;
+        revokeTimer = setInterval(() => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            // Window expired — pull the button so the user doesn't click a
+            // doomed request, and stop the timer.
+            clearInterval(revokeTimer); revokeTimer = null;
+            const block = panel.querySelector('.review-notice__revoke');
+            if (block) block.remove();
+            return;
+          }
+          revokeBtn.textContent = RB.t('teacher.revoke.button', { n: remaining });
+        }, 1000);
+        revokeBtn.addEventListener('click', async () => {
+          revokeBtn.disabled = true;
+          revokeBtn.textContent = RB.t('teacher.revoke.working');
+          try {
+            await RB.api(`/api/reviews/${encodeURIComponent(mine.id)}/revoke`, { method: 'POST' });
+            if (revokeTimer) { clearInterval(revokeTimer); revokeTimer = null; }
+            RB.toast(RB.t('teacher.revoke.done'));
+            // Refresh the teacher detail so the panel flips back to the form.
+            state.teacher = await RB.api(`/api/teachers/${encodeURIComponent(id)}`);
+            renderHero(); renderStats(); renderReviewPanel(); loadReviews();
+          } catch (e) {
+            revokeBtn.disabled = false;
+            revokeBtn.textContent = RB.t('teacher.revoke.button', { n: remaining });
+            RB.toast(e.data?.detail || e.message || RB.t('teacher.revoke.fail'));
+          }
+        });
+      }
     }
 
     function renderRatingRows() {
