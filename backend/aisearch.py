@@ -194,8 +194,19 @@ def _call_openai_compatible(url: str, key: str, model: str, query: str) -> dict:
             "Content-Type": "application/json",
         },
     )
-    with urllib.request.urlopen(req, timeout=LLM_TIMEOUT_SEC) as resp:
-        data = json.loads(resp.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=LLM_TIMEOUT_SEC) as resp:
+            data = json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        # urllib swallows the response body on non-2xx by default; read it so
+        # the upstream "insufficient_quota" or "model_not_found" message
+        # actually shows up in our logs.
+        body_text = ""
+        try:
+            body_text = e.read().decode("utf-8", errors="replace")[:500]
+        except Exception:
+            pass
+        raise RuntimeError(f"LLM HTTP {e.code}: {body_text}") from e
     text = data["choices"][0]["message"]["content"]
     return json.loads(text)
 
