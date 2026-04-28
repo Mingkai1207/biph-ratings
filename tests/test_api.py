@@ -146,3 +146,30 @@ def test_admin_edit_teacher_rejects_too_short_name(client, seeded_teacher):
         headers=ADMIN_HEADERS,
     )
     assert r.status_code == 422
+
+
+# ——— Static-asset cache headers
+#
+# Why these tests exist: a previous deploy shipped the right app.js but users
+# kept seeing stale code because the default StaticFiles set no Cache-Control,
+# so browsers held cached copies for hours. We now force `no-cache` on JS/CSS/
+# HTML and aggressive caching on images. These tests pin that contract so
+# nobody accidentally regresses it.
+
+
+def test_app_js_has_revalidate_cache_header(client):
+    r = client.get("/app.js")
+    assert r.status_code == 200
+    assert "no-cache" in r.headers.get("cache-control", "")
+
+
+def test_styles_css_has_revalidate_cache_header(client):
+    r = client.get("/styles.css")
+    assert r.status_code == 200
+    assert "no-cache" in r.headers.get("cache-control", "")
+
+
+def test_index_html_has_revalidate_cache_header(client):
+    r = client.get("/index.html")
+    assert r.status_code == 200
+    assert "no-cache" in r.headers.get("cache-control", "")

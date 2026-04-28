@@ -783,5 +783,28 @@ def admin_sync_base44(authorization: Optional[str] = Header(default=None)):
 
 
 # ——— Static frontend (single-origin hosting, no CORS headache for v1)
+#
+# Why the custom subclass: the default StaticFiles sets no Cache-Control header
+# on JS/CSS/HTML, so browsers apply heuristic caching and hold stale copies of
+# app.js for hours after a deploy. Users then see "the change isn't live" even
+# though the file on disk is current. We force `no-cache` on text assets so the
+# browser ALWAYS revalidates — etag/last-modified make this a fast 304 round
+# trip when nothing changed, and a 200 with fresh bytes when it did. Images
+# (PNG/SVG/ICO/WebP) keep aggressive caching because they almost never change.
+class NoCacheStaticFiles(StaticFiles):
+    REVALIDATE_EXTS = {".html", ".js", ".css", ".json", ".map"}
+    LONG_CACHE_EXTS = {".png", ".jpg", ".jpeg", ".svg", ".ico", ".webp", ".gif", ".woff", ".woff2"}
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        ext = Path(path).suffix.lower()
+        if ext in self.REVALIDATE_EXTS:
+            # Browser may cache, but MUST revalidate via etag before reuse.
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        elif ext in self.LONG_CACHE_EXTS:
+            response.headers["Cache-Control"] = "public, max-age=86400"
+        return response
+
+
 if FRONTEND_DIR.is_dir():
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+    app.mount("/", NoCacheStaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
