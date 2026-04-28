@@ -172,6 +172,18 @@ async def _maintenance_gate(request, call_next):
         return await call_next(request)
     preview_token = request.query_params.get("preview", "")
     cookie_token = request.cookies.get(PREVIEW_COOKIE, "")
+    # Explicit logout: ?preview=logout clears the cookie + serves the
+    # maintenance page like normal. Lets an admin verify what students
+    # are seeing without manually digging into devtools.
+    if preview_token == "logout":
+        response = Response(
+            content=_MAINTENANCE_HTML,
+            status_code=503,
+            media_type="text/html; charset=utf-8",
+            headers={"Cache-Control": "no-store"},
+        )
+        response.delete_cookie(PREVIEW_COOKIE)
+        return response
     valid_query = preview_token and preview_token in ADMIN_TOKENS
     valid_cookie = cookie_token and cookie_token in ADMIN_TOKENS
     if valid_query or valid_cookie:
