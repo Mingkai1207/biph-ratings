@@ -984,6 +984,99 @@ def admin_stats(authorization: Optional[str] = Header(default=None)):
     }
 
 
+class RegenIn(BaseModel):
+    """Input to the one-shot regenerate-reviews flow. dry_run=true previews
+    the plan without touching the DB; the corpus comes back in the response
+    body so the caller can save it as a backup before re-running with
+    dry_run=false."""
+    target_total: int = Field(default=1000, ge=10, le=5000)
+    dry_run: bool = True
+    seed: Optional[int] = None
+
+
+@app.post("/api/admin/regenerate-reviews")
+def admin_regenerate_reviews(
+    body: RegenIn, authorization: Optional[str] = Header(default=None),
+):
+    """Replace all base44-imported reviews with mechanically-generated ones.
+
+    Steps when dry_run=False:
+      1. Pull every row where source='imported_biph_insights' (the corpus).
+      2. Generate `target_total` new reviews using regen.generate_reviews,
+         sampled per-teacher from each teacher's own ratings + sentence pool.
+      3. In ONE transaction: DELETE all base44 rows, INSERT all generated
+         rows. Either both succeed or neither — no half-state.
+      4. Return summary counts + corpus snapshot (for offline backup).
+
+    Why corpus is in the response body (not a file): Railway's container
+    filesystem is ephemeral and volume-mount paths shouldn't be polluted
+    with one-time backups. Caller pipes the response to a local JSON file
+    and stores it wherever they want."""
+    require_admin(authorization)
+    from . import regen
+
+    with get_conn() as conn:
+        rows = [dict(r) for r in conn.execute(
+            """SELECT id, teacher_id, teaching_quality, test_difficulty,
+                      homework_load, easygoingness, would_take_again, comment,
+                      created_at, source
+               FROM reviews WHERE source = 'imported_biph_insights'"""
+        ).fetchall()]
+
+        if not rows:
+            raise HTTPException(
+                status_code=400,
+                detail="No base44 reviews found — nothing to regenerate from",
+            )
+
+        generated = regen.generate_reviews(rows, body.target_total, seed=body.seed)
+        plan = regen.plan_per_teacher(regen._build_per_teacher_corpus(rows), body.target_total)
+
+        if body.dry_run:
+            return {
+                "dry_run": True,
+                "would_delete": len(rows),
+                "would_generate": len(generated),
+                "per_teacher_plan": plan,
+                "sample_generated": generated[:3],
+                "corpus_size": len(rows),
+            }
+
+        # Execute. The `with get_conn() as conn:` block already wraps this in
+        # an implicit transaction — if any INSERT below raises, the DELETE
+        # gets rolled back automatically.
+        n_deleted = conn.execute(
+            "DELETE FROM reviews WHERE source = 'imported_biph_insights'"
+        ).rowcount
+        for g in generated:
+            conn.execute(
+                """INSERT INTO reviews
+                   (id, teacher_id, teaching_quality, test_difficulty,
+                    homework_load, easygoingness, would_take_again, comment,
+                    ip_hash, source, legacy_id, is_visible, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    g["id"], g["teacher_id"],
+                    g["teaching_quality"], g["test_difficulty"],
+                    g["homework_load"], g["easygoingness"],
+                    g["would_take_again"], g["comment"],
+                    g["ip_hash"], g["source"], g["legacy_id"],
+                    g["is_visible"], g["created_at"],
+                ),
+            )
+
+    return {
+        "dry_run": False,
+        "deleted": n_deleted,
+        "generated": len(generated),
+        "per_teacher_plan": plan,
+        # Corpus echoed back so the caller can save the backup AFTER seeing
+        # success. (If we failed mid-way, the response wouldn't include this
+        # and the transaction would have rolled back — corpus still in DB.)
+        "corpus_backup": rows,
+    }
+
+
 @app.post("/api/admin/sync-base44")
 def admin_sync_base44(authorization: Optional[str] = Header(default=None)):
     """One-shot pull from the base44 reference site to pick up reviews

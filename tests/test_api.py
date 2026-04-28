@@ -510,3 +510,119 @@ def test_admin_stats_returns_breakdown(client, seeded_teacher):
     assert "imported_biph_insights" in data["reviews"]["by_source"]
     assert data["reviews"]["by_source"]["user"]["visible"] >= 1
     assert data["reviews"]["by_source"]["imported_biph_insights"]["hidden"] >= 1
+
+
+# ——— Mechanical review regeneration
+#
+# Replaces base44 imports with mechanically-remixed reviews that preserve
+# per-teacher rating distributions and the original sentence "voice."
+
+
+def _wipe_regen_residue():
+    """The session DB persists across tests, so each regen test scrubs prior
+    base44/generated rows before seeding its own corpus. Otherwise count
+    assertions get polluted by leftover state."""
+    from backend import db as _db
+    with _db.get_conn() as conn:
+        conn.execute(
+            "DELETE FROM reviews WHERE source IN ('imported_biph_insights', 'ai_generated')"
+        )
+
+
+def _seed_base44_corpus(teacher_id, n=10):
+    """Insert N base44-source reviews on the given teacher."""
+    _wipe_regen_residue()
+    import uuid as _uuid
+    from backend import db as _db
+    with _db.get_conn() as conn:
+        for i in range(n):
+            conn.execute(
+                "INSERT INTO reviews (id, teacher_id, teaching_quality, "
+                "test_difficulty, homework_load, easygoingness, comment, "
+                "is_visible, source) VALUES (?, ?, 5, 3, 2, 4, ?, 1, 'imported_biph_insights')",
+                (_uuid.uuid4().hex, teacher_id,
+                 f"Teacher is great. Tests are fair. Class number {i}."),
+            )
+
+
+def test_admin_regenerate_requires_auth(client):
+    r = client.post("/api/admin/regenerate-reviews", json={"target_total": 50})
+    assert r.status_code == 401
+
+
+def test_admin_regenerate_400_when_no_base44(client, seeded_teacher):
+    _wipe_regen_residue()
+    r = client.post(
+        "/api/admin/regenerate-reviews",
+        json={"target_total": 50, "dry_run": False},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 400
+
+
+def test_admin_regenerate_dry_run_makes_no_changes(client, seeded_teacher):
+    _seed_base44_corpus(seeded_teacher, n=10)
+    from backend import db as _db
+    with _db.get_conn() as conn:
+        before = conn.execute("SELECT COUNT(*) AS n FROM reviews").fetchone()["n"]
+    r = client.post(
+        "/api/admin/regenerate-reviews",
+        json={"target_total": 30, "dry_run": True},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["dry_run"] is True
+    assert body["would_delete"] == 10
+    assert body["would_generate"] >= 1
+    with _db.get_conn() as conn:
+        after = conn.execute("SELECT COUNT(*) AS n FROM reviews").fetchone()["n"]
+    assert before == after
+
+
+def test_admin_regenerate_executes(client, seeded_teacher):
+    _seed_base44_corpus(seeded_teacher, n=10)
+    r = client.post(
+        "/api/admin/regenerate-reviews",
+        json={"target_total": 30, "dry_run": False, "seed": 42},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["deleted"] == 10
+    assert body["generated"] >= 1
+    from backend import db as _db
+    with _db.get_conn() as conn:
+        n_base44 = conn.execute(
+            "SELECT COUNT(*) AS n FROM reviews WHERE source = 'imported_biph_insights'"
+        ).fetchone()["n"]
+        n_generated = conn.execute(
+            "SELECT COUNT(*) AS n FROM reviews WHERE source = 'ai_generated'"
+        ).fetchone()["n"]
+    assert n_base44 == 0
+    assert n_generated == body["generated"]
+
+
+def test_admin_regenerate_preserves_native_user_reviews(client, seeded_teacher):
+    """User-source reviews (native ones) must NOT get touched."""
+    import uuid as _uuid
+    from backend import db as _db
+    _seed_base44_corpus(seeded_teacher, n=5)
+    user_id = _uuid.uuid4().hex
+    with _db.get_conn() as conn:
+        conn.execute(
+            "INSERT INTO reviews (id, teacher_id, teaching_quality, "
+            "test_difficulty, homework_load, easygoingness, comment, "
+            "is_visible, source) VALUES (?, ?, 5, 5, 5, 5, 'native review', 1, 'user')",
+            (user_id, seeded_teacher),
+        )
+    client.post(
+        "/api/admin/regenerate-reviews",
+        json={"target_total": 10, "dry_run": False, "seed": 1},
+        headers=ADMIN_HEADERS,
+    )
+    with _db.get_conn() as conn:
+        survived = conn.execute(
+            "SELECT id FROM reviews WHERE id = ?", (user_id,),
+        ).fetchone()
+    assert survived is not None
