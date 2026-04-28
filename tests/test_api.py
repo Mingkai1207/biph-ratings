@@ -76,3 +76,73 @@ def test_card_png_404_for_missing_teacher(client):
 def test_qr_png_404_for_missing_teacher(client):
     r = client.get("/api/teachers/does-not-exist/qr.png")
     assert r.status_code == 404
+
+
+# ——— Admin teacher edit (rename / subject change)
+
+ADMIN_HEADERS = {"Authorization": "Bearer test-admin-token"}
+
+
+def test_admin_edit_teacher_rejects_unauthorized(client, seeded_teacher):
+    r = client.post(f"/api/admin/teachers/{seeded_teacher}/edit", json={"name": "New"})
+    assert r.status_code == 401
+
+
+def test_admin_edit_teacher_renames(client, seeded_teacher):
+    r = client.post(
+        f"/api/admin/teachers/{seeded_teacher}/edit",
+        json={"name": "Renamed Teacher"},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    assert r.json()["name"] == "Renamed Teacher"
+    # Subject was untouched on this edit, so it stays as the seeded value.
+    assert r.json()["subject"] == "Math"
+
+
+def test_admin_edit_teacher_changes_subject_only(client, seeded_teacher):
+    r = client.post(
+        f"/api/admin/teachers/{seeded_teacher}/edit",
+        json={"subject": "Physics"},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    assert r.json()["name"] == "Test Teacher"  # name preserved
+    assert r.json()["subject"] == "Physics"
+
+
+def test_admin_edit_teacher_clears_subject_on_empty_string(client, seeded_teacher):
+    r = client.post(
+        f"/api/admin/teachers/{seeded_teacher}/edit",
+        json={"subject": ""},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    assert r.json()["subject"] is None
+
+
+def test_admin_edit_teacher_404_for_missing(client):
+    r = client.post(
+        "/api/admin/teachers/does-not-exist/edit",
+        json={"name": "Anyone"},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 404
+
+
+def test_admin_edit_teacher_rejects_empty_body(client, seeded_teacher):
+    r = client.post(
+        f"/api/admin/teachers/{seeded_teacher}/edit",
+        json={},
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 400
+
+
+def test_admin_edit_teacher_rejects_too_short_name(client, seeded_teacher):
+    r = client.post(
+        f"/api/admin/teachers/{seeded_teacher}/edit",
+        json={"name": "A"},  # min_length=2
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 422

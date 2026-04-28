@@ -37,6 +37,7 @@
       'nav.compare':     'Compare',
       'nav.submit':      'Add a teacher',
       'nav.suggestions': 'Suggestions',
+      'nav.admin':       'Admin',
       'nav.menu':        'Menu',
       // Footer
       'footer.body':     'Rate BIPH is student-run and independent of Beijing International Private High. Reviews are anonymous and moderated.<br/>Be kind. Be honest. Be specific.',
@@ -250,6 +251,18 @@
       'admin.hide.button':   'Hide review',
       'admin.hide.empty':    'Paste a review ID.',
       'admin.hide.toast':    'Review hidden',
+      // Admin · Teachers section (rename / change subject)
+      'admin.tabs.teachers':    'Teachers',
+      'admin.tabs.subs':        'Submissions',
+      'admin.tabs.sugs':        'Suggestions',
+      'admin.tabs.tools':       'Tools',
+      'admin.teachers.title':   'Edit teachers',
+      'admin.teachers.lede':    'Click any name or subject to edit. Changes save when you click outside the field or press Enter.',
+      'admin.teachers.search':  'Search teachers…',
+      'admin.teachers.empty':   'No teachers match.',
+      'admin.teachers.saved':   'Saved {name}',
+      'admin.teachers.error':   'Could not save: {msg}',
+      'admin.teachers.subjectMissing': 'no subject',
     },
     zh: {
       // Nav
@@ -258,6 +271,7 @@
       'nav.compare':     '对比',
       'nav.submit':      '添加老师',
       'nav.suggestions': '建议',
+      'nav.admin':       '管理',
       'nav.menu':        '菜单',
       // Footer
       'footer.body':     'Rate BIPH 由学生独立运营，与北京君诚国际学校无任何关联。所有评价匿名提交并经过审核。<br/>请友善、诚实、具体。',
@@ -471,6 +485,18 @@
       'admin.hide.button':   '隐藏评价',
       'admin.hide.empty':    '请粘贴评价 ID。',
       'admin.hide.toast':    '评价已隐藏',
+      // Admin · Teachers section
+      'admin.tabs.teachers':    '老师',
+      'admin.tabs.subs':        '待审核',
+      'admin.tabs.sugs':        '建议',
+      'admin.tabs.tools':       '工具',
+      'admin.teachers.title':   '编辑老师',
+      'admin.teachers.lede':    '点击姓名或科目即可编辑。点击其他地方或按回车保存。',
+      'admin.teachers.search':  '搜索老师…',
+      'admin.teachers.empty':   '没有匹配的老师。',
+      'admin.teachers.saved':   '已保存 {name}',
+      'admin.teachers.error':   '保存失败：{msg}',
+      'admin.teachers.subjectMissing': '未填科目',
     },
   };
 
@@ -767,6 +793,9 @@
       link('compare.html',     'compare',     'nav.compare'),
       link('submit.html',      'submit',      'nav.submit'),
       link('suggestions.html', 'suggestions', 'nav.suggestions'),
+      // Admin link is always visible in the nav. Clicking lands on the
+      // token-gated admin page — non-admins just see the login screen.
+      link('admin.html',       'admin',       'nav.admin'),
     ].join('');
     // Language toggle — shown in THREE positions so it's always reachable:
     // 1. Inline in the desktop link row (hidden on mobile via .topnav__links display:none)

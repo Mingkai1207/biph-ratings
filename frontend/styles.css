@@ -984,6 +984,124 @@ body[data-page="home"] .container {
 }
 
 /* ——— Admin */
+/* Admin tab strip — sits below the page heading, switches between
+   panes (Teachers / Submissions / Suggestions / Tools). */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
+.admin-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.admin-tab:hover { color: var(--ink); }
+.admin-tab--active {
+  color: var(--accent-ink);
+  border-bottom-color: var(--accent);
+}
+
+/* Admin pane visibility — only the active pane renders. Display:none not
+   used so JS-attached event listeners on hidden inputs still wire cleanly. */
+.admin-pane { display: none; }
+.admin-pane--active { display: block; }
+.admin-pane__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.admin-pane__title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+.admin-pane__lede {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+.admin-search {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* Editable teacher row — avatar | (name + subject inputs) | review count.
+   Inputs are styled as tight-fitting, borderless until hover/focus so the
+   row reads as text but clearly invites editing. */
+.admin-teachers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.admin-teacher {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 8px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.admin-teacher__avatar { display: flex; align-items: center; }
+.admin-teacher__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.admin-teacher__name,
+.admin-teacher__subject {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-family: inherit;
+  width: 100%;
+  outline: none;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.admin-teacher__name {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.admin-teacher__subject {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.admin-teacher__name:hover,
+.admin-teacher__subject:hover {
+  background: var(--bg-sunken);
+}
+.admin-teacher__name:focus,
+.admin-teacher__subject:focus {
+  background: var(--bg-card);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.admin-teacher__count {
+  font-size: 12px;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+
 .admin-sub {
   display: grid;
   grid-template-columns: 1fr auto;

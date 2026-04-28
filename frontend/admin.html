@@ -27,33 +27,61 @@
     </div>
 
     <section id="panel" hidden>
-      <div class="reviews-header">
-        <div class="serif reviews-header__title" data-i18n="admin.subs.title">Pending submissions</div>
-        <button id="refreshBtn" class="btn btn--ghost btn--sm" data-i18n="admin.subs.refresh">Refresh</button>
+      <!-- Tab nav. JS toggles a single .admin-tab--active class + .admin-pane--active. -->
+      <div class="admin-tabs" role="tablist">
+        <button class="admin-tab admin-tab--active" data-tab="teachers" type="button" data-i18n="admin.tabs.teachers">Teachers</button>
+        <button class="admin-tab" data-tab="subs"     type="button" data-i18n="admin.tabs.subs">Submissions</button>
+        <button class="admin-tab" data-tab="sugs"     type="button" data-i18n="admin.tabs.sugs">Suggestions</button>
+        <button class="admin-tab" data-tab="tools"    type="button" data-i18n="admin.tabs.tools">Tools</button>
       </div>
-      <div id="subsList"></div>
-      <div id="subsEmpty" class="empty" hidden data-i18n="admin.subs.empty">No pending submissions.</div>
 
-      <div class="reviews-header" style="margin-top:40px">
-        <div class="serif reviews-header__title" data-i18n="admin.sugs.title">Suggestions inbox</div>
-        <label class="reviews-header__toggle">
-          <input type="checkbox" id="showResolved" /> <span data-i18n="admin.sugs.showResolved">Show resolved</span>
-        </label>
-      </div>
-      <div id="sugsList"></div>
-      <div id="sugsEmpty" class="empty" hidden data-i18n="admin.sugs.empty">No suggestions.</div>
-
-      <div class="reviews-header" style="margin-top:40px">
-        <div class="serif reviews-header__title" data-i18n="admin.hide.title">Hide a review</div>
-      </div>
-      <div class="form-card">
-        <div class="field">
-          <div class="field__row"><label class="field__label" for="reviewId" data-i18n="admin.hide.label">Review ID (UUID)</label></div>
-          <input id="reviewId" class="input" data-i18n-placeholder="admin.hide.placeholder" placeholder="paste review id" />
+      <!-- TEACHERS pane: search + inline-editable name/subject for every visible teacher. -->
+      <div id="pane-teachers" class="admin-pane admin-pane--active">
+        <div class="admin-pane__head">
+          <div class="serif admin-pane__title" data-i18n="admin.teachers.title">Edit teachers</div>
         </div>
-        <div id="hideStatus" class="form-status"></div>
-        <div class="form-actions">
-          <button id="hideBtn" class="btn btn--primary" data-i18n="admin.hide.button">Hide review</button>
+        <p class="admin-pane__lede" data-i18n="admin.teachers.lede">Click any name or subject to edit. Changes save when you click outside the field or press Enter.</p>
+        <input id="teacherSearch" class="input admin-search" data-i18n-placeholder="admin.teachers.search" placeholder="Search teachers…" autocomplete="off" />
+        <div id="teachersList" class="admin-teachers"></div>
+        <div id="teachersEmpty" class="empty" hidden data-i18n="admin.teachers.empty">No teachers match.</div>
+      </div>
+
+      <!-- SUBMISSIONS pane: pending teacher additions (existing flow) -->
+      <div id="pane-subs" class="admin-pane">
+        <div class="admin-pane__head">
+          <div class="serif admin-pane__title" data-i18n="admin.subs.title">Pending submissions</div>
+          <button id="refreshBtn" class="btn btn--ghost btn--sm" data-i18n="admin.subs.refresh">Refresh</button>
+        </div>
+        <div id="subsList"></div>
+        <div id="subsEmpty" class="empty" hidden data-i18n="admin.subs.empty">No pending submissions.</div>
+      </div>
+
+      <!-- SUGGESTIONS pane: site-feedback inbox (existing flow) -->
+      <div id="pane-sugs" class="admin-pane">
+        <div class="admin-pane__head">
+          <div class="serif admin-pane__title" data-i18n="admin.sugs.title">Suggestions inbox</div>
+          <label class="reviews-header__toggle">
+            <input type="checkbox" id="showResolved" /> <span data-i18n="admin.sugs.showResolved">Show resolved</span>
+          </label>
+        </div>
+        <div id="sugsList"></div>
+        <div id="sugsEmpty" class="empty" hidden data-i18n="admin.sugs.empty">No suggestions.</div>
+      </div>
+
+      <!-- TOOLS pane: hide-review form, plus future admin tools -->
+      <div id="pane-tools" class="admin-pane">
+        <div class="admin-pane__head">
+          <div class="serif admin-pane__title" data-i18n="admin.hide.title">Hide a review</div>
+        </div>
+        <div class="form-card">
+          <div class="field">
+            <div class="field__row"><label class="field__label" for="reviewId" data-i18n="admin.hide.label">Review ID (UUID)</label></div>
+            <input id="reviewId" class="input" data-i18n-placeholder="admin.hide.placeholder" placeholder="paste review id" />
+          </div>
+          <div id="hideStatus" class="form-status"></div>
+          <div class="form-actions">
+            <button id="hideBtn" class="btn btn--primary" data-i18n="admin.hide.button">Hide review</button>
+          </div>
         </div>
       </div>
     </section>
@@ -71,11 +99,100 @@
 
     function escape(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
-    // Cache the last loaded lists so we can re-render on lang toggle without
-    // re-fetching from the admin API.
+    // Cached lists so we re-render on language toggle without re-fetching.
     let lastSubs = null;
     let lastSugs = null;
+    let lastTeachers = null;
 
+    // ——— Tab switching
+    document.querySelectorAll('.admin-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('admin-tab--active', t === btn));
+        document.querySelectorAll('.admin-pane').forEach(p => {
+          p.classList.toggle('admin-pane--active', p.id === 'pane-' + tab);
+        });
+      });
+    });
+
+    // ——— Teachers: list + inline edit
+    async function loadTeachers() {
+      // Reuse the public endpoint — admin sees the same visible roster.
+      // (Hidden teachers can be re-shown via a future endpoint; for v1 we
+      //  match what students see on the home page.)
+      const teachers = await RB.api('/api/teachers');
+      // Stable alphabetical order so the row position doesn't jump after edits.
+      teachers.sort((a, b) => a.name.localeCompare(b.name));
+      lastTeachers = teachers;
+      renderTeachers(teachers, document.getElementById('teacherSearch').value || '');
+    }
+
+    function renderTeachers(teachers, query) {
+      const host = document.getElementById('teachersList');
+      const empty = document.getElementById('teachersEmpty');
+      host.innerHTML = '';
+      const q = query.trim().toLowerCase();
+      const filtered = q
+        ? teachers.filter(t =>
+            t.name.toLowerCase().includes(q) ||
+            (t.subject || '').toLowerCase().includes(q))
+        : teachers;
+      if (!filtered.length) { empty.hidden = false; return; }
+      empty.hidden = true;
+      filtered.forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'admin-teacher';
+        row.dataset.teacherId = t.id;
+        // Render the avatar via the same helper the teacher cards use so the
+        // admin list visually matches the public site.
+        row.innerHTML = `
+          <div class="admin-teacher__avatar" data-avatar></div>
+          <div class="admin-teacher__fields">
+            <input class="admin-teacher__name" data-field="name" value="${escape(t.name)}" />
+            <input class="admin-teacher__subject" data-field="subject" value="${escape(t.subject || '')}"
+                   data-i18n-placeholder="admin.teachers.subjectMissing" placeholder="${RB.t('admin.teachers.subjectMissing')}" />
+          </div>
+          <div class="admin-teacher__count">${t.review_count}</div>`;
+        row.querySelector('[data-avatar]').replaceWith(RB.avatarEl(t.name, 36));
+        const nameInput = row.querySelector('[data-field="name"]');
+        const subjInput = row.querySelector('[data-field="subject"]');
+        wireField(nameInput, 'name', t);
+        wireField(subjInput, 'subject', t);
+        host.appendChild(row);
+      });
+    }
+
+    // Inline edit: save on blur or Enter, only if the value actually changed.
+    // Escape reverts. Avoids accidental writes when the admin tabs through.
+    function wireField(input, field, teacher) {
+      const original = input.value;
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') input.blur();
+        if (e.key === 'Escape') { input.value = original; input.blur(); }
+      });
+      input.addEventListener('blur', async () => {
+        const val = input.value.trim();
+        if (val === (teacher[field] || '')) return;  // no change
+        try {
+          const updated = await auth(`/api/admin/teachers/${teacher.id}/edit`, {
+            method: 'POST',
+            body: JSON.stringify({ [field]: val }),
+          });
+          // Mutate the cached row so a re-render keeps the new value.
+          teacher[field] = updated[field];
+          RB.toast(RB.t('admin.teachers.saved', { name: updated.name }));
+        } catch (e) {
+          input.value = teacher[field] || '';
+          RB.toast(RB.t('admin.teachers.error', { msg: e.message }));
+        }
+      });
+    }
+
+    document.getElementById('teacherSearch').addEventListener('input', () => {
+      if (lastTeachers) renderTeachers(lastTeachers, document.getElementById('teacherSearch').value || '');
+    });
+
+    // ——— Submissions (existing flow, preserved verbatim)
     async function loadSubs() {
       const subs = await auth('/api/admin/submissions');
       lastSubs = subs;
@@ -102,7 +219,7 @@
             <button class="btn btn--ghost btn--sm" data-act="reject">${RB.t('admin.subs.reject')}</button>
           </div>`;
         row.querySelector('[data-act="approve"]').onclick = async () => {
-          try { await auth(`/api/admin/submissions/${s.id}/approve`, { method: 'POST' }); RB.toast(RB.t('admin.subs.approved')); loadSubs(); }
+          try { await auth(`/api/admin/submissions/${s.id}/approve`, { method: 'POST' }); RB.toast(RB.t('admin.subs.approved')); loadSubs(); loadTeachers(); }
           catch (e) { RB.toast(e.message); }
         };
         row.querySelector('[data-act="reject"]').onclick = async () => {
@@ -113,6 +230,7 @@
       });
     }
 
+    // ——— Suggestions (existing flow)
     async function loadSugs() {
       const showResolved = document.getElementById('showResolved').checked;
       const sugs = await auth(`/api/admin/suggestions${showResolved ? '?include_resolved=true' : ''}`);
@@ -158,10 +276,10 @@
       });
     }
 
-    // Re-render cached lists when the language toggles.
     document.addEventListener('rb:lang', () => {
       if (lastSubs) renderSubs(lastSubs);
       if (lastSugs) renderSugs(lastSugs);
+      if (lastTeachers) renderTeachers(lastTeachers, document.getElementById('teacherSearch').value || '');
     });
 
     async function unlock() {
@@ -173,6 +291,7 @@
         sessionStorage.setItem('rb.admin', token);
         document.getElementById('authCard').hidden = true;
         document.getElementById('panel').hidden = false;
+        loadTeachers();
         loadSubs();
         loadSugs();
       } catch (e) {
@@ -183,7 +302,7 @@
 
     document.getElementById('loginBtn').addEventListener('click', unlock);
     document.getElementById('token').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
-    document.getElementById('refreshBtn').addEventListener('click', () => { loadSubs(); loadSugs(); });
+    document.getElementById('refreshBtn').addEventListener('click', () => { loadTeachers(); loadSubs(); loadSugs(); });
     document.getElementById('showResolved').addEventListener('change', loadSugs);
     document.getElementById('hideBtn').addEventListener('click', async () => {
       const rid = document.getElementById('reviewId').value.trim();

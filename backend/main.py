@@ -139,6 +139,14 @@ class VoteIn(BaseModel):
     vote: conint(ge=-1, le=1)
 
 
+class TeacherEditIn(BaseModel):
+    """Admin-only edit. Both fields optional — only what's provided gets
+    updated. Length bounds match the submission validator so admin edits
+    can't write values that POST /api/teachers/submit would reject."""
+    name: Optional[str] = Field(default=None, min_length=2, max_length=80)
+    subject: Optional[str] = Field(default=None, max_length=60)
+
+
 def client_ip(request: Request) -> str:
     fwd = request.headers.get("x-forwarded-for")
     if fwd:
@@ -708,6 +716,56 @@ def admin_reopen_suggestion(sug_id: str, authorization: Optional[str] = Header(d
     if not n:
         raise HTTPException(status_code=404, detail="Suggestion not found or not resolved")
     return {"ok": True}
+
+
+@app.post("/api/admin/teachers/{teacher_id}/edit")
+def admin_edit_teacher(
+    teacher_id: str,
+    body: TeacherEditIn,
+    authorization: Optional[str] = Header(default=None),
+):
+    """Admin-only rename + subject change. Only fields actually provided
+    in the body get updated, so editing just the name leaves the subject
+    alone (and vice versa). Returns the post-update row so the UI can
+    reflect the change without a re-fetch."""
+    require_admin(authorization)
+    name = body.name.strip() if body.name is not None else None
+    subject = body.subject.strip() if body.subject is not None else None
+    if name is None and subject is None:
+        raise HTTPException(status_code=400, detail="Provide at least one of: name, subject")
+    if name == "":
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+
+    sets = []
+    params: list = []
+    if name is not None:
+        sets.append("name = ?")
+        params.append(name)
+    if subject is not None:
+        # Empty string for subject means "clear it" — distinguishes from
+        # "didn't touch it" (None). Stored as NULL so the UI shows "—".
+        sets.append("subject = ?")
+        params.append(subject if subject else None)
+    params.append(teacher_id)
+
+    with get_conn() as conn:
+        n = conn.execute(
+            f"UPDATE teachers SET {', '.join(sets)} WHERE id = ?",
+            params,
+        ).rowcount
+        if not n:
+            raise HTTPException(status_code=404, detail="Teacher not found")
+        row = conn.execute(
+            "SELECT id, name, subject, courses, is_visible FROM teachers WHERE id = ?",
+            (teacher_id,),
+        ).fetchone()
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "subject": row["subject"],
+        "courses": parse_courses(row["courses"]),
+        "is_visible": bool(row["is_visible"]),
+    }
 
 
 @app.post("/api/admin/sync-base44")
