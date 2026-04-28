@@ -68,22 +68,45 @@
         <div id="sugsEmpty" class="empty" hidden data-i18n="admin.sugs.empty">No suggestions.</div>
       </div>
 
-      <!-- TOOLS pane: browse-and-hide reviews. Admin sees teacher + ratings +
-           comment for each review and clicks Hide directly. Hidden reviews
-           stay in the list (faded) so a wrong hide can be reversed via Unhide. -->
+      <!-- TOOLS pane: two-level drill-down. Default view = teacher list with
+           review counts. Click into a teacher → that teacher's reviews with
+           Hide/Unhide buttons inline. Hidden reviews stay in the list (faded)
+           so a wrong hide can be reversed via Unhide. -->
       <div id="pane-tools" class="admin-pane">
-        <div class="admin-pane__head">
-          <div class="serif admin-pane__title" data-i18n="admin.tools.title">Browse reviews</div>
-          <p class="admin-pane__lede" data-i18n="admin.tools.lede">Newest first. Search teacher names or comment text. Click Hide on anything that needs to disappear from the public site — Unhide reverses it.</p>
+        <!-- Teacher list view (default) -->
+        <div id="toolsTeacherView">
+          <div class="admin-pane__head">
+            <div class="serif admin-pane__title" data-i18n="admin.tools.title">Manage reviews</div>
+            <p class="admin-pane__lede" data-i18n="admin.tools.lede">Pick a teacher to see their reviews. Click any review to hide it from the public site — hidden reviews stay visible to you so mistakes can be reversed.</p>
+          </div>
+          <div class="admin-tools__controls">
+            <input id="toolsTeacherSearch" class="input" type="text"
+                   data-i18n-placeholder="admin.tools.searchTeacher" placeholder="Search teachers…" />
+          </div>
+          <div id="toolsTeacherList" class="admin-tools-teachers"></div>
+          <div id="toolsTeacherEmpty" class="empty" hidden data-i18n="admin.tools.noTeachers">No teachers match.</div>
         </div>
-        <div class="admin-tools__controls">
-          <input id="reviewSearch" class="input" type="text"
-                 data-i18n-placeholder="admin.tools.search" placeholder="Search teacher or comment…" />
-        </div>
-        <div id="reviewsList" class="admin-reviews"></div>
-        <div id="reviewsEmpty" class="empty" hidden data-i18n="admin.tools.empty">No reviews match.</div>
-        <div class="admin-tools__foot">
-          <button id="reviewsLoadMore" class="btn btn--ghost btn--sm" hidden data-i18n="admin.tools.loadMore">Load more</button>
+
+        <!-- Reviews view (after clicking into a teacher) -->
+        <div id="toolsReviewView" hidden>
+          <div class="admin-tools__back">
+            <button id="toolsBackBtn" class="btn btn--ghost btn--sm" type="button">
+              <span aria-hidden="true">←</span> <span data-i18n="admin.tools.back">Back to teachers</span>
+            </button>
+          </div>
+          <div class="admin-pane__head">
+            <div class="serif admin-pane__title" id="toolsReviewTitle">—</div>
+            <p class="admin-pane__lede" id="toolsReviewSub"></p>
+          </div>
+          <div class="admin-tools__controls">
+            <input id="reviewSearch" class="input" type="text"
+                   data-i18n-placeholder="admin.tools.searchComment" placeholder="Search comments…" />
+          </div>
+          <div id="reviewsList" class="admin-reviews"></div>
+          <div id="reviewsEmpty" class="empty" hidden data-i18n="admin.tools.empty">No reviews match.</div>
+          <div class="admin-tools__foot">
+            <button id="reviewsLoadMore" class="btn btn--ghost btn--sm" hidden data-i18n="admin.tools.loadMore">Load more</button>
+          </div>
         </div>
       </div>
     </section>
@@ -278,17 +301,108 @@
       });
     }
 
-    // ——— Tools: browse-and-hide reviews
-    let reviewsState = { items: [], offset: 0, q: '', loading: false, hasMore: false };
+    // ——— Tools: two-level drill-down for review moderation
+    //   Level 1: list of teachers with review counts
+    //   Level 2: that teacher's reviews with Hide/Unhide buttons
+    // State: when teacherId is null we're on level 1; when set we're on level 2.
+    let reviewsState = {
+      items: [], offset: 0, q: '', loading: false, hasMore: false,
+      teacherId: null, teacherName: '', teacherSubject: '',
+    };
     let reviewSearchTimer = null;
+    let teacherSearchTimer = null;
     const REVIEW_PAGE = 50;
     const METRIC_KEYS = ['teaching_quality', 'test_difficulty', 'homework_load', 'easygoingness'];
 
+    function showToolsTeacherView() {
+      document.getElementById('toolsTeacherView').hidden = false;
+      document.getElementById('toolsReviewView').hidden = true;
+      reviewsState.teacherId = null;
+      reviewsState.items = [];
+      reviewsState.offset = 0;
+      reviewsState.q = '';
+      const reviewSearch = document.getElementById('reviewSearch');
+      if (reviewSearch) reviewSearch.value = '';
+    }
+
+    function showToolsReviewView(teacher) {
+      reviewsState.teacherId = teacher.id;
+      reviewsState.teacherName = teacher.name;
+      reviewsState.teacherSubject = teacher.subject || '';
+      reviewsState.items = [];
+      reviewsState.offset = 0;
+      reviewsState.q = '';
+      document.getElementById('toolsTeacherView').hidden = true;
+      document.getElementById('toolsReviewView').hidden = false;
+      document.getElementById('toolsReviewTitle').textContent = teacher.name;
+      const subj = teacher.subject ? RB.localizeSubject(teacher.subject) : '';
+      const count = teacher.review_count || 0;
+      const countLabel = count === 1
+        ? RB.t('teacher.basedOnSingular', { n: count })
+        : RB.t('teacher.basedOn', { n: count });
+      document.getElementById('toolsReviewSub').textContent =
+        [subj, countLabel].filter(Boolean).join(' · ');
+      document.getElementById('reviewSearch').value = '';
+      loadReviews(true);
+    }
+
+    function renderToolsTeachers(teachers, query) {
+      const host = document.getElementById('toolsTeacherList');
+      const empty = document.getElementById('toolsTeacherEmpty');
+      host.innerHTML = '';
+      const q = (query || '').trim().toLowerCase();
+      const filtered = q
+        ? teachers.filter(t =>
+            t.name.toLowerCase().includes(q) ||
+            (t.subject || '').toLowerCase().includes(q))
+        : teachers;
+      if (!filtered.length) { empty.hidden = false; return; }
+      empty.hidden = true;
+      filtered.forEach(t => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'admin-tools-teacher';
+        row.dataset.teacherId = t.id;
+        const subj = t.subject ? RB.localizeSubject(t.subject) : '';
+        const count = t.review_count || 0;
+        const countSuffix = count === 1
+          ? RB.t('admin.tools.reviewCountOne', { n: count })
+          : RB.t('admin.tools.reviewCountMany', { n: count });
+        row.innerHTML = `
+          <div class="admin-tools-teacher__avatar" data-avatar></div>
+          <div class="admin-tools-teacher__meta">
+            <div class="admin-tools-teacher__name">${escape(t.name)}</div>
+            <div class="admin-tools-teacher__sub">${escape(subj || '—')} · ${countSuffix}</div>
+          </div>
+          <div class="admin-tools-teacher__chev" aria-hidden="true">›</div>`;
+        row.querySelector('[data-avatar]').replaceWith(RB.avatarEl(t.name, 36));
+        row.addEventListener('click', () => showToolsReviewView(t));
+        host.appendChild(row);
+      });
+    }
+
+    function loadToolsTeachers() {
+      // Reuse the cached list from the Teachers tab if it's already loaded.
+      // Otherwise fetch — same endpoint as the public roster.
+      const render = () => renderToolsTeachers(
+        lastTeachers,
+        document.getElementById('toolsTeacherSearch').value || '',
+      );
+      if (lastTeachers) { render(); return; }
+      RB.api('/api/teachers').then(teachers => {
+        teachers.sort((a, b) => a.name.localeCompare(b.name));
+        lastTeachers = teachers;
+        render();
+      }).catch(e => RB.toast(e.message));
+    }
+
     async function loadReviews(reset) {
+      if (!reviewsState.teacherId) return;
       if (reviewsState.loading) return;
       reviewsState.loading = true;
       const offset = reset ? 0 : reviewsState.offset;
       const params = new URLSearchParams({
+        teacher_id: reviewsState.teacherId,
         limit: String(REVIEW_PAGE),
         offset: String(offset),
         include_hidden: 'true',
@@ -322,11 +436,12 @@
     }
 
     function buildReviewRow(r) {
+      // Scoped view: we're already inside a teacher's drill-down, so the
+      // row no longer needs to repeat the teacher name. Just date + visibility.
       const row = document.createElement('div');
       row.className = 'admin-review' + (r.is_visible ? '' : ' admin-review--hidden');
       row.dataset.reviewId = r.id;
       const when = RB.relDate(r.created_at) || '';
-      const subj = r.teacher_subject ? ` · ${escape(RB.localizeSubject(r.teacher_subject))}` : '';
       const metrics = METRIC_KEYS.map(k => {
         const label = RB.t('teacher.metrics.short.' + k);
         return `<span class="admin-review__metric">${escape(label)} <strong>${r[k]}</strong></span>`;
@@ -341,18 +456,16 @@
           : '';
       const actionLabel = r.is_visible ? RB.t('admin.tools.hide') : RB.t('admin.tools.unhide');
       const actionClass = r.is_visible ? 'btn--ghost' : 'btn--accent';
+      const hiddenTag = r.is_visible ? '' : ` · <span class="admin-review__hidden-tag">${RB.t('admin.tools.hiddenTag')}</span>`;
       row.innerHTML = `
         <div class="admin-review__head">
-          <div class="admin-review__avatar" data-avatar></div>
           <div class="admin-review__who">
-            <a class="admin-review__name" href="teacher.html?id=${encodeURIComponent(r.teacher_id)}" target="_blank" rel="noopener">${escape(r.teacher_name)}</a>
-            <div class="admin-review__sub">${when}${subj}${r.is_visible ? '' : ` · <span class="admin-review__hidden-tag">${RB.t('admin.tools.hiddenTag')}</span>`}</div>
+            <div class="admin-review__sub">${when}${hiddenTag}</div>
           </div>
           <button class="btn btn--sm ${actionClass}" data-act="toggle">${actionLabel}</button>
         </div>
         <div class="admin-review__metrics">${metrics}${wta}</div>
         ${comment}`;
-      row.querySelector('[data-avatar]').replaceWith(RB.avatarEl(r.teacher_name, 36));
       row.querySelector('[data-act="toggle"]').onclick = async () => {
         const path = r.is_visible
           ? `/api/admin/reviews/${r.id}/hide`
@@ -374,7 +487,24 @@
       if (lastSubs) renderSubs(lastSubs);
       if (lastSugs) renderSugs(lastSugs);
       if (lastTeachers) renderTeachers(lastTeachers, document.getElementById('teacherSearch').value || '');
-      if (reviewsState.items.length) renderReviews();
+      // Re-render whichever Tools view is open so labels follow the lang flip.
+      if (!document.getElementById('toolsTeacherView').hidden && lastTeachers) {
+        renderToolsTeachers(lastTeachers, document.getElementById('toolsTeacherSearch').value || '');
+      }
+      if (reviewsState.teacherId) {
+        // Re-localize the header (subject + count phrasing).
+        const t = (lastTeachers || []).find(x => x.id === reviewsState.teacherId);
+        if (t) {
+          const subj = t.subject ? RB.localizeSubject(t.subject) : '';
+          const count = t.review_count || 0;
+          const countLabel = count === 1
+            ? RB.t('teacher.basedOnSingular', { n: count })
+            : RB.t('teacher.basedOn', { n: count });
+          document.getElementById('toolsReviewSub').textContent =
+            [subj, countLabel].filter(Boolean).join(' · ');
+        }
+        if (reviewsState.items.length) renderReviews();
+      }
     });
 
     async function unlock() {
@@ -409,10 +539,22 @@
       }, 250);
     });
     document.getElementById('reviewsLoadMore').addEventListener('click', () => loadReviews(false));
-    // Lazy-load reviews on first click of the Tools tab so login isn't blocked
-    // by a 50-row fetch the admin may not need.
+    document.getElementById('toolsBackBtn').addEventListener('click', showToolsTeacherView);
+    document.getElementById('toolsTeacherSearch').addEventListener('input', (e) => {
+      // Filter is purely client-side over the cached teacher list, but debounce
+      // anyway so we don't thrash the DOM on every keystroke.
+      clearTimeout(teacherSearchTimer);
+      teacherSearchTimer = setTimeout(() => {
+        if (lastTeachers) renderToolsTeachers(lastTeachers, e.target.value || '');
+      }, 100);
+    });
+    // Lazy-load the teacher list the first time the Tools tab is opened so
+    // login isn't blocked by a fetch the admin may not need.
     document.querySelector('.admin-tab[data-tab="tools"]').addEventListener('click', () => {
-      if (!reviewsState.items.length && !reviewsState.loading) loadReviews(true);
+      // Always reset to the teacher list view when the tab is (re)opened.
+      // A drilled-in admin who clicks Tools again expects to start fresh.
+      showToolsTeacherView();
+      loadToolsTeachers();
     });
 
     if (token) {

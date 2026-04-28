@@ -292,3 +292,54 @@ def test_admin_unhide_review_404_for_missing(client):
         "/api/admin/reviews/does-not-exist/unhide", headers=ADMIN_HEADERS,
     )
     assert r.status_code == 404
+
+
+# ——— Drill-down: GET /api/admin/reviews?teacher_id=...
+#
+# The Tools tab drills from teacher list → that teacher's reviews. The
+# `teacher_id` query param scopes the result. With a teacher_id set, `q`
+# narrows to comment text only (teacher name is implicit at that level).
+
+
+def test_admin_list_reviews_filters_by_teacher_id(client, seeded_teacher):
+    """Other teachers' reviews must not leak into a scoped query."""
+    import uuid as _uuid
+    from backend import db as _db
+    other_id = _uuid.uuid4().hex
+    with _db.get_conn() as conn:
+        conn.execute(
+            "INSERT INTO teachers (id, name, subject, is_visible) "
+            "VALUES (?, 'Other Teacher', 'Physics', 1)",
+            (other_id,),
+        )
+    mine = _seed_review(seeded_teacher, comment="for me")
+    theirs = _seed_review(other_id, comment="for them")
+    r = client.get(
+        f"/api/admin/reviews?teacher_id={seeded_teacher}", headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    ids = {x["id"] for x in r.json()["reviews"]}
+    assert mine in ids
+    assert theirs not in ids
+
+
+def test_admin_list_reviews_teacher_id_with_comment_search(client, seeded_teacher):
+    """Inside a teacher drill-down, q narrows to comment text only."""
+    keep = _seed_review(seeded_teacher, comment="contains FINDME marker")
+    drop = _seed_review(seeded_teacher, comment="other content")
+    r = client.get(
+        f"/api/admin/reviews?teacher_id={seeded_teacher}&q=FINDME",
+        headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    ids = {x["id"] for x in r.json()["reviews"]}
+    assert keep in ids
+    assert drop not in ids
+
+
+def test_admin_list_reviews_teacher_id_unknown_returns_empty(client):
+    r = client.get(
+        "/api/admin/reviews?teacher_id=does-not-exist", headers=ADMIN_HEADERS,
+    )
+    assert r.status_code == 200
+    assert r.json()["reviews"] == []

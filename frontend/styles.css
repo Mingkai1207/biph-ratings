@@ -1147,9 +1147,57 @@ body[data-page="home"] .container {
   white-space: nowrap;
 }
 
-/* Tools tab: browse-and-hide reviews */
+/* Tools tab: two-level drill-down (teacher list → that teacher's reviews) */
 .admin-tools__controls {
   margin: 0 0 14px;
+}
+.admin-tools__back {
+  margin-bottom: 16px;
+}
+.admin-tools-teachers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-tools-teacher {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.05s ease;
+}
+.admin-tools-teacher:hover {
+  border-color: var(--accent);
+}
+.admin-tools-teacher:active {
+  transform: translateY(1px);
+}
+.admin-tools-teacher__avatar { display: flex; align-items: center; }
+.admin-tools-teacher__meta { min-width: 0; }
+.admin-tools-teacher__name {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.2;
+}
+.admin-tools-teacher__sub {
+  font-size: 12px;
+  color: var(--ink-mute);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.admin-tools-teacher__chev {
+  font-size: 20px;
+  color: var(--ink-mute);
+  line-height: 1;
 }
 .admin-reviews { display: flex; flex-direction: column; gap: 10px; }
 .admin-review {

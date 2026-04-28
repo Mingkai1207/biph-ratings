@@ -694,15 +694,19 @@ def admin_unhide_review(review_id: str, authorization: Optional[str] = Header(de
 def admin_list_reviews(
     authorization: Optional[str] = Header(default=None),
     q: Optional[str] = Query(default=None, max_length=100),
+    teacher_id: Optional[str] = Query(default=None, max_length=100),
     include_hidden: bool = Query(default=True),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ):
-    """Browse-and-hide for the admin Tools tab. Replaces the old paste-UUID
-    flow so the moderator sees the actual review content (teacher name,
-    ratings, comment) before deciding to hide.
+    """Browse-and-hide for the admin Tools tab. The UI is a two-level
+    drill-down: list teachers, then click a teacher to manage their
+    reviews. Pass `teacher_id` to scope to one teacher's reviews;
+    omit it for the unscoped firehose (useful for global comment search).
 
-    `q` matches teacher name OR comment text (case-insensitive substring).
+    `q` matches teacher name OR comment text (case-insensitive substring)
+    when no teacher_id is set. With teacher_id, q matches comment text only
+    so the admin can search WITHIN that teacher's reviews.
     `include_hidden=True` by default so admin can find what they hid and
     unhide if needed. Newest first."""
     require_admin(authorization)
@@ -710,10 +714,18 @@ def admin_list_reviews(
     params = []
     if not include_hidden:
         where.append("r.is_visible = 1")
+    if teacher_id:
+        where.append("r.teacher_id = ?")
+        params.append(teacher_id)
     if q:
         like = f"%{q.lower()}%"
-        where.append("(LOWER(t.name) LIKE ? OR LOWER(COALESCE(r.comment, '')) LIKE ?)")
-        params.extend([like, like])
+        if teacher_id:
+            # Scoped: search comment only — name is implied by the drill-down.
+            where.append("LOWER(COALESCE(r.comment, '')) LIKE ?")
+            params.append(like)
+        else:
+            where.append("(LOWER(t.name) LIKE ? OR LOWER(COALESCE(r.comment, '')) LIKE ?)")
+            params.extend([like, like])
     where_sql = ("WHERE " + " AND ".join(where)) if where else ""
     sql = f"""
       SELECT r.id, r.teaching_quality, r.test_difficulty, r.homework_load,
