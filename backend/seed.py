@@ -37,9 +37,6 @@ def is_real_teacher(t: dict) -> bool:
         return False
     if name in NOISE_NAMES:
         return False
-    # notes/warnings use a long sentence in `subject`
-    if len(subject) > 25:
-        return False
     return True
 
 
@@ -68,10 +65,15 @@ def sync_from_base44() -> dict:
             "SELECT COUNT(*) AS n FROM reviews WHERE legacy_id IS NOT NULL"
         ).fetchone()["n"]
 
+    # Fetch both datasets before writing, so a failed review fetch cannot
+    # leave a partially imported teacher roster.
     teachers = fetch_json(TEACHER_URL)
+    reviews = fetch_json(REVIEW_URL)
+    excluded_teacher_ids = {t["id"] for t in teachers if not is_real_teacher(t)}
     legacy_to_id: dict[str, str] = {}
     teachers_skipped = 0
 
+    reviews_orphaned = 0
     with get_conn() as conn:
         for row in conn.execute(
             "SELECT id, legacy_id FROM teachers WHERE legacy_id IS NOT NULL"
@@ -94,41 +96,40 @@ def sync_from_base44() -> dict:
                 (tid, t["name"].strip(), t["subject"].strip(), legacy),
             )
 
-    reviews = fetch_json(REVIEW_URL)
-    reviews_orphaned = 0
-
-    with get_conn() as conn:
         for r in reviews:
             legacy_teacher = r.get("teacher_id")
-            teacher_id = legacy_to_id.get(legacy_teacher)
+            teacher_id = (None if legacy_teacher in excluded_teacher_ids
+                          else legacy_to_id.get(legacy_teacher))
             if not teacher_id:
                 reviews_orphaned += 1
                 continue
             legacy_review = r["id"]
             rid = str(uuid.uuid4())
             comment = (r.get("comment") or "").strip() or None
-            try:
-                conn.execute(
-                    """INSERT INTO reviews
-                       (id, teacher_id, teaching_quality, test_difficulty, homework_load, easygoingness,
-                        comment, created_at, source, legacy_id)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'imported_biph_insights', ?)
-                       ON CONFLICT(legacy_id) DO NOTHING""",
-                    (
-                        rid, teacher_id,
-                        clamp_rating(r.get("teaching_quality")),
-                        clamp_rating(r.get("test_difficulty")),
-                        clamp_rating(r.get("homework_load")),
-                        clamp_rating(r.get("easygoingness")),
-                        comment,
-                        r.get("created_date") or None,
-                        legacy_review,
-                    ),
-                )
-            except Exception:
-                pass
+            # Source withdrawals/rejections stay hidden. A later sync can
+            # hide an imported review, but never undo local moderation.
+            visible = int(not r.get("is_retracted") and
+                          r.get("moderation_status") not in ("rejected", "pending"))
+            conn.execute(
+                """INSERT INTO reviews
+                   (id, teacher_id, teaching_quality, test_difficulty, homework_load, easygoingness,
+                    comment, created_at, source, legacy_id, is_visible)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'imported_biph_insights', ?, ?)
+                   ON CONFLICT(legacy_id) DO UPDATE SET
+                     is_visible = MIN(reviews.is_visible, excluded.is_visible)""",
+                (
+                    rid, teacher_id,
+                    clamp_rating(r.get("teaching_quality")),
+                    clamp_rating(r.get("test_difficulty")),
+                    clamp_rating(r.get("homework_load")),
+                    clamp_rating(r.get("easygoingness")),
+                    comment,
+                    r.get("created_date") or None,
+                    legacy_review,
+                    visible,
+                ),
+            )
 
-    with get_conn() as conn:
         teachers_after = conn.execute(
             "SELECT COUNT(*) AS n FROM teachers WHERE legacy_id IS NOT NULL"
         ).fetchone()["n"]
