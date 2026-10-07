@@ -616,10 +616,9 @@
     // choice persists across sessions.
     const v = (typeof localStorage !== 'undefined' && localStorage.getItem('rb.lang')) || '';
     if (v === 'en' || v === 'zh') return v;
-    // No saved choice yet. Default to Chinese — the audience is BIPH (a
-    // Beijing high school) so zh is the right cold-start. English visitors
-    // are one toggle click away and the choice sticks after that.
-    return 'zh';
+    // New visitors start in English. They can switch to Chinese with the
+    // language toggle, and their choice persists across sessions.
+    return 'en';
   }
   function t(key, params) {
     const dict = I18N[getLang()] || I18N.en;
