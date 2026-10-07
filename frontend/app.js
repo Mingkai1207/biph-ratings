@@ -33,7 +33,6 @@
     en: {
       // Nav
       'nav.browse':      'Browse',
-      'nav.rankings':    'Rankings',
       'nav.compare':     'Compare',
       'nav.submit':      'Add a teacher',
       'nav.suggestions': 'Suggestions',
@@ -304,7 +303,6 @@
     zh: {
       // Nav
       'nav.browse':      '浏览',
-      'nav.rankings':    '排行榜',
       'nav.compare':     '对比',
       'nav.submit':      '添加老师',
       'nav.suggestions': '建议',
@@ -868,7 +866,6 @@
       `<a href="${href}" class="topnav__link"${active===id?' aria-current="page"':''} data-i18n="${key}">${t(key)}</a>`;
     const links = [
       link('index.html',       'home',        'nav.browse'),
-      link('rankings.html',    'rankings',    'nav.rankings'),
       link('compare.html',     'compare',     'nav.compare'),
       link('submit.html',      'submit',      'nav.submit'),
       link('suggestions.html', 'suggestions', 'nav.suggestions'),
