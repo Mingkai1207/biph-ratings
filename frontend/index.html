@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Rate BIPH — anonymous teacher reviews</title>
-  <link rel="stylesheet" href="styles.css?v=22926e5" />
+  <link rel="stylesheet" href="styles.css?v=biph-blue-20261021" />
   <script src="config.js?v=22926e5"></script>
 </head>
 <body data-page="home">
@@ -71,7 +71,7 @@
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=22926e5"></script>
+  <script src="app.js?v=biph-blue-20261021"></script>
   <script>
   (function () {
     const qInput = document.getElementById('q');
@@ -294,8 +294,8 @@
     var ctx = canvas.getContext('2d');
 
     var STAR_PATH = new Path2D('M12 2l2.95 5.98 6.6.96-4.78 4.66 1.13 6.57L12 17.58l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2z');
-    var HUES = ['oklch(0.72 0.14 70)', 'oklch(0.68 0.15 40)', 'oklch(0.75 0.12 90)'];
-    var LINE_COL = 'oklch(0.42 0.12 35)';
+    var HUES = ['#3255a4', '#6c87bd', '#8793a7'];
+    var LINE_COL = '#3255a4';
 
     function drawStar(x, y, size, rot, color, alpha) {
       ctx.save();
@@ -471,8 +471,8 @@
         }
         ctx.globalAlpha = 1;
         var grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 36);
-        grad.addColorStop(0, 'oklch(0.72 0.14 70 / 0.30)');
-        grad.addColorStop(1, 'oklch(0.72 0.14 70 / 0)');
+        grad.addColorStop(0, 'rgba(50, 85, 164, 0.30)');
+        grad.addColorStop(1, 'rgba(50, 85, 164, 0)');
         ctx.fillStyle = grad;
         ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 36, 0, Math.PI * 2); ctx.fill();
       }
@@ -481,7 +481,7 @@
         var sk = stars[k];
         drawStar(sk.x, sk.y, sk.size, sk.rot, sk.color, sk.alpha);
       }
-      if (mouse.inside) drawStar(mouse.x, mouse.y, 16, now / 500, 'oklch(0.72 0.14 70)', 0.85);
+      if (mouse.inside) drawStar(mouse.x, mouse.y, 16, now / 500, '#3255a4', 0.85);
 
       requestAnimationFrame(loop);
     }

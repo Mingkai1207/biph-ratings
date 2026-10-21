@@ -33,19 +33,19 @@ SERIF = str(FONTS_DIR / "InstrumentSerif-Regular.ttf")
 SANS = str(FONTS_DIR / "Geist-Regular.ttf")
 SANS_BOLD = str(FONTS_DIR / "Geist-Bold.ttf")
 
-# Palette — OKLCH values from styles.css, hand-tuned to sRGB. Kept in one
-# place so the share card matches the site's visual identity.
-BG = (247, 240, 227)         # warm cream (--bg)
-BG_CARD = (250, 245, 233)    # slightly lighter (--bg-card)
-INK = (45, 40, 34)           # warm dark (--ink)
-INK_SOFT = (98, 90, 82)      # muted (--ink-soft)
-INK_MUTE = (150, 140, 128)   # even softer (--ink-mute)
-LINE = (224, 216, 200)       # hairline (--line)
-ACCENT = (217, 129, 88)      # orange (--accent)
-ACCENT_INK = (140, 74, 46)   # dark orange (--accent-ink)
-ACCENT_BG = (242, 214, 195)  # peach (--accent-bg)
-STAR = (213, 159, 79)        # golden (--star)
-STAR_EMPTY = (224, 216, 200) # same as line — faded star outline
+# Palette — sRGB values from styles.css. Kept in one place so the share
+# card matches the site's BIPH blue, white, and gray visual identity.
+BG = (255, 255, 255)         # white (--bg)
+BG_CARD = (255, 255, 255)    # white (--bg-card)
+INK = (51, 51, 51)          # dark gray (--ink)
+INK_SOFT = (80, 91, 104)    # muted (--ink-soft)
+INK_MUTE = (96, 105, 117)   # secondary text (--ink-mute)
+LINE = (220, 225, 233)       # hairline (--line)
+ACCENT = (50, 85, 164)       # BIPH blue (--accent)
+ACCENT_INK = (50, 85, 164)   # BIPH blue (--accent-ink)
+ACCENT_BG = (234, 240, 250)  # pale blue (--accent-bg)
+STAR = (50, 85, 164)         # BIPH blue (--star)
+STAR_EMPTY = (135, 147, 167) # faded star outline (--line-strong)
 
 
 def _load_font(path: str, size: int) -> ImageFont.FreeTypeFont:

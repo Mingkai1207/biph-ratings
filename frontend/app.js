@@ -665,16 +665,16 @@
     });
   }
 
-  // ——— Avatar helpers (hash name -> color from warm palette)
+  // ——— Avatar helpers (hash name -> color from blue and pale-gray palette)
   const AVATAR_COLORS = [
-    'oklch(0.85 0.08 70)',
-    'oklch(0.86 0.07 110)',
-    'oklch(0.84 0.09 40)',
-    'oklch(0.86 0.06 170)',
-    'oklch(0.84 0.08 20)',
-    'oklch(0.87 0.06 150)',
-    'oklch(0.85 0.09 85)',
-    'oklch(0.83 0.08 55)',
+    '#cddaf2',
+    '#dce5f5',
+    '#e4ebf7',
+    '#d6dfe9',
+    '#e7edf4',
+    '#c6d6ef',
+    '#dae3f0',
+    '#d2e0f3',
   ];
   function hashString(s) {
     let h = 0;
@@ -893,9 +893,9 @@
           <a href="index.html" class="logo">
             <span class="logo__mark">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect x="6" y="13.5" width="10" height="1.4" rx="0.7" fill="oklch(0.98 0.01 75)"/>
-                <rect x="6" y="16.5" width="7" height="1.4" rx="0.7" fill="oklch(0.98 0.01 75)"/>
-                <path d="M13.5 9.8l3.6-3.6a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1 0 1.4l-3.6 3.6-2.6.6.2-3z" fill="oklch(0.98 0.01 75)"/>
+                <rect x="6" y="13.5" width="10" height="1.4" rx="0.7" fill="#ffffff"/>
+                <rect x="6" y="16.5" width="7" height="1.4" rx="0.7" fill="#ffffff"/>
+                <path d="M13.5 9.8l3.6-3.6a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1 0 1.4l-3.6 3.6-2.6.6.2-3z" fill="#ffffff"/>
               </svg>
             </span>
             <span class="logo__word">Rate <em>BIPH</em></span>
