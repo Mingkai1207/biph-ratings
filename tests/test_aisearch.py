@@ -3,6 +3,7 @@ Tests for the AI smart-search endpoint. We mock Groq via monkeypatch so
 tests stay deterministic, never hit the network, and exercise the full
 parse → validate → SQL flow.
 """
+import io
 import json
 import uuid
 
@@ -155,33 +156,23 @@ def test_search_rate_limit_returns_429(client, monkeypatch):
     assert over.json()["error"] == "rate_limited"
 
 
-# ——— Provider selection (Gemini > OpenAI > Groq) ——————————————
+# ——— Provider selection (Gemini > Groq) ——————————————
 
 def test_active_provider_prefers_gemini_when_all_keys_set(monkeypatch):
-    """Priority order: Gemini > OpenAI > Groq."""
+    """Priority order: Gemini > Groq."""
     monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "AIza-test-gemini")
-    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "sk-test-openai")
     monkeypatch.setattr(aisearch, "GROQ_API_KEY", "gsk-test-groq")
     assert aisearch.active_provider() == "gemini"
 
 
-def test_active_provider_picks_openai_when_no_gemini(monkeypatch):
-    monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "")
-    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "sk-test-openai")
-    monkeypatch.setattr(aisearch, "GROQ_API_KEY", "gsk-test-groq")
-    assert aisearch.active_provider() == "openai"
-
-
 def test_active_provider_falls_back_to_groq_when_only_groq_set(monkeypatch):
     monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "")
-    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "")
     monkeypatch.setattr(aisearch, "GROQ_API_KEY", "gsk-test-groq")
     assert aisearch.active_provider() == "groq"
 
 
 def test_active_provider_returns_none_when_no_keys(monkeypatch):
     monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "")
-    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "")
     monkeypatch.setattr(aisearch, "GROQ_API_KEY", "")
     assert aisearch.active_provider() is None
 
@@ -190,7 +181,6 @@ def test_call_llm_raises_when_no_provider(monkeypatch):
     """Without a key configured we don't silently call something — the caller
     needs to know so it can fall back to keyword search."""
     monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "")
-    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "")
     monkeypatch.setattr(aisearch, "GROQ_API_KEY", "")
     with pytest.raises(RuntimeError, match="No LLM API key"):
         aisearch.call_llm("anything")
@@ -225,17 +215,63 @@ def test_outbound_rpm_cap_recovers_after_window(monkeypatch):
 
 def test_call_llm_routes_to_gemini_when_gemini_key_set(monkeypatch):
     """When Gemini is active, call_llm must dispatch to _call_gemini, not the
-    OpenAI-compatible helper (the request shape is incompatible)."""
+    Groq helper (the request shape is incompatible)."""
     monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "AIza-test")
-    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "sk-also-set")
-    calls = {"gemini": 0, "openai_compat": 0}
+    monkeypatch.setattr(aisearch, "GROQ_API_KEY", "gsk-test-groq")
+    calls = {"gemini": 0, "groq": 0}
     def fake_gemini(q):
         calls["gemini"] += 1
         return {"intent": "rank"}
-    def fake_openai_compat(*a):
-        calls["openai_compat"] += 1
+    def fake_groq(q):
+        calls["groq"] += 1
         return {}
     monkeypatch.setattr(aisearch, "_call_gemini", fake_gemini)
-    monkeypatch.setattr(aisearch, "_call_openai_compatible", fake_openai_compat)
+    monkeypatch.setattr(aisearch, "_call_groq", fake_groq)
     aisearch.call_llm("anything")
-    assert calls == {"gemini": 1, "openai_compat": 0}
+    assert calls == {"gemini": 1, "groq": 0}
+
+
+def test_legacy_openai_key_alone_never_calls_an_upstream_provider(monkeypatch):
+    """An old deployment variable must not reactivate the removed provider."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-retired")
+    monkeypatch.setattr(aisearch, "OPENAI_API_KEY", "sk-test-retired", raising=False)
+    monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "")
+    monkeypatch.setattr(aisearch, "GROQ_API_KEY", "")
+    monkeypatch.setattr(aisearch, "_llm_call_timestamps", [])
+    monkeypatch.setattr(
+        aisearch.urllib.request,
+        "urlopen",
+        lambda *args, **kwargs: pytest.fail("Search must not call a removed provider"),
+    )
+
+    assert aisearch.active_provider() is None
+    with pytest.raises(RuntimeError, match="No LLM API key"):
+        aisearch.call_llm("best math teacher")
+
+
+def test_call_llm_routes_to_groq_when_only_groq_key_is_set(monkeypatch):
+    monkeypatch.setattr(aisearch, "GEMINI_API_KEY", "")
+    monkeypatch.setattr(aisearch, "GROQ_API_KEY", "gsk-test-groq")
+    monkeypatch.setattr(aisearch, "GROQ_MODEL", "test-groq-model")
+    monkeypatch.setattr(aisearch, "_llm_call_timestamps", [])
+    requests = []
+
+    def fake_urlopen(request, timeout):
+        requests.append(request)
+        return io.BytesIO(json.dumps({
+            "choices": [{"message": {"content": json.dumps({
+                "intent": "filter", "subject_filter": "Math",
+            })}}],
+        }).encode())
+
+    monkeypatch.setattr(aisearch.urllib.request, "urlopen", fake_urlopen)
+    assert aisearch.call_llm("math teachers") == {
+        "intent": "filter", "subject_filter": "Math",
+    }
+    assert len(requests) == 1
+    request = requests[0]
+    assert request.full_url == "https://api.groq.com/openai/v1/chat/completions"
+    assert request.get_header("Authorization") == "Bearer gsk-test-groq"
+    body = json.loads(request.data)
+    assert body["model"] == "test-groq-model"
+    assert body["messages"][-1] == {"role": "user", "content": "math teachers"}

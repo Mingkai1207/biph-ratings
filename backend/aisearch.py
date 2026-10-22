@@ -27,17 +27,12 @@ from typing import Any
 from .db import get_conn
 from .spam import SpamError
 
-# LLM providers, in priority order: Gemini → OpenAI → Groq. The first one
-# with a configured key wins. Gemini and OpenAI/Groq use different request
-# shapes — Gemini speaks Google's "generateContent" schema, OpenAI/Groq
-# share the OpenAI-compatible chat-completions schema.
+# LLM providers, in priority order: Gemini → Groq. The first one with a
+# configured key wins. Gemini uses Google's "generateContent" schema;
+# Groq uses a chat-completions schema.
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
 GEMINI_URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
-OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
 # Llama 3.3 70B is on Groq's free tier (1000 req/day, 30 RPM as of 2026).
@@ -83,11 +78,9 @@ def _check_outbound_rpm() -> None:
 def active_provider() -> str | None:
     """Which LLM provider we're going to call. Returns None when no keys are
     configured — the caller should fall back to keyword search in that case.
-    Priority: Gemini > OpenAI > Groq."""
+    Priority: Gemini > Groq."""
     if GEMINI_API_KEY:
         return "gemini"
-    if OPENAI_API_KEY:
-        return "openai"
     if GROQ_API_KEY:
         return "groq"
     return None
@@ -206,13 +199,12 @@ def log_search(ip_hash: str, query: str, parsed: dict | None) -> None:
         )
 
 
-def _call_openai_compatible(url: str, key: str, model: str, query: str) -> dict:
-    """Shared helper for OpenAI-style chat-completions endpoints. Both OpenAI
-    and Groq use this exact request shape, so we only need one impl. Returns
-    the parsed JSON dict from the model's response. Raises on transport /
-    auth / parse failure — caller decides whether to fall back."""
+def _call_groq(query: str) -> dict:
+    """Call Groq's chat-completions endpoint and parse its JSON response.
+    Raises on transport / auth / parse failure — caller decides whether to
+    fall back."""
     body = json.dumps({
-        "model": model,
+        "model": GROQ_MODEL,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": query},
@@ -226,11 +218,11 @@ def _call_openai_compatible(url: str, key: str, model: str, query: str) -> dict:
     }).encode()
 
     req = urllib.request.Request(
-        url,
+        GROQ_URL,
         data=body,
         method="POST",
         headers={
-            "Authorization": f"Bearer {key}",
+            "Authorization": f"Bearer {GROQ_API_KEY}",
             "Content-Type": "application/json",
         },
     )
@@ -253,7 +245,7 @@ def _call_openai_compatible(url: str, key: str, model: str, query: str) -> dict:
 
 def _call_gemini(query: str) -> dict:
     """Google's generateContent endpoint. Different request shape from
-    OpenAI/Groq — system instruction is a separate field, the user message
+    Groq — system instruction is a separate field, the user message
     goes in `contents`, and JSON mode is opted in via responseMimeType.
     Returns the parsed dict from the model's text output."""
     url = GEMINI_URL_TEMPLATE.format(model=GEMINI_MODEL)
@@ -299,7 +291,7 @@ def _call_gemini(query: str) -> dict:
 
 
 def call_llm(query: str) -> dict:
-    """Provider-aware call. Picks Gemini > OpenAI > Groq based on which key
+    """Provider-aware call. Picks Gemini > Groq based on which key
     is set. Raises RuntimeError when none is configured. Raises
     LLMRateLimited when our outbound RPM cap would be exceeded — caller
     should fall back to keyword search."""
@@ -310,12 +302,10 @@ def call_llm(query: str) -> dict:
     _check_outbound_rpm()
     if provider == "gemini":
         return _call_gemini(query)
-    if provider == "openai":
-        return _call_openai_compatible(OPENAI_URL, OPENAI_API_KEY, OPENAI_MODEL, query)
     if provider == "groq":
-        return _call_openai_compatible(GROQ_URL, GROQ_API_KEY, GROQ_MODEL, query)
+        return _call_groq(query)
     raise RuntimeError(
-        "No LLM API key configured (set GEMINI_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY)"
+        "No LLM API key configured (set GEMINI_API_KEY or GROQ_API_KEY)"
     )
 
 
