@@ -404,62 +404,6 @@ def list_teachers(
     return [teacher_row_to_dict(r) for r in rows]
 
 
-class AISearchIn(BaseModel):
-    query: str = Field(min_length=2, max_length=200)
-
-
-@app.post("/api/search")
-def ai_search(payload: AISearchIn, request: Request):
-    """Smart search: parse natural language → structured filter → SQL.
-    Falls back to keyword search if Groq is unreachable so the user always
-    gets *something* back rather than a 500."""
-    from . import aisearch
-
-    iph = hash_ip(client_ip(request))
-    aisearch.enforce_ai_rate_limit(iph)
-
-    try:
-        parsed = aisearch.parse_query(payload.query)
-        teachers = aisearch.execute_search(parsed)
-        aisearch.log_search(iph, payload.query, parsed)
-        return {
-            "teachers": teachers,
-            "explanation_en": parsed["explanation_en"],
-            "explanation_zh": parsed["explanation_zh"],
-            "parsed": parsed,
-            "fallback": False,
-        }
-    except SpamError:
-        raise
-    except Exception as e:
-        # LLM down / quota / parse failure — degrade to keyword search so
-        # the UI doesn't dead-end. Log loudly so we can fix the underlying
-        # provider issue (this used to swallow silently and hide config bugs).
-        import logging
-        logging.exception(
-            "[smart-search] %s fallback (provider=%s) on query=%r: %s",
-            type(e).__name__, aisearch.active_provider(), payload.query[:80], e,
-        )
-        aisearch.log_search(iph, payload.query, None)
-        teachers = list_teachers(q=payload.query, subject=None)
-        # Distinguish "we deliberately throttled" from "upstream broke" so
-        # the UI can show a calmer message — the former is just "try again
-        # in a sec," not "smart search is down."
-        if isinstance(e, aisearch.LLMRateLimited):
-            en_msg = "Smart search is busy right now — keyword results below. Try again in a minute."
-            zh_msg = "智能搜索现在忙不过来，先给你关键词匹配结果。一分钟后再试一下。"
-        else:
-            en_msg = "Smart search unavailable; showing keyword matches."
-            zh_msg = "智能搜索暂不可用；以下是关键词匹配结果。"
-        return {
-            "teachers": teachers,
-            "explanation_en": en_msg,
-            "explanation_zh": zh_msg,
-            "parsed": None,
-            "fallback": True,
-        }
-
-
 @app.get("/api/teachers/{teacher_id}")
 def get_teacher(teacher_id: str, request: Request):
     sql = TEACHER_STATS_SELECT + " AND t.id = ? GROUP BY t.id"

@@ -57,14 +57,13 @@ CREATE TABLE IF NOT EXISTS review_votes (
   PRIMARY KEY (review_id, ip_hash)
 );
 
--- AI smart-search audit + rate limit. We log every parsed search so we can
--- (a) cap per-IP daily volume against the Groq free tier and (b) review
--- which queries actually got asked when tuning the system prompt.
+-- Legacy AI-search audit table retained to preserve historical records.
+-- The retired search feature no longer reads or writes this table.
 CREATE TABLE IF NOT EXISTS ai_search_log (
   id          TEXT PRIMARY KEY,
   ip_hash     TEXT,
   query       TEXT NOT NULL,
-  parsed      TEXT,           -- JSON of the structured filter, NULL if Groq failed
+  parsed      TEXT,           -- Historical JSON filter, NULL on provider failure
   created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 

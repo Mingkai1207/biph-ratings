@@ -26,6 +26,41 @@ def test_teachers_list_includes_seeded_teacher(client, seeded_teacher):
     assert me["review_count"] == 0
 
 
+def test_teacher_search_matches_names_case_insensitively(client, seeded_teacher):
+    from backend import db
+    name = f"Keyword Teacher {seeded_teacher}"
+    with db.get_conn() as conn:
+        conn.execute("UPDATE teachers SET name = ? WHERE id = ?", (name, seeded_teacher))
+
+    r = client.get("/api/teachers", params={"q": name.upper()})
+    assert r.status_code == 200
+    assert [teacher["id"] for teacher in r.json()] == [seeded_teacher]
+
+
+def test_teacher_search_matches_courses_and_respects_subject(client, seeded_teacher):
+    from backend import db
+    course = f"AP Calculus {seeded_teacher}"
+    with db.get_conn() as conn:
+        conn.execute("UPDATE teachers SET courses = ? WHERE id = ?", (course, seeded_teacher))
+
+    matched = client.get("/api/teachers", params={"q": course.upper(), "subject": "Math"})
+    assert matched.status_code == 200
+    assert [teacher["id"] for teacher in matched.json()] == [seeded_teacher]
+    assert matched.json()[0]["courses"] == [course]
+
+    excluded = client.get("/api/teachers", params={"q": course, "subject": "Science"})
+    assert excluded.status_code == 200
+    assert excluded.json() == []
+
+
+def test_ai_search_endpoint_is_retired(client):
+    # Unmatched POST requests reach the existing static mount, which returns
+    # 405. The route must also disappear from the published API schema.
+    r = client.post("/api/search", json={"query": "best math teacher"})
+    assert r.status_code == 405
+    assert "/api/search" not in client.get("/openapi.json").json()["paths"]
+
+
 def test_teacher_detail_computes_averages(client, seeded_teacher_with_reviews):
     r = client.get(f"/api/teachers/{seeded_teacher_with_reviews}")
     assert r.status_code == 200

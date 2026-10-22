@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Rate BIPH — anonymous teacher reviews</title>
-  <link rel="stylesheet" href="styles.css?v=biph-blue-20261021" />
+  <link rel="stylesheet" href="styles.css?v=search-cleanup-20261022" />
   <script src="config.js?v=22926e5"></script>
 </head>
 <body data-page="home">
@@ -30,38 +30,10 @@
             <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
           </svg>
           <input id="q" data-i18n-placeholder="home.search.placeholder" placeholder="Teacher name…" autocomplete="off" />
-          <!-- Smart search hidden for now — LLM provider isn't reliably
-               funded yet. JS still wires the button so re-enabling is just
-               removing the `hidden` attribute. See backend/aisearch.py for
-               the parse-then-execute flow that's ready to go. -->
-          <button class="searchbar__smart" type="button" id="smartBtn" hidden
-                  data-i18n-aria-label="home.search.smartAria"
-                  data-i18n-title="home.search.smartHint"
-                  aria-label="Ask in plain English"
-                  title="Ask in plain English: 'best math teacher', 'easiest tests', 'who gives the most homework'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 2l1.6 4.4L18 8l-4.4 1.6L12 14l-1.6-4.4L6 8l4.4-1.6L12 2zm6.5 11l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6zM5.5 14l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7L5.5 14z"/>
-            </svg>
-          </button>
           <button class="btn btn--primary" type="submit" data-i18n="home.search.go">Go</button>
         </form>
-        <!-- Hint paragraph is hidden alongside the smart-search button so the
-             hero doesn't promise something the user can't actually use. -->
-        <p class="hero__smart-hint serif" hidden data-i18n-html="home.search.smartHintHtml">
-          <em>Or just ask:</em> <span class="hero__smart-hint__eg">"best math teacher"</span> · <span class="hero__smart-hint__eg">"easiest tests"</span> · <span class="hero__smart-hint__eg">"who gives the most homework"</span>
-        </p>
       </div>
     </section>
-
-    <!-- Smart-search explanation banner. Hidden until the user runs a smart
-         query. Shows what the AI parsed and a "clear" button to return to
-         the normal browse view. -->
-    <div class="smart-banner" id="smartBanner" hidden>
-      <span class="smart-banner__icon">✨</span>
-      <span class="smart-banner__text" id="smartBannerText"></span>
-      <button type="button" class="smart-banner__clear" id="smartClear"
-              data-i18n="home.smart.clear">Clear smart search</button>
-    </div>
 
     <div class="chips" id="chips"></div>
 
@@ -71,7 +43,7 @@
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=biph-blue-20261021"></script>
+  <script src="app.js?v=search-cleanup-20261022"></script>
   <script>
   (function () {
     const qInput = document.getElementById('q');
@@ -84,7 +56,7 @@
     // 'All' is a special sentinel — never translated as data, but rendered
     // through RB.t('home.chips.all') when displayed. We keep state.subject
     // as 'All' (the canonical key) so the URL filter logic stays untouched.
-    let state = { q: '', subject: 'All', subjects: ['All'], smart: false };
+    let state = { q: '', subject: 'All', subjects: ['All'] };
     let debounce;
 
     async function loadSubjects() {
@@ -191,89 +163,11 @@
     function escape(s) { return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
     qInput.addEventListener('input', () => {
-      // Typing in the box implicitly drops out of smart-search mode — the
-      // user is editing a regular query now.
-      if (state.smart) clearSmart({ skipReload: true });
       state.q = qInput.value.trim();
       clearTimeout(debounce);
       debounce = setTimeout(loadTeachers, 200);
     });
     form.addEventListener('submit', (e) => { e.preventDefault(); state.q = qInput.value.trim(); loadTeachers(); });
-
-    // ——— Smart search wiring
-    const smartBtn = document.getElementById('smartBtn');
-    const smartBanner = document.getElementById('smartBanner');
-    const smartBannerText = document.getElementById('smartBannerText');
-    const smartClearBtn = document.getElementById('smartClear');
-    let lastSmartResponse = null;
-
-    function showSmartBanner(text) {
-      smartBannerText.textContent = text;
-      smartBanner.hidden = false;
-    }
-
-    function clearSmart({ skipReload } = {}) {
-      state.smart = false;
-      lastSmartResponse = null;
-      smartBanner.hidden = true;
-      if (!skipReload) loadTeachers();
-    }
-
-    async function runSmartSearch() {
-      const q = qInput.value.trim();
-      if (q.length < 2) return;
-      state.smart = true;
-      loading.hidden = false;
-      empty.hidden = true;
-      grid.innerHTML = '';
-      loading.textContent = RB.t('home.smart.loading');
-      try {
-        const resp = await RB.api('/api/search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: q }),
-        });
-        lastSmartResponse = resp;
-        renderSmartResponse(resp);
-      } catch (e) {
-        // Fall back to a regular keyword search so the user still sees
-        // teachers — never leave the screen empty after pressing the button.
-        showSmartBanner(RB.t('home.smart.error'));
-        state.smart = false;
-        loadTeachers();
-      } finally {
-        loading.hidden = true;
-        loading.textContent = RB.t('home.loading');
-      }
-    }
-
-    function renderSmartResponse(resp) {
-      const lang = (RB.getLang && RB.getLang()) === 'zh' ? 'zh' : 'en';
-      // When the backend falls back, it already returns a "smart search
-      // unavailable" message in both languages — use the localized frontend
-      // copy instead so we get one clean sentence, not two saying the same
-      // thing back to back.
-      const explain = resp.fallback
-        ? RB.t('home.smart.fallback')
-        : (lang === 'zh' ? resp.explanation_zh : resp.explanation_en);
-      showSmartBanner(explain);
-      if (!resp.teachers || !resp.teachers.length) {
-        empty.hidden = false;
-        empty.textContent = RB.t('home.smart.empty');
-        lastRows = [];
-        return;
-      }
-      lastRows = resp.teachers;
-      renderGrid(resp.teachers);
-    }
-
-    smartBtn.addEventListener('click', runSmartSearch);
-    smartClearBtn.addEventListener('click', () => clearSmart());
-
-    // Re-localize the banner on language toggle without re-querying Groq.
-    document.addEventListener('rb:lang', () => {
-      if (state.smart && lastSmartResponse) renderSmartResponse(lastSmartResponse);
-    });
 
     loadSubjects();
     loadTeachers();
