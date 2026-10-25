@@ -1,0 +1,79 @@
+[
+  {
+    "date": "2026-10-25",
+    "mode": "redesign",
+    "depth": "polish",
+    "scope": "app",
+    "theme": "BIPH brand (preserved)",
+    "prompt": "Polish ratebiph.com for BIPH students who find teachers, read reviews and share their experience. Preserve BIPH blue and white, existing layout, bilingual controls and ordinary search.",
+    "before": {
+      "fail": 74,
+      "reflex": 136,
+      "warn": 17
+    },
+    "after": {
+      "fail": 0,
+      "reflex": 0,
+      "warn": 0,
+      "waived_instances": 42,
+      "answered_instances": 3,
+      "layout_notes": 99,
+      "kind": "static"
+    },
+    "waived": [
+      "7b: existing white brand surface expressly chosen by the user"
+    ],
+    "kept": {
+      "links": "4/4",
+      "script_hooks": "103/103",
+      "routes": "all",
+      "data": "all"
+    },
+    "tests": [
+      "70 pytest tests passed",
+      "app.js and 7 inline scripts syntax passed",
+      "star native-button state + English/Chinese unit check passed",
+      "git diff --check passed"
+    ],
+    "browser": {
+      "tool": "CUA",
+      "result": "passed scoped browser checks",
+      "widths": [
+        320,
+        375,
+        1280,
+        1440,
+        1920
+      ],
+      "checks": [
+        "ordinary search",
+        "English/Chinese switch",
+        "mobile menu",
+        "teacher comparison",
+        "empty teacher-submission validation",
+        "native star Enter/Space selection and visible focus",
+        "320px rating controls stay inside viewport"
+      ],
+      "limits": "Isolated preview database; no live reviews submitted."
+    },
+    "copy_record": ".hallmark/copy-changes.md",
+    "layout": "Preserved. Off-scale spacing notes require a restyle and were not expanded into this polish.",
+    "finish_fixes": [
+      "At viewport widths of 360px or less, stack each rating label above its five buttons so the fifth button remains visible. The existing layout at 375px and wider is preserved."
+    ],
+    "finishReview": {
+      "reviewer": "fresh-context subagent",
+      "decision": "ship",
+      "findings": 0,
+      "additionalSourceReview": "320px star clipping found, fixed and verified at 320px and 375px",
+      "scores": {
+        "P": 4,
+        "H": 4,
+        "E": 4,
+        "S": 4,
+        "R": 4,
+        "V": 4
+      }
+    }
+  }
+]

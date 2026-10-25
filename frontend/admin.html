@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rate BIPH — admin</title>
-  <link rel="stylesheet" href="styles.css?v=search-cleanup-20261022" />
+  <meta name="description" content="Moderation tools for the Rate BIPH student moderator." />
+  <title>Rate BIPH: admin</title>
+  <link rel="stylesheet" href="styles.css?v=hallmark-polish-20261025" />
   <script src="config.js?v=22926e5"></script>
 </head>
 <body data-page="admin">
   <div data-topnav></div>
 
   <main class="container container--narrow">
-    <div class="eyebrow" data-i18n="admin.eyebrow">MODERATION</div>
-    <h1 class="page-title serif" data-i18n="admin.heading">Admin</h1>
+    <h1 class="page-title serif" data-i18n="admin.heading">Moderation</h1>
     <p class="page-lede" data-i18n="admin.lede">Token-gated tools for the student moderator. Approve teacher submissions or hide individual reviews.</p>
 
     <div id="authCard" class="form-card">
@@ -22,7 +22,7 @@
       </div>
       <div id="authStatus" class="form-status"></div>
       <div class="form-actions">
-        <button id="loginBtn" class="btn btn--primary" data-i18n="admin.unlock">Unlock</button>
+        <button id="loginBtn" class="btn btn--primary" data-i18n="admin.unlock">Sign in</button>
       </div>
     </div>
 
@@ -41,7 +41,7 @@
           <div class="serif admin-pane__title" data-i18n="admin.teachers.title">Edit teachers</div>
         </div>
         <p class="admin-pane__lede" data-i18n="admin.teachers.lede">Click any name or subject to edit. Changes save when you click outside the field or press Enter.</p>
-        <input id="teacherSearch" class="input admin-search" data-i18n-placeholder="admin.teachers.search" placeholder="Search teachers…" autocomplete="off" />
+        <input id="teacherSearch" aria-label="Search teachers" data-i18n-aria-label="admin.teachers.search" class="input admin-search" data-i18n-placeholder="admin.teachers.search" placeholder="Search teachers…" autocomplete="off" />
         <div id="teachersList" class="admin-teachers"></div>
         <div id="teachersEmpty" class="empty" hidden data-i18n="admin.teachers.empty">No teachers match.</div>
       </div>
@@ -77,10 +77,10 @@
         <div id="toolsTeacherView">
           <div class="admin-pane__head">
             <div class="serif admin-pane__title" data-i18n="admin.tools.title">Manage reviews</div>
-            <p class="admin-pane__lede" data-i18n="admin.tools.lede">Pick a teacher to see their reviews. Click any review to hide it from the public site — hidden reviews stay visible to you so mistakes can be reversed.</p>
+            <p class="admin-pane__lede" data-i18n="admin.tools.lede">Pick a teacher to see their reviews. Click any review to hide it from the public site. Hidden reviews stay visible to you so mistakes can be reversed.</p>
           </div>
           <div class="admin-tools__controls">
-            <input id="toolsTeacherSearch" class="input" type="text"
+            <input id="toolsTeacherSearch" aria-label="Search teachers" data-i18n-aria-label="admin.tools.searchTeacher" class="input" type="text"
                    data-i18n-placeholder="admin.tools.searchTeacher" placeholder="Search teachers…" />
           </div>
           <div id="toolsTeacherList" class="admin-tools-teachers"></div>
@@ -95,11 +95,11 @@
             </button>
           </div>
           <div class="admin-pane__head">
-            <div class="serif admin-pane__title" id="toolsReviewTitle">—</div>
+            <div class="serif admin-pane__title" id="toolsReviewTitle"></div>
             <p class="admin-pane__lede" id="toolsReviewSub"></p>
           </div>
           <div class="admin-tools__controls">
-            <input id="reviewSearch" class="input" type="text"
+            <input id="reviewSearch" aria-label="Search comments" data-i18n-aria-label="admin.tools.searchComment" class="input" type="text"
                    data-i18n-placeholder="admin.tools.searchComment" placeholder="Search comments…" />
           </div>
           <div id="reviewsList" class="admin-reviews"></div>
@@ -113,7 +113,7 @@
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=search-cleanup-20261022"></script>
+  <script src="app.js?v=hallmark-polish-20261025"></script>
   <script>
   (function () {
     let token = sessionStorage.getItem('rb.admin');
@@ -173,8 +173,8 @@
         row.innerHTML = `
           <div class="admin-teacher__avatar" data-avatar></div>
           <div class="admin-teacher__fields">
-            <input class="admin-teacher__name" data-field="name" value="${escape(t.name)}" />
-            <input class="admin-teacher__subject" data-field="subject" value="${escape(t.subject || '')}"
+            <input class="admin-teacher__name" aria-label="${RB.t('sub.name.label')}" data-field="name" value="${escape(t.name)}" />
+            <input class="admin-teacher__subject" aria-label="${RB.t('sub.subject.label')}" data-field="subject" value="${escape(t.subject || '')}"
                    data-i18n-placeholder="admin.teachers.subjectMissing" placeholder="${RB.t('admin.teachers.subjectMissing')}" />
           </div>
           <div class="admin-teacher__count">${t.review_count}</div>`;

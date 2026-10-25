@@ -1,4 +1,4 @@
-// Rate BIPH — shared frontend helpers. Vanilla JS, no framework.
+// Rate BIPH: shared frontend helpers. Vanilla JS, no framework.
 (function () {
   const API = window.API_BASE || '';
 
@@ -61,13 +61,13 @@
       'common.somethingWentWrong': 'Something went wrong.',
 
       // Home
-      'home.pageTitle':           'Rate BIPH — anonymous teacher reviews',
-      'home.hero.titleHtml':      'How is the teacher, <em>honestly</em>?',
+      'home.pageTitle':           'Rate BIPH: anonymous teacher reviews',
+      'home.hero.titleHtml':      'How is the teacher, honestly?',
       'home.hero.subtitle':       'Real reviews from BIPH students. Anonymous, unfiltered, kind when deserved.',
-      'home.search.placeholder':  'Teacher name…',
-      'home.search.go':           'Go',
+      'home.search.placeholder':  'Teacher name or course…',
+      'home.search.go':           'Search',
       'home.chips.all':           'All',
-      'home.empty.html':          'No teachers match that search. <a href="submit.html">Add one →</a>',
+      'home.empty.html':          'No teachers match that search. <a href="submit.html">Add a teacher</a>',
       'home.loading':             'Loading teachers…',
       'home.card.overall':        'overall rating',
       'home.card.noReviews':      'no reviews yet',
@@ -78,8 +78,8 @@
       'home.card.wta':            '{n}% would take again',
 
       // Teacher detail
-      'teacher.pageTitle':        'Rate BIPH — teacher profile',
-      'teacher.back':             '← Back to roster',
+      'teacher.pageTitle':        'Rate BIPH: teacher profile',
+      'teacher.back':             'Back to roster',
       'teacher.notFound':         'Teacher not found.',
       'teacher.review.heading':   'What students said',
       'teacher.review.sortLabel': 'most liked first',
@@ -103,6 +103,7 @@
       'teacher.courses.errSave':     'Could not save.',
       'teacher.courses.saved':       'Courses saved.',
       'teacher.form.heading':        'Write a review',
+      'teacher.form.commentLabel': 'Your review',
       'teacher.form.commentPlaceholder': "What's the class actually like? Grading, pace, personality, anything specific that'd help the next student…",
       'teacher.form.submit':         'Post anonymously',
       'teacher.form.submitting':     'Posting…',
@@ -131,11 +132,11 @@
       'teacher.share.text':          'Honest reviews of {name} on Rate BIPH.',
 
       // Printable QR sheet
-      'qrs.pageTitle':    'Rate BIPH — printable QR sheet',
-      'qrs.back':         '← Back to roster',
+      'qrs.pageTitle':    'Rate BIPH: printable QR sheet',
+      'qrs.back':         'Back to roster',
       'qrs.eyebrow':      'PRINT-READY QR SHEET',
-      'qrs.headingHtml':  'Printable <em>QR codes</em>.',
-      'qrs.lede':         "One QR per teacher. Print this page, cut into cards, tape outside classrooms during course-selection week. Each QR takes students straight to that teacher's page.",
+      'qrs.headingHtml':  'Printable QR codes.',
+      'qrs.lede':         "One QR per teacher. Print this page, cut into cards, tape outside classrooms during course-selection week. Each QR takes students straight to that teacher’s page.",
       'qrs.filter':       'Filter by name or subject…',
       'qrs.print':        'Print',
       'qrs.count':        '{n} teachers',
@@ -164,14 +165,14 @@
       'rank.metric.homework.note':  "Higher rating = heavier workload. Useful if you're already drowning.",
 
       // Compare
-      'compare.pageTitle':   'Rate BIPH — compare teachers',
+      'compare.pageTitle':   'Rate BIPH: compare teachers',
       'compare.eyebrow':     'SIDE BY SIDE',
-      'compare.headingHtml': 'Compare two <em>teachers</em>.',
+      'compare.headingHtml': 'Compare two teachers.',
       'compare.lede':        "Picking between two teachers for the same course? Stack their stats next to each other and decide.",
       'compare.pickA':       'Teacher A',
       'compare.pickB':       'Teacher B',
       'compare.placeholder': 'Pick a teacher…',
-      'compare.viewProfile': 'View full profile →',
+      'compare.viewProfile': 'View full profile',
       'compare.empty':       'Pick two teachers above to see them side by side.',
       'compare.same':        'Pick two different teachers.',
       'compare.row.overall': 'Overall',
@@ -180,10 +181,10 @@
       'compare.notEnough':   '—',
 
       // Submit
-      'sub.pageTitle':       'Rate BIPH — add a teacher',
+      'sub.pageTitle':       'Rate BIPH: add a teacher',
       'sub.eyebrow':         "CAN'T FIND SOMEONE?",
-      'sub.headingHtml':     'Add a teacher to the <em>roster</em>.',
-      'sub.lede':            'Submissions are reviewed by a student moderator and usually show up within a day. No photos, no personal contact info — just the basics.',
+      'sub.headingHtml':     'Add a teacher to the roster.',
+      'sub.lede':            'Submissions are reviewed by a student moderator and usually show up within a day. No photos, no personal contact info, just the basics.',
       'sub.name.label':      'Teacher name',
       'sub.name.hint':       'Full name as used at school',
       'sub.name.placeholder':'e.g. Daniel Huang',
@@ -196,19 +197,19 @@
       'sub.sending':         'Sending…',
       'sub.errShort':        'Teacher name looks too short.',
       'sub.success.title':   'Sent for review ✓',
-      'sub.success.body':    'Thanks — a student moderator will take a look. Once approved, ',
+      'sub.success.body':    'Thanks. A student moderator will take a look. Once approved, ',
       'sub.success.bodyTail':' will appear in the roster.',
       'sub.success.again':   'Submit another',
       'sub.success.back':    'Back to roster',
 
       // Suggestions
-      'sug.pageTitle':       'Rate BIPH — suggestions',
+      'sug.pageTitle':       'Rate BIPH: suggestions',
       'sug.eyebrow':         'IDEAS FOR THE SITE',
-      'sug.headingHtml':     'Suggestions <em>welcome</em>.',
-      'sug.lede':            'Bug reports, missing teachers, features you want, things that feel off. Read by a student moderator. Your suggestion is private — only the admin account can see it.',
+      'sug.headingHtml':     'Suggestions welcome.',
+      'sug.lede':            'Bug reports, missing teachers, features you want, things that feel off. Read by a student moderator. Your suggestion is private; only the admin account can see it.',
       'sug.body.label':      'Your suggestion',
       'sug.body.hint':       'Anonymous. At least 10 characters.',
-      'sug.body.placeholder':"Be specific so we can actually act on it — what should change, what's broken, what you wish existed…",
+      'sug.body.placeholder':"Be specific so we can actually act on it: what should change, what's broken, what you wish existed…",
       'sug.send':            'Send suggestion',
       'sug.sending':         'Sending…',
       'sug.errShort':        'Write at least 10 characters so we can act on it.',
@@ -218,27 +219,27 @@
       'sug.success.back':    'Back to roster',
 
       // About / clarification
-      'about.pageTitle':       'Rate BIPH — about',
+      'about.pageTitle':       'Rate BIPH: about',
       'about.eyebrow':         'A FEW THINGS UP FRONT',
-      'about.headingHtml':     'Why this <em>exists</em>.',
+      'about.headingHtml':     'About Rate BIPH',
       'about.lede':            'Two things to clarify so nobody walks in confused.',
-      'about.credit.title':    "Credit where it's due",
-      'about.credit.body1':    'The idea — students rating teachers anonymously on a website — came from <strong>BIPH Insights</strong>, the no-code prototype earlier students put together on base44. <strong>This isn\'t my original idea</strong>; huge credit to whoever started it. I posted on my WeChat moments to make that clear. What I rebuilt here is the experience, not the original site.',
+      'about.credit.title':    "Credit where it’s due",
+      'about.credit.body1':    'The idea of students rating teachers anonymously on a website came from <strong>BIPH Insights</strong>, the no-code prototype earlier students put together on base44. <strong>This isn’t my original idea</strong>; huge credit to whoever started it. I posted on my WeChat moments to make that clear. What I rebuilt here is the experience, not the original site.',
       'about.credit.body2':    'I rebuilt it on a real domain (ratebiph.com, not a base44 subdomain) with a real backend because I wanted the experience to feel like a developed web product, not a hosted prototype. Faster pages, real search, anonymous reviews that actually scale, a proper mobile experience, comparison pages, shareable cards, daily auto-sync.',
       'about.purpose.title':   'What this site is for',
-      'about.purpose.body1':   "This isn't a place to <strong>curse</strong> teachers. It's a place to share <strong>opinions</strong>, honestly and specifically, so the next class of students can pick courses with their eyes open.",
-      'about.purpose.body2':   'Be specific: <em>what</em> the teacher does well, <em>where</em> the class is hard, <em>how</em> the homework actually feels. "Sucks" tells nobody anything. "Tests are short but every question is a synthesis problem" tells the next student what to expect.',
-      'about.purpose.body3':   'Reviews that cross from opinion into personal attack get hidden. The bar isn\'t "is this nice" — it\'s "is this the truth, said respectfully."',
+      'about.purpose.body1':   "This isn’t a place to <strong>curse</strong> teachers. It’s a place to share <strong>opinions</strong>, honestly and specifically, so the next class of students can pick courses with their eyes open.",
+      'about.purpose.body2':   'Be specific: <em>what</em> the teacher does well, <em>where</em> the class is hard, <em>how</em> the homework actually feels. “Sucks” tells nobody anything. “Tests are short but every question is a synthesis problem” tells the next student what to expect.',
+      'about.purpose.body3':   'Reviews that cross from opinion into personal attack get hidden. The bar isn’t “is this nice”; it’s “is this the truth, said respectfully.”',
       'about.cta':             'Back to the roster',
 
       // Admin
-      'admin.pageTitle':     'Rate BIPH — admin',
+      'admin.pageTitle':     'Rate BIPH: admin',
       'admin.eyebrow':       'MODERATION',
-      'admin.heading':       'Admin',
+      'admin.heading':       'Moderation',
       'admin.lede':          'Token-gated tools for the student moderator. Approve teacher submissions or hide individual reviews.',
       'admin.token.label':   'Admin token',
       'admin.token.placeholder': 'Paste admin token',
-      'admin.unlock':        'Unlock',
+      'admin.unlock':        'Sign in',
       'admin.invalid':       'Invalid token.',
       'admin.subs.title':    'Pending submissions',
       'admin.subs.refresh':  'Refresh',
@@ -276,7 +277,7 @@
       'admin.teachers.subjectMissing': 'no subject',
       // Admin · Tools (drill-down review moderation)
       'admin.tools.title':           'Manage reviews',
-      'admin.tools.lede':            'Pick a teacher to see their reviews. Click any review to hide it from the public site — hidden reviews stay visible to you so mistakes can be reversed.',
+      'admin.tools.lede':            'Pick a teacher to see their reviews. Click any review to hide it from the public site. Hidden reviews stay visible to you so mistakes can be reversed.',
       'admin.tools.searchTeacher':   'Search teachers…',
       'admin.tools.searchComment':   'Search comments…',
       'admin.tools.noTeachers':      'No teachers match.',
@@ -323,10 +324,10 @@
       'common.somethingWentWrong': '出错了。',
 
       // Home
-      'home.pageTitle':           'Rate BIPH — 匿名老师评价',
-      'home.hero.titleHtml':      '这位老师怎么样，<em>说真的</em>？',
+      'home.pageTitle':           'Rate BIPH: 匿名老师评价',
+      'home.hero.titleHtml':      '这位老师怎么样，说真的？',
       'home.hero.subtitle':       'BIPH 学生写的真实评价。匿名、不过滤、该夸的时候就夸。',
-      'home.search.placeholder':  '老师姓名…',
+      'home.search.placeholder':  '老师姓名或课程…',
       'home.search.go':           '搜索',
       'home.chips.all':           '全部',
       'home.empty.html':          '没找到匹配的老师。<a href="submit.html">添加一位 →</a>',
@@ -340,8 +341,8 @@
       'home.card.wta':            '{n}% 愿意再选',
 
       // Teacher detail
-      'teacher.pageTitle':        'Rate BIPH — 老师主页',
-      'teacher.back':             '← 返回名单',
+      'teacher.pageTitle':        'Rate BIPH: 老师主页',
+      'teacher.back':             '返回名单',
       'teacher.notFound':         '没找到这位老师。',
       'teacher.review.heading':   '学生怎么说',
       'teacher.review.sortLabel': '按点赞数排序',
@@ -365,6 +366,7 @@
       'teacher.courses.errSave':     '保存失败。',
       'teacher.courses.saved':       '课程已保存。',
       'teacher.form.heading':        '写一条评价',
+      'teacher.form.commentLabel': '你的评价',
       'teacher.form.commentPlaceholder': '这门课实际上怎么样？打分、节奏、老师风格，任何能帮到下一届学生的具体细节…',
       'teacher.form.submit':         '匿名发布',
       'teacher.form.submitting':     '发布中…',
@@ -393,11 +395,11 @@
       'teacher.share.text':          '{name} 在 Rate BIPH 的真实评价。',
 
       // 可打印的二维码总表
-      'qrs.pageTitle':    'Rate BIPH — 可打印二维码',
-      'qrs.back':         '← 返回老师列表',
+      'qrs.pageTitle':    'Rate BIPH: 可打印二维码',
+      'qrs.back':         '返回老师列表',
       'qrs.eyebrow':      '可打印二维码',
-      'qrs.headingHtml':  '可打印的 <em>二维码</em>。',
-      'qrs.lede':         '每位老师一个二维码。打印这页，剪成卡片，选课周贴在教室门口 — 扫码直达老师主页。',
+      'qrs.headingHtml':  '可打印的二维码。',
+      'qrs.lede':         '每位老师一个二维码。打印这页，剪成卡片，选课周贴在教室门口，扫码直达老师主页。',
       'qrs.filter':       '按姓名或科目筛选…',
       'qrs.print':        '打印',
       'qrs.count':        '共 {n} 位老师',
@@ -426,14 +428,14 @@
       'rank.metric.homework.note':  '评分越高 = 作业越重。如果你已经被作业淹没，可以参考。',
 
       // Compare
-      'compare.pageTitle':   'Rate BIPH — 对比老师',
+      'compare.pageTitle':   'Rate BIPH: 对比老师',
       'compare.eyebrow':     '左右对比',
-      'compare.headingHtml': '对比两位<em>老师</em>。',
+      'compare.headingHtml': '对比两位老师。',
       'compare.lede':        '在同一门课的两位老师之间纠结？把他们的数据放在一起，自己判断。',
       'compare.pickA':       '老师 A',
       'compare.pickB':       '老师 B',
       'compare.placeholder': '选择一位老师…',
-      'compare.viewProfile': '查看完整资料 →',
+      'compare.viewProfile': '查看完整资料',
       'compare.empty':       '请在上方选择两位老师，即可对比查看。',
       'compare.same':        '请选择两位不同的老师。',
       'compare.row.overall': '总评',
@@ -442,10 +444,10 @@
       'compare.notEnough':   '—',
 
       // Submit
-      'sub.pageTitle':       'Rate BIPH — 添加老师',
+      'sub.pageTitle':       'Rate BIPH: 添加老师',
       'sub.eyebrow':         '没找到这位老师？',
-      'sub.headingHtml':     '添加一位老师到 <em>名单</em>。',
-      'sub.lede':            '提交后由学生管理员审核，通常一天内会出现在网站上。不收照片，不收个人联系方式 — 只要基本信息。',
+      'sub.headingHtml':     '添加一位老师到名单。',
+      'sub.lede':            '提交后由学生管理员审核，通常一天内会出现在网站上。不收照片，不收个人联系方式，只要基本信息。',
       'sub.name.label':      '老师姓名',
       'sub.name.hint':       '学校里使用的全名',
       'sub.name.placeholder':'例如：Daniel Huang',
@@ -464,10 +466,10 @@
       'sub.success.back':    '返回名单',
 
       // Suggestions
-      'sug.pageTitle':       'Rate BIPH — 建议',
+      'sug.pageTitle':       'Rate BIPH: 建议',
       'sug.eyebrow':         '给网站提点想法',
-      'sug.headingHtml':     '欢迎 <em>提建议</em>。',
-      'sug.lede':            'Bug 反馈、缺失的老师、想要的功能、感觉不对劲的地方都行。学生管理员会看。你的建议是私密的 — 只有管理员账号能看到。',
+      'sug.headingHtml':     '欢迎提建议。',
+      'sug.lede':            'Bug 反馈、缺失的老师、想要的功能、感觉不对劲的地方都行。学生管理员会看。你的建议是私密的，只有管理员账号能看到。',
       'sug.body.label':      '你的建议',
       'sug.body.hint':       '匿名。至少 10 个字符。',
       'sug.body.placeholder':'写得具体些我们才能真的去改 — 该改什么、哪里坏了、希望多一个什么功能…',
@@ -480,9 +482,9 @@
       'sug.success.back':    '返回名单',
 
       // About / clarification
-      'about.pageTitle':       'Rate BIPH — 说明',
+      'about.pageTitle':       'Rate BIPH: 说明',
       'about.eyebrow':         '先说几件事',
-      'about.headingHtml':     '为什么<em>做这个</em>。',
+      'about.headingHtml':     '关于 Rate BIPH',
       'about.lede':            '两件事先讲清楚，免得有人误会。',
       'about.credit.title':    '该感谢的要感谢',
       'about.credit.body1':    '"学生匿名评价老师"这个想法，最早是同学们在 base44 上搭的 <strong>BIPH Insights</strong> 做的。<strong>这个想法不是我原创的</strong>，非常感谢最初做这件事的人，我已经在朋友圈里说明过。我在这里重新做的是体验本身，不是原来的网站。',
@@ -494,13 +496,13 @@
       'about.cta':             '返回名单',
 
       // Admin
-      'admin.pageTitle':     'Rate BIPH — 管理',
+      'admin.pageTitle':     'Rate BIPH: 管理',
       'admin.eyebrow':       '审核',
       'admin.heading':       '管理',
       'admin.lede':          '学生管理员的工具，需要 token。用于审核老师提交、隐藏单条评价。',
       'admin.token.label':   '管理员 token',
       'admin.token.placeholder': '粘贴管理员 token',
-      'admin.unlock':        '解锁',
+      'admin.unlock':        '登录',
       'admin.invalid':       'Token 无效。',
       'admin.subs.title':    '待审核提交',
       'admin.subs.refresh':  '刷新',
@@ -651,14 +653,14 @@
 
   // ——— Avatar helpers (hash name -> color from blue and pale-gray palette)
   const AVATAR_COLORS = [
-    '#cddaf2',
-    '#dce5f5',
-    '#e4ebf7',
-    '#d6dfe9',
-    '#e7edf4',
-    '#c6d6ef',
-    '#dae3f0',
-    '#d2e0f3',
+    'var(--avatar-1)',
+    'var(--avatar-2)',
+    'var(--avatar-3)',
+    'var(--avatar-4)',
+    'var(--avatar-5)',
+    'var(--avatar-6)',
+    'var(--avatar-7)',
+    'var(--avatar-8)',
   ];
   function hashString(s) {
     let h = 0;
@@ -695,15 +697,15 @@
     if (kind === 'full') { fill = star; stroke = star; }
     else if (kind === 'half') { fill = `url(#h-${id})`; stroke = star; }
     else { fill = empty; stroke = empty; }
-    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" data-kind="${kind}">
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" data-kind="${kind}" aria-hidden="true">
       <defs><linearGradient id="h-${id}"><stop offset="50%" stop-color="${star}"/><stop offset="50%" stop-color="${empty}"/></linearGradient></defs>
       <path d="${STAR_PATH}" fill="${fill}" stroke="${stroke}" stroke-width="0.8" stroke-linejoin="round"/>
     </svg>`;
   }
   function renderStars(container, value, { size = 18, interactive = false, onChange } = {}) {
-    // Build span wrappers ONCE and keep them stable. Only swap the inner SVG on hover/commit.
+    // Build stable wrappers ONCE and keep them stable. Only swap the inner SVG on hover/commit.
     // Rebuilding the DOM on every hover breaks touch taps: the emulated mouseenter destroys
-    // the span mid-gesture, so the subsequent click event never fires. Keeping the spans
+    // the wrapper mid-gesture, so the subsequent click event never fires. Keeping the wrappers
     // stable lets both desktop clicks and mobile taps register reliably.
     container.innerHTML = '';
     container.classList.add('stars');
@@ -714,11 +716,14 @@
 
     const wraps = [];
     for (let i = 1; i <= 5; i++) {
-      const wrap = document.createElement('span');
+      const wrap = document.createElement(interactive ? 'button' : 'span');
       wrap.style.display = 'inline-flex';
       wrap.style.cursor = interactive ? 'pointer' : 'default';
       wrap.dataset.idx = String(i);
       if (interactive) {
+        wrap.type = 'button';
+        wrap.className = 'star-button';
+        wrap.setAttribute('aria-label', getLang() === 'zh' ? `${i} 分（满分 5 分）` : `${i} out of 5 stars`);
         const idx = i;
         // Use pointerenter (fires for both mouse and touch) plus mouseenter fallback.
         wrap.addEventListener('mouseenter', () => { hover = idx; paint(); });
@@ -742,6 +747,7 @@
         if (i <= Math.floor(v)) kind = 'full';
         else if (i - 0.5 <= v) kind = 'half';
         wraps[i - 1].innerHTML = starSvg(kind, id + '-' + i, size);
+        if (interactive) wraps[i - 1].setAttribute('aria-pressed', committed === i ? 'true' : 'false');
       }
     };
     paint();
@@ -876,10 +882,10 @@
         <div class="topnav__inner">
           <a href="index.html" class="logo">
             <span class="logo__mark">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect x="6" y="13.5" width="10" height="1.4" rx="0.7" fill="#ffffff"/>
-                <rect x="6" y="16.5" width="7" height="1.4" rx="0.7" fill="#ffffff"/>
-                <path d="M13.5 9.8l3.6-3.6a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1 0 1.4l-3.6 3.6-2.6.6.2-3z" fill="#ffffff"/>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="6" y="13.5" width="10" height="1.4" rx="0.7" fill="var(--on-accent)"/>
+                <rect x="6" y="16.5" width="7" height="1.4" rx="0.7" fill="var(--on-accent)"/>
+                <path d="M13.5 9.8l3.6-3.6a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1 0 1.4l-3.6 3.6-2.6.6.2-3z" fill="var(--on-accent)"/>
               </svg>
             </span>
             <span class="logo__word">Rate <em>BIPH</em></span>

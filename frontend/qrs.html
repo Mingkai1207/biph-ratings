@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rate BIPH — printable QR sheet</title>
-  <link rel="stylesheet" href="styles.css?v=search-cleanup-20261022" />
+  <meta name="description" content="Print QR codes that link students to BIPH teacher review pages." />
+  <title>Rate BIPH: printable QR sheet</title>
+  <link rel="stylesheet" href="styles.css?v=hallmark-polish-20261025" />
   <script src="config.js?v=22926e5"></script>
   <style>
     /* Page-specific grid. Screen view keeps the site chrome; print view
@@ -22,9 +23,9 @@
       font-size: 15px; color: var(--ink);
       outline: none;
     }
-    .qrs-controls input[type="search"]:focus {
-      border-color: var(--accent-ink);
-      box-shadow: 0 0 0 3px rgba(50, 85, 164, 0.18);
+    .qrs-controls input[type="search"]:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
     }
     .qrs-grid {
       display: grid;
@@ -49,15 +50,15 @@
     }
     .qrs-card__subject {
       font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      letter-spacing: 0;
+      text-transform: none;
       color: var(--accent-ink);
       margin-bottom: 10px;
     }
     .qrs-card__qr {
       width: 100%;
       aspect-ratio: 1 / 1;
-      background: #fff;
+      background: var(--bg-card);
       border: 1px solid var(--line);
       border-radius: 10px;
       padding: 6px;
@@ -74,17 +75,17 @@
     .qrs-loading { padding: 40px 0; text-align: center; color: var(--ink-mute); }
 
     @media print {
-      body { background: #fff; }
+      body { background: var(--bg-card); }
       .topnav, [data-footer], [data-topnav], .qrs-controls, .crumb,
       .page-title, .page-lede, .eyebrow { display: none !important; }
       main.container { max-width: none; padding: 0; margin: 0; }
       .qrs-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
       }
       .qrs-card {
-        border: 1px solid #bbb;
-        background: #fff;
+        border: 1px solid var(--print-rule);
+        background: var(--bg-card);
         padding: 10px 8px 12px;
       }
       .qrs-card__name { font-size: 15px; }
@@ -97,13 +98,12 @@
   <div data-topnav></div>
 
   <main class="container">
-    <a href="index.html" class="crumb" data-i18n="qrs.back">← Back to roster</a>
-    <div class="eyebrow" data-i18n="qrs.eyebrow">PRINT-READY QR SHEET</div>
-    <h1 class="page-title serif" data-i18n-html="qrs.headingHtml">Printable <em>QR codes</em>.</h1>
-    <p class="page-lede" data-i18n="qrs.lede">One QR per teacher. Print this page, cut into cards, tape outside classrooms during course-selection week. Each QR takes students straight to that teacher's page.</p>
+    <a href="index.html" class="crumb" data-i18n="qrs.back">Back to roster</a>
+    <h1 class="page-title serif" data-i18n-html="qrs.headingHtml">Printable QR codes.</h1>
+    <p class="page-lede" data-i18n="qrs.lede">One QR per teacher. Print this page, cut into cards, tape outside classrooms during course-selection week. Each QR takes students straight to that teacher’s page.</p>
 
     <div class="qrs-controls">
-      <input type="search" id="qrsFilter" data-i18n-placeholder="qrs.filter" placeholder="Filter by name or subject…" />
+      <input type="search" id="qrsFilter" aria-label="Filter teachers" data-i18n-aria-label="qrs.filter" data-i18n-placeholder="qrs.filter" placeholder="Filter by name or subject…" />
       <button type="button" class="btn btn--accent btn--lg" id="qrsPrint" data-i18n="qrs.print">Print</button>
       <span class="qrs-note" id="qrsCount"></span>
     </div>
@@ -114,7 +114,7 @@
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=search-cleanup-20261022"></script>
+  <script src="app.js?v=hallmark-polish-20261025"></script>
   <script>
   (function () {
     const state = { teachers: [], filter: '' };
@@ -148,7 +148,7 @@
       const apiBase = window.API_BASE || '';
       host.innerHTML = rows.map(t => {
         const qrSrc = `${apiBase}/api/teachers/${encodeURIComponent(t.id)}/qr.png`;
-        // Don't escape the API-driven src; it's our own endpoint.
+        // Don't escape the API-driven src; it’s our own endpoint.
         return `
           <div class="qrs-card">
             <div class="qrs-card__subject">${escape(RB.localizeSubject(t.subject) || '—')}</div>

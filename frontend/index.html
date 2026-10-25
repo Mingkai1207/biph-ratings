@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rate BIPH — anonymous teacher reviews</title>
-  <link rel="stylesheet" href="styles.css?v=search-cleanup-20261022" />
+  <meta name="description" content="Find BIPH teachers, compare courses, and read anonymous student reviews." />
+  <title>Rate BIPH: anonymous teacher reviews</title>
+  <link rel="stylesheet" href="styles.css?v=hallmark-polish-20261025" />
   <script src="config.js?v=22926e5"></script>
 </head>
 <body data-page="home">
@@ -23,14 +24,14 @@
         <span class="hero__shape hero__shape--8"></span>
       </div>
       <div class="hero__inner">
-        <h1 class="hero__title serif" data-i18n-html="home.hero.titleHtml">How is the teacher, <em>honestly</em>?</h1>
+        <h1 class="hero__title serif" data-i18n-html="home.hero.titleHtml">How is the teacher, honestly?</h1>
         <p class="hero__subtitle" data-i18n="home.hero.subtitle">Real reviews from BIPH students. Anonymous, unfiltered, kind when deserved.</p>
         <form class="searchbar" id="searchForm">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-mute)" stroke-width="2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-mute)" stroke-width="2" aria-hidden="true">
             <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
           </svg>
-          <input id="q" data-i18n-placeholder="home.search.placeholder" placeholder="Teacher name…" autocomplete="off" />
-          <button class="btn btn--primary" type="submit" data-i18n="home.search.go">Go</button>
+          <input id="q" aria-label="Teacher name or course" data-i18n-aria-label="home.search.placeholder" data-i18n-placeholder="home.search.placeholder" placeholder="Teacher name or course…" autocomplete="off" />
+          <button class="btn btn--primary" type="submit" data-i18n="home.search.go">Search</button>
         </form>
       </div>
     </section>
@@ -38,12 +39,12 @@
     <div class="chips" id="chips"></div>
 
     <div id="grid" class="grid"></div>
-    <div id="empty" class="empty" hidden data-i18n-html="home.empty.html">No teachers match that search. <a href="submit.html">Add one →</a></div>
+    <div id="empty" class="empty" hidden data-i18n-html="home.empty.html">No teachers match that search. <a href="submit.html">Add a teacher</a></div>
     <div id="loading" class="loading" data-i18n="home.loading">Loading teachers…</div>
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=search-cleanup-20261022"></script>
+  <script src="app.js?v=hallmark-polish-20261025"></script>
   <script>
   (function () {
     const qInput = document.getElementById('q');
@@ -115,9 +116,7 @@
         const card = document.createElement('a');
         card.className = 'card';
         card.href = `teacher.html?id=${encodeURIComponent(t.id)}`;
-        // Expose the teacher's avatar color as --aura so hover/focus-visible
-        // can render a card-specific drop shadow + border. Each teacher ends
-        // up with its own "aura" on the roster.
+        // Preserve the existing avatar-color custom property for each roster card.
         card.style.setProperty('--aura', RB.avatarColor(t.name));
         const avg = t.avg_rating;
         const firstCourse = (t.courses && t.courses.length) ? t.courses[0] : null;
@@ -174,280 +173,6 @@
   })();
   </script>
 
-  <!-- ——— Star canvas (home page only, per handoff 3 spec).
-       Full-page falling stars in the outer margins, attraction + constellation
-       lines toward cursor/finger, amber cursor-crown. Single RAF, no per-frame
-       DOM. Respects prefers-reduced-motion; runs on both pointer and touch. -->
-  <script>
-  (function () {
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    var canvas = document.createElement('canvas');
-    canvas.className = 'rb-star-canvas';
-    document.body.appendChild(canvas);
-    var ctx = canvas.getContext('2d');
-
-    var STAR_PATH = new Path2D('M12 2l2.95 5.98 6.6.96-4.78 4.66 1.13 6.57L12 17.58l-5.9 3.1 1.13-6.58L2.45 9.44l6.6-.96L12 2z');
-    var HUES = ['#3255a4', '#6c87bd', '#8793a7'];
-    var LINE_COL = '#3255a4';
-
-    function drawStar(x, y, size, rot, color, alpha) {
-      ctx.save();
-      ctx.translate(x, y); ctx.rotate(rot);
-      var s = size / 24; ctx.scale(s, s); ctx.translate(-12, -12);
-      ctx.fillStyle = color; ctx.globalAlpha = alpha;
-      ctx.fill(STAR_PATH);
-      ctx.restore();
-    }
-
-    var W, H;
-    function resize() {
-      W = window.innerWidth; H = window.innerHeight;
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = W * dpr; canvas.height = H * dpr;
-      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    var mouse = { x: -9999, y: -9999, inside: false };
-    window.addEventListener('mousemove', function (e) {
-      mouse.x = e.clientX; mouse.y = e.clientY; mouse.inside = true;
-    });
-    window.addEventListener('mouseout', function (e) {
-      if (!e.relatedTarget) { mouse.inside = false; mouse.x = mouse.y = -9999; }
-    });
-    // Touch support — finger acts as cursor while pressed
-    function onTouch(e) {
-      if (e.touches && e.touches.length) {
-        var t = e.touches[0];
-        mouse.x = t.clientX; mouse.y = t.clientY; mouse.inside = true;
-      }
-    }
-    function onTouchEnd() { mouse.inside = false; mouse.x = mouse.y = -9999; }
-    window.addEventListener('touchstart',  onTouch,    { passive: true });
-    window.addEventListener('touchmove',   onTouch,    { passive: true });
-    window.addEventListener('touchend',    onTouchEnd, { passive: true });
-    window.addEventListener('touchcancel', onTouchEnd, { passive: true });
-
-    // Desktop/tablet: ~2.25x the handoff baseline (32/63/24444).
-    // Mobile (≤640, matching styles.css breakpoint): ~1.5x the baseline
-    // (21/42/36667) so the narrow viewport fills without crowding.
-    var isMobile = W <= 640;
-    var target = isMobile
-      ? Math.max(21, Math.min(42, Math.round(W * H / 36667)))
-      : Math.max(32, Math.min(63, Math.round(W * H / 24444)));
-
-    function makeFaller(top) {
-      var side = Math.random() < 0.5 ? 'L' : 'R';
-      var margin = W * (1 / 8);
-      var x = side === 'L' ? Math.random() * margin : W - Math.random() * margin;
-      return {
-        x: x,
-        y: top ? -20 - Math.random() * 60 : Math.random() * H,
-        vx: 0, vy: 18 + Math.random() * 20,
-        size: 10 + Math.random() * 12,
-        rot: Math.random() * Math.PI * 2,
-        vrot: (Math.random() - 0.5) * 1.2,
-        alpha: 0.22 + Math.random() * 0.30,
-        color: HUES[Math.floor(Math.random() * HUES.length)],
-      };
-    }
-
-    var ATTR_R = 220, LINE_R = 180;
-    var stars = [];
-    var last = performance.now();
-
-    // Stars must not enter the central content column (search bar, cards).
-    // We compute the no-fly zone from the actual <main.container> rect each
-    // frame so it tracks scroll, resize, and any layout the CSS does on home.
-    // ZONE_PAD adds a small breathing gap so stars halt just before the
-    // content edge instead of clipping it.
-    var mainEl = document.querySelector('main.container');
-    var ZONE_PAD = 12;
-    function getZone() {
-      if (!mainEl) return null;
-      var r = mainEl.getBoundingClientRect();
-      // Ignore degenerate / off-screen rects (pre-layout, hidden tab, etc.)
-      if (r.width < 40 || r.height < 40) return null;
-      return {
-        left:   r.left   - ZONE_PAD,
-        right:  r.right  + ZONE_PAD,
-        top:    r.top    - ZONE_PAD,
-        bottom: r.bottom + ZONE_PAD,
-      };
-    }
-
-    // How long a star must sit pinned to the zone boundary before it starts
-    // fading out. Without this, attracted stars pile up against the edge and
-    // crowd it as more keep falling. Recycle keeps the population fresh.
-    var STUCK_BEFORE_FADE = 3.0;     // seconds
-    var FADE_RATE = 0.6;             // alpha per second
-
-    function loop(now) {
-      var dt = Math.min((now - last) / 1000, 0.05); last = now;
-      while (stars.length < target) stars.push(makeFaller(stars.length > target * 0.4));
-
-      var zone = getZone();
-
-      ctx.clearRect(0, 0, W, H);
-
-      for (var i = 0; i < stars.length; i++) {
-        var s = stars[i];
-        if (mouse.inside) {
-          var dx = mouse.x - s.x, dy = mouse.y - s.y;
-          var d = Math.hypot(dx, dy);
-          if (d < ATTR_R) {
-            var f = (1 - d / ATTR_R) * 140;
-            s.vx += (dx / (d + 0.1)) * f * dt;
-            s.vy += (dy / (d + 0.1)) * f * dt - 50 * dt;
-          }
-        }
-        s.vy += 22 * dt; s.vx *= 0.95;
-
-        var nx = s.x + s.vx * dt * 8;
-        var ny = s.y + s.vy * dt * 2.5;
-
-        // No-fly zone clamp. If the star's next position would land inside
-        // the central content rect, snap it back to the nearest edge and
-        // zero the offending velocity component so it pins at the boundary
-        // instead of jittering through it.
-        var blocked = false;
-        if (zone && nx > zone.left && nx < zone.right && ny > zone.top && ny < zone.bottom) {
-          var dl = nx - zone.left;
-          var dr = zone.right - nx;
-          var dT = ny - zone.top;
-          var dB = zone.bottom - ny;
-          var minE = Math.min(dl, dr, dT, dB);
-          if (minE === dl)      { nx = zone.left;   if (s.vx > 0) s.vx = 0; }
-          else if (minE === dr) { nx = zone.right;  if (s.vx < 0) s.vx = 0; }
-          else if (minE === dT) { ny = zone.top;    if (s.vy > 0) s.vy = 0; }
-          else                  { ny = zone.bottom; if (s.vy < 0) s.vy = 0; }
-          blocked = true;
-        }
-
-        s.x = nx;
-        s.y = ny;
-        s.rot += s.vrot * dt;
-
-        // Stuck-at-boundary fade: after STUCK_BEFORE_FADE seconds against
-        // the wall, alpha bleeds down so the star recycles. Free movement
-        // resets the timer.
-        if (blocked) {
-          s.stuckTime = (s.stuckTime || 0) + dt;
-          if (s.stuckTime > STUCK_BEFORE_FADE) {
-            s.alpha -= FADE_RATE * dt;
-          }
-        } else {
-          s.stuckTime = 0;
-        }
-
-        if (s.y > H + 30 || s.x < -40 || s.x > W + 40 || s.alpha <= 0.02) {
-          Object.assign(s, makeFaller(true));
-          s.stuckTime = 0;
-        }
-      }
-
-      if (mouse.inside) {
-        var near = stars
-          .map(function (s) { return { s: s, d: Math.hypot(s.x - mouse.x, s.y - mouse.y) }; })
-          .filter(function (p) { return p.d < LINE_R; })
-          .sort(function (a, b) { return a.d - b.d; })
-          .slice(0, 6);
-        ctx.strokeStyle = LINE_COL; ctx.lineWidth = 1;
-        for (var j = 0; j < near.length; j++) {
-          ctx.globalAlpha = (1 - near[j].d / LINE_R) * 0.6;
-          ctx.beginPath();
-          ctx.moveTo(mouse.x, mouse.y);
-          ctx.lineTo(near[j].s.x, near[j].s.y);
-          ctx.stroke();
-        }
-        ctx.globalAlpha = 1;
-        var grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 36);
-        grad.addColorStop(0, 'rgba(50, 85, 164, 0.30)');
-        grad.addColorStop(1, 'rgba(50, 85, 164, 0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 36, 0, Math.PI * 2); ctx.fill();
-      }
-
-      for (var k = 0; k < stars.length; k++) {
-        var sk = stars[k];
-        drawStar(sk.x, sk.y, sk.size, sk.rot, sk.color, sk.alpha);
-      }
-      if (mouse.inside) drawStar(mouse.x, mouse.y, 16, now / 500, '#3255a4', 0.85);
-
-      requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
-  })();
-  </script>
-
-  <!-- ——— Cursor hint (desktop only). Fades once the cursor reaches the hint
-       box (+60px grace) OR after 14s. Hidden on touch + reduced-motion. -->
-  <script>
-  (function () {
-    if (!window.matchMedia) return;
-    if (window.matchMedia('(hover: none)').matches) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    var wrap = document.createElement('div');
-    wrap.setAttribute('aria-hidden', 'true');
-    wrap.style.cssText = [
-      'position:fixed',
-      'right:clamp(16px,4vw,52px)',
-      'top:50%',
-      'transform:translateY(-50%) translateX(0)',
-      'opacity:1',
-      'transition:opacity 0.6s ease,transform 0.6s ease',
-      'pointer-events:none',
-      'z-index:50',
-      'display:flex',
-      'flex-direction:column',
-      'align-items:center',
-      'gap:10px',
-    ].join(';');
-    wrap.innerHTML = [
-      '<div style="position:relative;width:56px;height:56px">',
-      '  <div class="rb-cursor-orbit" style="position:absolute;inset:0;border:1.5px dashed var(--accent);border-radius:50%;opacity:0.45"></div>',
-      '  <div class="rb-cursor-dot"   style="position:absolute;width:8px;height:8px;border-radius:50%;background:var(--accent);top:50%;left:50%;margin-left:-4px;margin-top:-4px"></div>',
-      '  <svg width="22" height="22" viewBox="0 0 24 24" style="position:absolute;top:50%;left:50%;transform:translate(-40%,-40%);color:var(--accent-ink)">',
-      '    <path d="M4 3l7 17 2.5-6.5L20 11z" fill="currentColor"/>',
-      '  </svg>',
-      '</div>',
-      // The hint is injected after DOMContentLoaded, so applyI18n() has
-      // already run. Set the translated text directly via RB.t().
-      '<div class="serif" data-i18n="home.cursorHint" style="font-style:italic;color:var(--accent-ink);font-size:15px;white-space:nowrap;letter-spacing:-0.005em">' + (window.RB ? RB.t('home.cursorHint') : 'drag your cursor') + '</div>',
-      '<svg width="16" height="24" viewBox="0 0 16 24" style="color:var(--accent-ink);opacity:0.6">',
-      '  <path d="M8 2v18M2 14l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
-      '</svg>',
-    ].join('');
-    document.body.appendChild(wrap);
-
-    var GRACE = 60;
-    var fired = false;
-    function fadeOut() {
-      if (fired) return;
-      fired = true;
-      wrap.style.opacity = '0';
-      wrap.style.transform = 'translateY(-50%) translateX(20px)';
-      window.removeEventListener('mousemove', onMove);
-      clearTimeout(timer);
-      // Remove from DOM after the fade completes so it can't intercept anything.
-      setTimeout(function () { wrap.remove(); }, 700);
-    }
-    function onMove(e) {
-      var r = wrap.getBoundingClientRect();
-      if (
-        e.clientX >= r.left  - GRACE &&
-        e.clientX <= r.right + GRACE &&
-        e.clientY >= r.top   - GRACE &&
-        e.clientY <= r.bottom + GRACE
-      ) fadeOut();
-    }
-    window.addEventListener('mousemove', onMove);
-    var timer = setTimeout(fadeOut, 14000);
-  })();
-  </script>
 </body>
 </html>

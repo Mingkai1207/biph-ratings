@@ -3,15 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rate BIPH — teacher profile</title>
-  <link rel="stylesheet" href="styles.css?v=search-cleanup-20261022" />
+  <meta name="description" content="Read student reviews and share your experience of a BIPH teacher." />
+  <title>Rate BIPH: teacher profile</title>
+  <link rel="stylesheet" href="styles.css?v=hallmark-polish-20261025" />
   <script src="config.js?v=22926e5"></script>
 </head>
 <body data-page="teacher">
   <div data-topnav></div>
 
   <main class="container container--narrow">
-    <a href="index.html" class="crumb" data-i18n="teacher.back">← Back to roster</a>
+    <a href="index.html" class="crumb" data-i18n="teacher.back">Back to roster</a>
 
     <section class="profile-hero" id="hero">
       <div class="profile-hero__left" id="heroLeft"></div>
@@ -33,7 +34,7 @@
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=search-cleanup-20261022"></script>
+  <script src="app.js?v=hallmark-polish-20261025"></script>
   <script>
   (function () {
     const id = new URLSearchParams(location.search).get('id');
@@ -93,7 +94,7 @@
       const left = document.getElementById('heroLeft');
       const hasCourses = t.courses && t.courses.length;
       const coursesLine = hasCourses
-        ? `<div class="profile-hero__courses">${escape(t.courses.join(' · '))}</div>`
+        ? `<div class="profile-hero__courses">${escape(t.courses.join(', '))}</div>`
         : `<button type="button" class="profile-hero__courses-add" data-add-courses>${RB.t('teacher.courses.add')}</button>`;
       left.innerHTML = `
         <div class="profile-hero__meta">
@@ -184,7 +185,7 @@
       const editor = document.createElement('div');
       editor.className = 'profile-hero__courses-editor';
       editor.innerHTML = `
-        <input type="text" class="profile-hero__courses-input" maxlength="300"
+        <input type="text" class="profile-hero__courses-input" maxlength="300" aria-label="${RB.t('sub.courses.label')}"
           placeholder="${RB.t('teacher.courses.placeholder')}" />
         <button type="button" class="btn btn--accent btn--sm" data-save-courses>${RB.t('common.save')}</button>
         <button type="button" class="btn btn--ghost btn--sm" data-cancel-courses>${RB.t('common.cancel')}</button>
@@ -263,7 +264,7 @@
 
       el.innerHTML = `
         <div class="stats-block__left">
-          <h3 class="serif">${RB.t('teacher.distribution')}</h3>
+          <h2 class="serif">${RB.t('teacher.distribution')}</h2>
           ${bars}
         </div>
         <div class="stats-block__right">
@@ -293,7 +294,7 @@
             <button type="button" class="wta-chip" data-wta="no">${RB.t('teacher.wta.no')}</button>
           </div>
         </div>
-        <textarea id="comment" class="textarea" rows="5"
+        <textarea id="comment" class="textarea" rows="5" aria-label="${RB.t('teacher.form.commentLabel')}"
           placeholder="${RB.t('teacher.form.commentPlaceholder')}"></textarea>
         <div class="turnstile-slot" id="turnstile"></div>
         <div class="form-foot">
@@ -417,6 +418,8 @@
       METRICS.forEach(m => {
         const row = document.createElement('div');
         row.className = 'rating-row';
+        row.setAttribute('role', 'group');
+        row.setAttribute('aria-label', metricLabel(m.key));
         row.innerHTML = `
           <div class="rating-row__label">${metricLabel(m.key)}</div>
           <div data-row-stars></div>`;
@@ -426,7 +429,7 @@
           RB.renderStars(rowStars, state.ratings[m.key], {
             size: 36,
             interactive: true,
-            onChange: (v) => { state.ratings[m.key] = v; rebind(); },
+            onChange: (v) => { state.ratings[m.key] = v; rowStars.setValue(v); },
           });
         };
         rebind();

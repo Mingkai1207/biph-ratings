@@ -1,0 +1,22 @@
+{
+  "scanned": "2026-10-25",
+  "findings": {
+    "fonts": "Geist + Instrument Serif: frontend/styles.css original lines29\u201330",
+    "palette": "BIPH blue #3255a4 and white: frontend/styles.css original lines3\u201318",
+    "motion": "Decorative hero drift, star canvas and cursor follower: index.html original181+,styles.css174+",
+    "framework": "FastAPI static HTML/CSS/JS frontend"
+  },
+  "preserve": [
+    "BIPH palette and font families",
+    "existing layout and routes",
+    "English default and Chinese switching",
+    "ordinary search and review data/handlers"
+  ],
+  "introduce": [
+    "Hallmark gate corrections",
+    "instant keyboard focus",
+    "semantic star rating buttons",
+    "tokenized scattered colors",
+    "reduced decorative motion"
+  ]
+}

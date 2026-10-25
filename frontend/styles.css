@@ -1,3 +1,9 @@
+/* Hallmark · v2.0.0 · checked: ratebiph.com · built: the project · redesign: polish · scope: app · genre: editorial · theme: BIPH brand · surface: absolute · posture: Restrained · nav: existing inline links and mobile menu · footer: student-run disclosure */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V3 · weakest: R, cursor effects and floating shapes competed with the teacher search; removed ornamental movement while preserving the roster layout */
+/* Hallmark · waive 7b · surface: absolute; blue text and controls retain readable contrast · The user chose BASIS BIPH white paper for this teacher roster, so the existing white brand surface is preserved */
+/* Hallmark · dropped ambient canvas and cursor hint · craft section 5 rejects cursor followers and unpausable ornamental loops; search and review handlers remain */
+/* Hallmark · reworded "Why this exists." to "About Rate BIPH" · gate 54 replaces the ornamental lead-in with a direct page heading */
+/* Hallmark · answered F7 · Existing teacher cards, form panels and review panels retain their layout and containment during this polish */
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap');
 
 :root {
@@ -16,6 +22,24 @@
   --accent-2: #6c87bd;
   --star: #3255a4;
   --error: #ac3f39;
+  --on-accent: #ffffff;
+  --color-accent-ink: var(--on-accent);
+  --focus: #3255a4;
+  --field-edge: #8793a7;
+  --accent-rule: rgb(50 85 164 / 0.35);
+  --print-rule: #bbbbbb;
+  --wta-yes-bg: oklch(0.92 0.06 145);
+  --wta-yes-ink: oklch(0.32 0.08 145);
+  --wta-no-bg: oklch(0.93 0.04 30);
+  --wta-no-ink: oklch(0.42 0.10 30);
+  --avatar-1: #cddaf2;
+  --avatar-2: #dce5f5;
+  --avatar-3: #e4ebf7;
+  --avatar-4: #d6dfe9;
+  --avatar-5: #e7edf4;
+  --avatar-6: #c6d6ef;
+  --avatar-7: #dae3f0;
+  --avatar-8: #d2e0f3;
 
   --radius-sm: 10px;
   --radius: 18px;
@@ -31,9 +55,10 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
+html, body { margin: 0; padding: 0; overflow-x: clip; }
 body {
   font-family: var(--font-sans);
+  font-synthesis: none;
   color: var(--ink);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -41,17 +66,15 @@ body {
   min-height: 100vh;
 }
 a { color: inherit; }
-button { font-family: inherit; cursor: pointer; }
-input, textarea, select { font-family: inherit; color: var(--ink); }
+button { font-family: var(--font-sans); cursor: pointer; }
+input, textarea, select { font-family: var(--font-sans); color: var(--ink); }
 
 .serif { font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.01em; }
 
 /* ——— Top nav */
 .topnav {
   position: sticky; top: 0; z-index: 10;
-  background: rgb(255 255 255 / 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
 .topnav__inner {
@@ -144,8 +167,8 @@ body[data-page="home"] .container {
 /* ——— Page heading block (submit, admin) */
 .eyebrow {
   font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-mute);
   font-weight: 500;
   margin-bottom: 10px;
@@ -157,7 +180,7 @@ body[data-page="home"] .container {
   letter-spacing: -0.02em;
   margin: 0 0 14px;
 }
-.page-title em { color: var(--accent-ink); font-style: italic; }
+.page-title em { color: inherit; font-style: normal; }
 .page-lede {
   font-size: 16px;
   color: var(--ink-soft);
@@ -176,113 +199,7 @@ body[data-page="home"] .container {
   overflow: hidden;
 }
 
-/* Floating decorative shapes — drift gently behind the hero copy */
-.hero__shapes {
-  position: absolute; inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  border-radius: inherit;
-}
-.hero__shape {
-  position: absolute;
-  border-radius: 50%;
-  will-change: transform;
-}
-/* Big blue circle, right side */
-.hero__shape--1 {
-  right: -60px; top: -40px;
-  width: 280px; height: 280px;
-  background: rgb(108 135 189 / 0.20);
-  animation: heroDrift1 6s ease-in-out infinite;
-}
-/* Pale blue large circle, bottom right */
-.hero__shape--2 {
-  right: 40px; bottom: -90px;
-  width: 200px; height: 200px;
-  background: rgb(170 187 224 / 0.35);
-  animation: heroDrift2 7s ease-in-out infinite;
-}
-/* Pale blue circle, bottom left */
-.hero__shape--3 {
-  left: -50px; bottom: -40px;
-  width: 170px; height: 170px;
-  background: rgb(108 135 189 / 0.15);
-  animation: heroDrift3 8s ease-in-out infinite;
-}
-/* Rounded square, upper right */
-.hero__shape--4 {
-  right: 260px; top: 30px;
-  width: 54px; height: 54px;
-  border-radius: 16px;
-  background: rgb(170 187 224 / 0.35);
-  animation: heroDrift4 5s ease-in-out infinite;
-}
-/* Small blue dot, right mid */
-.hero__shape--5 {
-  right: 150px; top: 190px;
-  width: 18px; height: 18px;
-  background: rgb(50 85 164 / 0.55);
-  animation: heroDrift5 4s ease-in-out infinite;
-}
-/* Small slate-blue dot, top center-right */
-.hero__shape--6 {
-  right: 520px; top: 70px;
-  width: 14px; height: 14px;
-  background: rgb(108 135 189 / 0.55);
-  animation: heroDrift6 4.5s ease-in-out infinite;
-}
-/* Small blue half-disc, bottom center */
-.hero__shape--7 {
-  left: 45%; bottom: -30px;
-  width: 64px; height: 64px;
-  background: rgb(108 135 189 / 0.20);
-  animation: heroDrift7 6s ease-in-out infinite;
-}
-/* Tiny blue dot, bottom right mid */
-.hero__shape--8 {
-  right: 200px; bottom: 80px;
-  width: 10px; height: 10px;
-  background: rgb(50 85 164 / 0.6);
-  animation: heroDrift8 3s ease-in-out infinite;
-}
-
-/* Bigger travel distances now that the cycles are shorter — motion is actually visible */
-@keyframes heroDrift1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(-28px, 34px) scale(1.06); }
-}
-@keyframes heroDrift2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(32px, -22px) scale(0.95); }
-}
-@keyframes heroDrift3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(34px, -26px) scale(1.07); }
-}
-@keyframes heroDrift4 {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  50%      { transform: translate(-22px, 26px) rotate(28deg); }
-}
-@keyframes heroDrift5 {
-  0%, 100% { transform: translate(0, 0); }
-  50%      { transform: translate(20px, -30px); }
-}
-@keyframes heroDrift6 {
-  0%, 100% { transform: translate(0, 0); }
-  50%      { transform: translate(-18px, 24px); }
-}
-@keyframes heroDrift7 {
-  0%, 100% { transform: translate(0, 0); }
-  50%      { transform: translate(-28px, -22px); }
-}
-@keyframes heroDrift8 {
-  0%, 100% { transform: translate(0, 0); }
-  50%      { transform: translate(22px, -26px); }
-}
-/* We intentionally animate on mobile too — the floating shapes are purely decorative
-   and users who really need reduced motion can still read everything. The old
-   prefers-reduced-motion disable was catching iOS Low Power Mode and killing the
-   animation on phones even when the user wanted to see it. */
+.hero__shapes { display: none; }
 
 .hero__inner { position: relative; z-index: 1; }
 .hero__title {
@@ -292,9 +209,7 @@ body[data-page="home"] .container {
   line-height: 1.05;
   letter-spacing: -0.02em;
 }
-.hero__title em {
-  color: var(--accent-ink); font-style: italic;
-}
+.hero__title em { color: inherit; font-style: normal; }
 .hero__subtitle {
   margin-top: 14px; font-size: 16px; color: var(--ink-soft); max-width: 500px; line-height: 1.5;
 }
@@ -330,7 +245,7 @@ body[data-page="home"] .container {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   white-space: nowrap;
 }
 .chip:hover { border-color: var(--line-strong); }
@@ -346,7 +261,7 @@ body[data-page="home"] .container {
    it flex to 4+ columns on wide monitors makes the page feel stretched. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 .card {
@@ -362,22 +277,18 @@ body[data-page="home"] .container {
      Falls back to the neutral line color so cards without a set --aura still have a
      readable hover state. */
   --aura: var(--line-strong);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 /* Hover aura — only on pointing devices so touchscreens don't get stuck-hover state */
 @media (hover: hover) {
   .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 14px 42px color-mix(in oklch, var(--aura) 70%, transparent);
-    border-color: var(--aura);
+    border-color: var(--accent);
   }
 }
 /* Keyboard parity — tabbing through cards should feel like hovering */
 .card:focus-visible {
-  outline: none;
-  transform: translateY(-3px);
-  box-shadow: 0 14px 42px color-mix(in oklch, var(--aura) 70%, transparent);
-  border-color: var(--aura);
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
 }
 .card__top {
   display: flex; align-items: center; justify-content: space-between;
@@ -407,8 +318,8 @@ body[data-page="home"] .container {
   font-size: 12px;
   color: var(--ink-mute);
   margin-top: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .card__foot {
   margin-top: auto;
@@ -452,7 +363,7 @@ body[data-page="home"] .container {
 }
 .profile-hero__subject {
   font-size: 12px; color: var(--ink-mute);
-  text-transform: uppercase; letter-spacing: 0.08em;
+  text-transform: none; letter-spacing: 0;
 }
 .profile-hero__courses {
   font-size: 13px; color: var(--ink-soft); margin-top: 2px;
@@ -465,7 +376,7 @@ body[data-page="home"] .container {
   font-size: 13px;
   color: var(--accent-ink);
   text-decoration: underline;
-  text-decoration-color: rgb(50 85 164 / 0.35);
+  text-decoration-color: var(--accent-rule);
   text-underline-offset: 3px;
   cursor: pointer;
 }
@@ -488,9 +399,9 @@ body[data-page="home"] .container {
   color: var(--ink);
   outline: none;
 }
-.profile-hero__courses-input:focus {
-  border-color: var(--accent-ink);
-  box-shadow: 0 0 0 3px rgb(50 85 164 / 0.18);
+.profile-hero__courses-input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 .profile-hero__courses-note {
   flex: 1 0 100%;
@@ -554,11 +465,11 @@ body[data-page="home"] .container {
   padding: 20px 24px;
   margin-bottom: 40px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 32px;
 }
 .stats-block__left { min-width: 0; }
-.stats-block h3 {
+.stats-block h2 {
   font-family: var(--font-serif);
   font-size: 20px;
   margin: 0 0 14px;
@@ -578,7 +489,7 @@ body[data-page="home"] .container {
 }
 .distrow__fill {
   height: 100%; background: var(--accent); border-radius: 4px;
-  transition: width 0.4s ease;
+
 }
 .distrow__count { color: var(--ink-mute); text-align: right; }
 
@@ -605,7 +516,7 @@ body[data-page="home"] .container {
 /* ——— Review form panel */
 .panel-accent {
   background: var(--accent-bg);
-  border: 1px solid rgb(50 85 164 / 0.3);
+  border: 1px solid var(--accent-rule);
   border-radius: var(--radius-lg);
   padding: 32px;
   margin-bottom: 40px;
@@ -695,7 +606,7 @@ body[data-page="home"] .container {
   outline: none;
   min-height: 120px;
 }
-.textarea:focus { border-color: var(--accent); }
+.textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 .form-foot {
   display: flex; justify-content: space-between; align-items: center;
@@ -720,8 +631,8 @@ body[data-page="home"] .container {
 }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn--primary { background: var(--accent); color: #ffffff; border-color: var(--accent); }
-.btn--accent { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+.btn--primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn--accent { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .btn--ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
 .btn--lg { padding: 14px 24px; font-size: 15px; border-radius: 14px; }
 .btn--sm { padding: 8px 14px; font-size: 13px; border-radius: 10px; }
@@ -827,8 +738,8 @@ body[data-page="home"] .container {
   margin-top: 8px;
   padding: 14px 16px;
   background: var(--bg-card);
-  border-left: 3px solid var(--accent);
-  border-radius: 0 10px 10px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
   color: var(--ink);
   font-style: italic;
   line-height: 1.5;
@@ -837,7 +748,7 @@ body[data-page="home"] .container {
 .review-notice__revoke {
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 1px dashed rgb(50 85 164 / 0.3);
+  border-top: 1px dashed var(--accent-rule);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -877,7 +788,7 @@ body[data-page="home"] .container {
   font-size: 15px;
   outline: none;
 }
-.input:focus { border-color: var(--accent); }
+.input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 .form-actions {
   display: flex; gap: 10px; flex-wrap: wrap;
@@ -976,7 +887,7 @@ body[data-page="home"] .container {
   border: none;
   border-bottom: 2px solid transparent;
   padding: 12px 16px;
-  font-family: inherit;
+  font-family: var(--font-sans);
   font-size: 14px;
   color: var(--ink-soft);
   cursor: pointer;
@@ -1047,7 +958,7 @@ body[data-page="home"] .container {
   border: 1px solid transparent;
   border-radius: 6px;
   padding: 4px 6px;
-  font-family: inherit;
+  font-family: var(--font-sans);
   width: 100%;
   outline: none;
   transition: background 0.12s ease, border-color 0.12s ease;
@@ -1122,8 +1033,8 @@ body[data-page="home"] .container {
   font-size: 12px;
   color: var(--ink-mute);
   margin-top: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .admin-tools-teacher__chev {
   font-size: 20px;
@@ -1162,8 +1073,8 @@ body[data-page="home"] .container {
   font-size: 12px;
   color: var(--ink-mute);
   margin-top: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .admin-review__hidden-tag {
   color: var(--accent);
@@ -1214,7 +1125,7 @@ body[data-page="home"] .container {
 .admin-sub__name { font-family: var(--font-serif); font-size: 22px; line-height: 1.15; }
 .admin-sub__subject {
   font-size: 12px; color: var(--ink-mute); margin-top: 4px;
-  text-transform: uppercase; letter-spacing: 0.04em;
+  text-transform: none; letter-spacing: 0;
 }
 .admin-sub__actions { display: flex; gap: 8px; }
 
@@ -1277,8 +1188,8 @@ body[data-page="home"] .container {
 .ranking-row__sub {
   font-size: 12px;
   color: var(--ink-mute);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .ranking-row__courses {
   text-transform: none;
@@ -1301,7 +1212,7 @@ body[data-page="home"] .container {
   font-size: 11px;
   color: var(--ink-mute);
   margin-top: 4px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .admin-sug {
@@ -1318,8 +1229,8 @@ body[data-page="home"] .container {
 }
 .admin-sug__state {
   font-size: 11px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   padding: 3px 10px;
   border-radius: var(--radius-pill);
   background: var(--bg-sunken);
@@ -1348,7 +1259,7 @@ body[data-page="home"] .container {
 /* ——— Compare page (two-teacher side-by-side) */
 .compare-pickers {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 32px;
 }
@@ -1366,7 +1277,7 @@ body[data-page="home"] .container {
   border-radius: var(--radius-sm);
   font-size: 15px;
   color: var(--ink);
-  font-family: inherit;
+  font-family: var(--font-sans);
   appearance: none;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   background-repeat: no-repeat;
@@ -1388,7 +1299,7 @@ body[data-page="home"] .container {
 }
 .compare-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -1461,42 +1372,10 @@ body[data-page="home"] .container {
 .compare-row__val--low  { color: var(--ink-mute); }
 
 @media (max-width: 640px) {
-  .compare-pickers { grid-template-columns: 1fr; }
-  .compare-grid    { grid-template-columns: 1fr; }
+  .compare-pickers { grid-template-columns: minmax(0, 1fr); }
+  .compare-grid    { grid-template-columns: minmax(0, 1fr); }
   .compare-row     { grid-template-columns: 1fr 1fr 1fr; padding: 12px 16px; gap: 8px; }
   .compare-row__val { font-size: 18px; }
-}
-
-/* ——— Star canvas (full-page falling stars + constellation + cursor crown)
-   Replaces the old .rb-trail DOM approach. One fixed <canvas> pinned to the
-   viewport, animation driven by a single RAF loop in index.html. Script mount
-   lives only on the home page; other pages never see the canvas. */
-.rb-star-canvas {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-/* Cursor hint — decorative 'drag your cursor' cue on the Browse page right margin.
-   Hidden on touch + reduced-motion in JS (never attached). */
-@keyframes rb-cursor-pulse {
-  0%, 100% { transform: scale(1);    opacity: 0.45; }
-  50%      { transform: scale(1.08); opacity: 0.7; }
-}
-@keyframes rb-cursor-orbit {
-  from { transform: rotate(0deg)   translateX(20px); }
-  to   { transform: rotate(360deg) translateX(20px); }
-}
-.rb-cursor-orbit { animation: rb-cursor-pulse 2.4s ease-in-out infinite; }
-.rb-cursor-dot   { animation: rb-cursor-orbit 3s linear infinite; transform-origin: -18px 4px; }
-
-@media (prefers-reduced-motion: reduce) {
-  /* Belt-and-suspenders kill for the canvas. The JS also early-returns, but
-     if anyone ever re-enables it, the canvas still won't render. We do NOT
-     kill hero shape animations here — iOS Low Power Mode triggers
-     reduced-motion and users want the hero drift to keep going. */
-  .rb-star-canvas { display: none !important; }
 }
 
 /* ——— Mobile (≤640px, per handoff 3 spec §3) */
@@ -1515,25 +1394,16 @@ body[data-page="home"] .container {
   .page-lede { font-size: 15px; }
   .form-card { padding: 24px 22px; }
 
-  /* Only shapes 1–3 on mobile — the rest clutter copy on a 375px viewport */
-  .hero__shape--1 { right: -60px; top: -50px;    width: 140px; height: 140px; }
-  .hero__shape--2 { right: -20px; bottom: -30px; width: 80px;  height: 80px; }
-  .hero__shape--3 { left: -24px;  bottom: 30px;  width: 56px;  height: 56px; }
-  .hero__shape--4,
-  .hero__shape--5,
-  .hero__shape--6,
-  .hero__shape--7,
-  .hero__shape--8 { display: none; }
 
   /* Single column grid on phones */
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
 
   /* Profile hero — single column, big rating becomes a header row */
   .profile-hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 22px;
     padding-bottom: 24px;
     margin-bottom: 28px;
@@ -1545,7 +1415,7 @@ body[data-page="home"] .container {
 
   /* Hide just the 5-bar distribution histogram on mobile — too noisy on a phone.
      Keep the per-metric averages (__right) and let them take the full width. */
-  .stats-block { grid-template-columns: 1fr; gap: 0; padding: 16px 18px; }
+  .stats-block { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 16px 18px; }
   .stats-block__left { display: none; }
   .stats-block__right { border-left: none; padding-left: 0; }
 
@@ -1687,12 +1557,12 @@ body[data-page="home"] .container {
 /* Review-level badge: "would take again" / "wouldn't". Same .metric-badge
    base as the rating badges, recolored by intent. */
 .metric-badge--wta-yes {
-  background: oklch(0.92 0.06 145);
-  color: oklch(0.32 0.08 145);
+  background: var(--wta-yes-bg);
+  color: var(--wta-yes-ink);
 }
 .metric-badge--wta-no {
-  background: oklch(0.93 0.04 30);
-  color: oklch(0.42 0.10 30);
+  background: var(--wta-no-bg);
+  color: var(--wta-no-ink);
 }
 
 /* Home-page card: tiny "% would take again" line between subject and foot.
@@ -1702,4 +1572,57 @@ body[data-page="home"] .container {
   color: var(--accent-ink);
   margin-top: 6px;
   letter-spacing: -0.005em;
+}
+
+/* Hallmark polish: shared access and control states, with the existing layout. */
+h1, h2, .page-title, .hero__title, .profile-hero__name {
+  overflow-wrap: break-word;
+  min-width: 0;
+  text-wrap: balance;
+}
+p { text-wrap: pretty; }
+a, button, input, textarea, select, [tabindex] { -webkit-tap-highlight-color: transparent; }
+a:focus-visible, button:focus-visible, input:focus-visible,
+textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+button, .btn, .topnav__link, .crumb { white-space: nowrap; }
+button:disabled, input:disabled, textarea:disabled, select:disabled,
+[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
+button[aria-busy="true"] { cursor: progress; }
+button:active:not(:disabled) { transform: translateY(1px); }
+.btn--primary:hover:not(:disabled), .btn--accent:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); }
+.btn--ghost:hover:not(:disabled) { background: var(--bg-sunken); }
+.topnav__link:hover { background: var(--bg-sunken); }
+.searchbar { border: 1px solid var(--field-edge); box-shadow: none; }
+.searchbar input { min-width: 0; min-height: 44px; font-size: 16px; }
+.searchbar .btn { min-height: 44px; }
+.searchbar input:focus-visible { outline-offset: 0; border-radius: var(--radius-sm); }
+.input, .textarea, .compare-picker__select, .profile-hero__courses-input { border-color: var(--field-edge); caret-color: var(--accent); }
+.input, .textarea { font-size: 16px; }
+.chips { scrollbar-width: thin; scrollbar-color: var(--line-strong) var(--bg); }
+.chips::-webkit-scrollbar { display: block; height: 4px; }
+.chips::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--radius-pill); }
+.chip { min-height: 36px; }
+.card__name { overflow-wrap: break-word; }
+.card__rating, .profile-hero__big, .metric__value, .compare-row__val { font-variant-numeric: tabular-nums; }
+.card__rating small, .metric-badge, .metric--wta .metric__note { font-size: 12px; }
+.review__body { font-size: 16px; }
+.field__hint, .form-foot__status, .form-status { min-height: 1lh; }
+::selection { color: var(--ink); background: var(--accent-bg); }
+html { scrollbar-color: var(--line-strong) var(--bg); }
+.star-button { appearance: none; border: 0; padding: 2px; background: transparent; color: var(--star); min-height: 36px; align-items: center; border-radius: 4px; }
+.star-button:focus-visible { outline-offset: 0; }
+@media (max-width: 640px) {
+  .hero__subtitle, .page-lede, .review__body { font-size: 16px; }
+  .topnav__toggle, .topnav__lang { min-height: 44px; }
+  .chip, .vote, .wta-chip, .star-button { min-height: 44px; }
+}
+@media (max-width: 360px) {
+  /* Keep all five rating buttons in view on narrow phones. */
+  .rating-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

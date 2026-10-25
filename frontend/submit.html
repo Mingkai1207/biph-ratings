@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rate BIPH — add a teacher</title>
-  <link rel="stylesheet" href="styles.css?v=search-cleanup-20261022" />
+  <meta name="description" content="Submit a missing BIPH teacher for review by a student moderator." />
+  <title>Rate BIPH: add a teacher</title>
+  <link rel="stylesheet" href="styles.css?v=hallmark-polish-20261025" />
   <script src="config.js?v=22926e5"></script>
 </head>
 <body data-page="submit">
   <div data-topnav></div>
 
   <main class="container container--narrow">
-    <div class="eyebrow" data-i18n="sub.eyebrow">CAN'T FIND SOMEONE?</div>
-    <h1 class="page-title serif" data-i18n-html="sub.headingHtml">Add a teacher to the <em>roster</em>.</h1>
-    <p class="page-lede" data-i18n="sub.lede">Submissions are reviewed by a student moderator and usually show up within a day. No photos, no personal contact info — just the basics.</p>
+    <h1 class="page-title serif" data-i18n-html="sub.headingHtml">Add a teacher to the roster.</h1>
+    <p class="page-lede" data-i18n="sub.lede">Submissions are reviewed by a student moderator and usually show up within a day. No photos, no personal contact info, just the basics.</p>
 
     <div id="formCard" class="form-card">
       <div class="field">
@@ -21,7 +21,7 @@
         <input id="name" class="input" data-i18n-placeholder="sub.name.placeholder" placeholder="e.g. Daniel Huang" />
       </div>
       <div class="field">
-        <div class="field__row"><label class="field__label" data-i18n="sub.subject.label">Subject</label></div>
+        <div class="field__row"><label class="field__label" for="subjectCustom" data-i18n="sub.subject.label">Subject</label></div>
         <div id="subjectChips" class="chips chips--wrap"></div>
         <input id="subjectCustom" class="input" data-i18n-placeholder="sub.subject.placeholder" placeholder="Or type a subject…" style="margin-top:10px" />
       </div>
@@ -41,7 +41,7 @@
 
     <div id="successCard" class="panel-accent" hidden>
       <div class="panel-accent__title serif" data-i18n="sub.success.title">Sent for review ✓</div>
-      <div class="panel-accent__sub"><span data-i18n="sub.success.body">Thanks — a student moderator will take a look. Once approved, </span><strong id="successName"></strong><span data-i18n="sub.success.bodyTail"> will appear in the roster.</span></div>
+      <div class="panel-accent__sub"><span data-i18n="sub.success.body">Thanks. A student moderator will take a look. Once approved, </span><strong id="successName"></strong><span data-i18n="sub.success.bodyTail"> will appear in the roster.</span></div>
       <div class="form-actions">
         <button id="againBtn" class="btn btn--primary" data-i18n="sub.success.again">Submit another</button>
         <a href="index.html" class="btn btn--ghost" data-i18n="sub.success.back">Back to roster</a>
@@ -50,7 +50,7 @@
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=search-cleanup-20261022"></script>
+  <script src="app.js?v=hallmark-polish-20261025"></script>
   <script>
   (function () {
     const state = { subject: '', subjects: [], turnstileToken: null };

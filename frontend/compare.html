@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rate BIPH — compare teachers</title>
-  <link rel="stylesheet" href="styles.css?v=search-cleanup-20261022" />
+  <meta name="description" content="Compare two BIPH teachers using student ratings and review counts." />
+  <title>Rate BIPH: compare teachers</title>
+  <link rel="stylesheet" href="styles.css?v=hallmark-polish-20261025" />
   <script src="config.js?v=22926e5"></script>
 </head>
 <body data-page="compare">
   <div data-topnav></div>
 
   <main class="container container--narrow">
-    <div class="eyebrow" data-i18n="compare.eyebrow">SIDE BY SIDE</div>
-    <h1 class="page-title serif" data-i18n-html="compare.headingHtml">Compare two <em>teachers</em>.</h1>
+    <h1 class="page-title serif" data-i18n-html="compare.headingHtml">Compare two teachers.</h1>
     <p class="page-lede" data-i18n="compare.lede">Picking between two teachers for the same course? Stack their stats next to each other and decide.</p>
 
     <div class="compare-pickers">
@@ -30,7 +30,7 @@
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=search-cleanup-20261022"></script>
+  <script src="app.js?v=hallmark-polish-20261025"></script>
   <script>
   (function () {
     // 4 metrics in the same display order as teacher.html so a student
@@ -149,7 +149,7 @@
             <span class="compare-col__count">${t.review_count} ${reviewWord}</span>
           </div>
           <a class="compare-col__link" href="teacher.html?id=${encodeURIComponent(t.id)}"
-             data-i18n="compare.viewProfile">View full profile →</a>
+             data-i18n="compare.viewProfile">View full profile</a>
         </div>`;
     }
 

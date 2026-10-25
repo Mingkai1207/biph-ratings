@@ -1,0 +1,148 @@
+frontend/qrs.html
+  WAIVED 7b :20 pure #fff: background: var(--bg-card) (.qrs-controls input[type="search"])
+  WAIVED 7b :36 pure #fff: background: var(--bg-card) (.qrs-card)
+  WAIVED 7b :61 pure #fff: background: var(--bg-card) (.qrs-card__qr)
+  WAIVED 7b :78 pure #fff: background: var(--bg-card) (body)
+  WAIVED 7b :88 pure #fff: background: var(--bg-card) (.qrs-card)
+  NOTE 24b :19 padding: 10px 14px (off the 4px scale) on .qrs-controls input[type="search"] | fix: Use the 4px spacing scale
+  NOTE 24b :33 gap: 18px (off the 4px scale) on .qrs-grid
+  NOTE 24b :39 padding: 16px 14px 18px (off the 4px scale) on .qrs-card
+  NOTE 24b :56 margin-bottom: 10px (off the 4px scale) on .qrs-card__subject
+  NOTE 24b :64 padding: 6px (off the 4px scale) on .qrs-card__qr
+  NOTE 24b :69 margin-top: 10px (off the 4px scale) on .qrs-card__url
+  NOTE 24b :84 gap: 10px (off the 4px scale) on .qrs-grid
+  NOTE 24b :89 padding: 10px 8px 12px (off the 4px scale) on .qrs-card
+  NOTE 24b :92 margin-bottom: 6px (off the 4px scale) on .qrs-card__subject
+  NOTE 24b :93 margin-top: 6px (off the 4px scale) on .qrs-card__url
+frontend/styles.css
+  WAIVED 7b :26 pure #fff: --color-accent-ink: var(--on-accent) (:root)
+  WAIVED 7b :63 pure #fff: background: var(--bg) (body)
+  WAIVED 7b :77 pure #fff: background: var(--bg) (.topnav)
+  WAIVED 7b :133 pure #fff: background: var(--bg-card) (.topnav__lang)
+  WAIVED 7b :218 pure #fff: background: var(--bg-card) (.searchbar)
+  WAIVED 7b :243 pure #fff: background: var(--bg-card) (.chip)
+  WAIVED 7b :255 pure #fff: color: var(--bg) (.chip--active)
+  WAIVED 7b :268 pure #fff: background: var(--bg-card) (.card)
+  WAIVED 7b :395 pure #fff: background: var(--bg-card) (.profile-hero__courses-input)
+  WAIVED 7b :462 pure #fff: background: var(--bg-card) (.stats-block)
+  WAIVED 7b :546 pure #fff: background: var(--bg-card) (.about-section)
+  WAIVED 7b :604 pure #fff: background: var(--bg-card) (.textarea)
+  WAIVED 7b :634 pure #fff: color: var(--on-accent) (.btn--primary)
+  WAIVED 7b :635 pure #fff: color: var(--on-accent) (.btn--accent)
+  WAIVED 7b :650 pure #fff: background: var(--bg-card) (.review)
+  WAIVED 7b :696 pure #fff: background: var(--bg-card) (.vote)
+  WAIVED 7b :711 pure #fff: color: var(--bg) (.vote--active)
+  WAIVED 7b :713 pure #fff: color: var(--bg) (.vote--active:hover)
+  WAIVED 7b :740 pure #fff: background: var(--bg-card) (.review-notice__comment)
+  WAIVED 7b :765 pure #fff: background: var(--bg-card) (.form-card)
+  WAIVED 7b :787 pure #fff: background: var(--bg) (.input)
+  WAIVED 7b :854 pure #fff: color: var(--bg) (.toast)
+  WAIVED 7b :944 pure #fff: background: var(--bg-card) (.admin-teacher)
+  WAIVED 7b :982 pure #fff: background: var(--bg-card) (.admin-teacher__name:focus, .admin-teacher__subject:focus)
+  WAIVED 7b :1010 pure #fff: background: var(--bg-card) (.admin-tools-teacher)
+  WAIVED 7b :1046 pure #fff: background: var(--bg-card) (.admin-review)
+  WAIVED 7b :1119 pure #fff: background: var(--bg-card) (.admin-sub)
+  WAIVED 7b :1161 pure #fff: background: var(--bg-card) (.ranking-row)
+  WAIVED 7b :1220 pure #fff: background: var(--bg-card) (.admin-sug)
+  WAIVED 7b :1276 pure #fff: background: var(--bg-card) (.compare-picker__select)
+  WAIVED 7b :1296 pure #fff: background: var(--bg-card) (.compare-empty)
+  WAIVED 7b :1307 pure #fff: background: var(--bg-card) (.compare-col)
+  WAIVED 7b :1345 pure #fff: background: var(--bg-card) (.compare-rows)
+  WAIVED 7b :1441 pure #fff: background: var(--bg-card) (.topnav__toggle)
+  WAIVED 7b :1523 pure #fff: background: var(--bg-card) (.wta-chip)
+  WAIVED 7b :1541 pure #fff: color: var(--bg) (.wta-chip--active)
+  WAIVED 7b :1543 pure #fff: color: var(--bg) (.wta-chip--active:hover)
+  ANSWERED F7 :127 same container recipe on 6 selectors (.topnav__lang, .review-notice__comment, .admin-…...)
+  ANSWERED F7 :267 same container recipe on 12 selectors (.card, .stats-block, .about-section, .review...)
+  ANSWERED F7 :267 same container recipe on 13 selectors (.card, .stats-block, .about-section, .review...)
+  NOTE 24b :82 padding: 14px 24px (off the 4px scale) on .topnav__inner
+  NOTE 24b :87 gap: 10px (off the 4px scale) on .logo
+  NOTE 24b :110 padding: 8px 14px (off the 4px scale) on .topnav__link
+  NOTE 24b :130 padding: 6px 12px (off the 4px scale) on .topnav__lang
+  NOTE 24b :174 margin-bottom: 10px (off the 4px scale) on .eyebrow
+  NOTE 24b :181 margin: 0 0 14px (off the 4px scale) on .page-title
+  NOTE 24b :214 margin-top: 14px (off the 4px scale) on .hero__subtitle
+  NOTE 24b :220 padding: 4px 4px 4px 18px (off the 4px scale) on .searchbar
+  NOTE 24b :221 margin-top: 26px (off the 4px scale) on .searchbar
+  NOTE 24b :240 padding: 7px 14px (off the 4px scale) on .chip
+  NOTE 24b :271 padding: 18px (off the 4px scale) on .card
+  NOTE 24b :275 gap: 14px (off the 4px scale) on .card
+  NOTE 24b :362 gap: 14px (off the 4px scale) on .profile-hero__meta
+  NOTE 24b :427 gap: 6px (off the 4px scale) on .profile-hero__rating
+  NOTE 24b :454 gap: 7px (off the 4px scale) on .share-bar .btn
+  NOTE 24b :475 margin: 0 0 14px (off the 4px scale) on .stats-block h2
+  NOTE 24b :482 gap: 10px (off the 4px scale) on .distrow
+  NOTE 24b :485 margin-top: 6px (off the 4px scale) on .distrow + .distrow
+  NOTE 24b :505 padding: 10px 0 (off the 4px scale) on .metric
+  NOTE 24b :533 margin: 0 0 6px (off the 4px scale) on .panel-accent__title
+  NOTE 24b :556 margin: 0 0 14px (off the 4px scale) on .about-section__title
+  NOTE 24b :564 margin: 0 0 14px (off the 4px scale) on .about-section__body
+  NOTE 24b :582 padding: 22px 20px (off the 4px scale) on .about-section
+  NOTE 24b :592 gap: 18px (off the 4px scale) on .rating-row
+  NOTE 24b :601 padding: 14px (off the 4px scale) on .textarea
+  NOTE 24b :613 margin-top: 14px (off the 4px scale) on .form-foot
+  NOTE 24b :613 gap: 10px (off the 4px scale) on .form-foot
+  NOTE 24b :637 padding: 14px 24px (off the 4px scale) on .btn--lg
+  NOTE 24b :638 padding: 8px 14px (off the 4px scale) on .btn--sm
+  NOTE 24b :648 gap: 14px (off the 4px scale) on .reviews-list
+  NOTE 24b :657 margin-bottom: 10px (off the 4px scale) on .review__top
+  NOTE 24b :657 gap: 10px (off the 4px scale) on .review__top
+  NOTE 24b :672 padding: 4px 10px (off the 4px scale) on .metric-badge
+  NOTE 24b :676 gap: 6px (off the 4px scale) on .metric-badge
+  NOTE 24b :687 margin-top: 14px (off the 4px scale) on .review__votes
+  NOTE 24b :692 gap: 6px (off the 4px scale) on .vote
+  NOTE 24b :693 padding: 5px 11px (off the 4px scale) on .vote
+  NOTE 24b :721 margin: 10px 0 18px (off the 4px scale) on .review-notice__lede
+  NOTE 24b :729 margin-bottom: 14px (off the 4px scale) on .review-notice__stars
+  NOTE 24b :735 margin-bottom: 14px (off the 4px scale) on .review-notice__metrics
+  NOTE 24b :739 padding: 14px 16px (off the 4px scale) on .review-notice__comment
+  NOTE 24b :750 padding-top: 14px (off the 4px scale) on .review-notice__revoke
+  NOTE 24b :784 padding: 12px 14px (off the 4px scale) on .input
+  NOTE 24b :794 gap: 10px (off the 4px scale) on .form-actions
+  NOTE 24b :799 margin: 6px 0 0 (off the 4px scale) on .form-status
+  NOTE 24b :834 gap: 6px (off the 4px scale) on .crumb
+  NOTE 24b :847 margin: 0 0 6px (off the 4px scale) on .empty h2
+  NOTE 24b :936 gap: 6px (off the 4px scale) on .admin-teachers
+  NOTE 24b :941 gap: 14px (off the 4px scale) on .admin-teacher
+  NOTE 24b :943 padding: 8px 14px (off the 4px scale) on .admin-teacher
+  NOTE 24b :960 padding: 4px 6px (off the 4px scale) on .admin-teacher__name, .admin-teacher__subject
+  NOTE 24b :994 margin: 0 0 14px (off the 4px scale) on .admin-tools__controls
+  NOTE 24b :1007 gap: 14px (off the 4px scale) on .admin-tools-teacher
+  NOTE 24b :1009 padding: 14px 18px (off the 4px scale) on .admin-tools-teacher
+  NOTE 24b :1044 gap: 10px (off the 4px scale) on .admin-reviews
+  NOTE 24b :1049 padding: 14px 16px (off the 4px scale) on .admin-review
+  NOTE 24b :1052 gap: 10px (off the 4px scale) on .admin-review
+  NOTE 24b :1086 gap: 6px 10px (off the 4px scale) on .admin-review__metrics
+  NOTE 24b :1110 margin-top: 14px (off the 4px scale) on .admin-tools__foot
+  NOTE 24b :1123 margin-top: 10px (off the 4px scale) on .admin-sub + .admin-sub
+  NOTE 24b :1136 gap: 10px (off the 4px scale) on .ranking-controls
+  NOTE 24b :1153 gap: 10px (off the 4px scale) on .ranking-list
+  NOTE 24b :1158 gap: 18px (off the 4px scale) on .ranking-row
+  NOTE 24b :1175 gap: 6px (off the 4px scale) on .ranking-row__rank
+  NOTE 24b :1224 margin-top: 10px (off the 4px scale) on .admin-sug + .admin-sug
+  NOTE 24b :1234 padding: 3px 10px (off the 4px scale) on .admin-sug__state
+  NOTE 24b :1254 gap: 6px (off the 4px scale) on .reviews-header__toggle
+  NOTE 24b :1270 margin-bottom: 6px (off the 4px scale) on .compare-picker__label
+  NOTE 24b :1274 padding: 12px 14px (off the 4px scale) on .compare-picker__select
+  NOTE 24b :1310 padding: 20px 22px (off the 4px scale) on .compare-col
+  NOTE 24b :1326 gap: 10px (off the 4px scale) on .compare-col__overall
+  NOTE 24b :1337 margin-top: 6px (off the 4px scale) on .compare-col__link
+  NOTE 24b :1355 padding: 14px 22px (off the 4px scale) on .compare-row
+  NOTE 24b :1389 padding: 28px 22px (off the 4px scale) on .hero
+  NOTE 24b :1392 margin-top: 18px (off the 4px scale) on .searchbar
+  NOTE 24b :1395 padding: 24px 22px (off the 4px scale) on .form-card
+  NOTE 24b :1407 gap: 22px (off the 4px scale) on .profile-hero
+  NOTE 24b :1418 padding: 16px 18px (off the 4px scale) on .stats-block
+  NOTE 24b :1423 padding: 22px 20px (off the 4px scale) on .panel-accent
+  NOTE 24b :1427 padding: 16px 18px (off the 4px scale) on .review
+  NOTE 24b :1456 padding: 8px 14px 14px (off the 4px scale) on .topnav__panel
+  NOTE 24b :1462 padding: 12px 14px (off the 4px scale) on .topnav__panel .topnav__link
+  NOTE 24b :1482 padding: 10px 14px (off the 4px scale) on .topnav__panel .topnav__lang
+  NOTE 24b :1484 margin: 6px 0 0 (off the 4px scale) on .topnav__panel .topnav__lang
+  NOTE 24b :1488 padding: 14px 16px (off the 4px scale) on .ranking-row
+  NOTE 24b :1506 margin: 6px 0 16px (off the 4px scale) on .wta-group
+  NOTE 24b :1508 gap: 10px (off the 4px scale) on .wta-group
+  NOTE 24b :1517 gap: 10px (off the 4px scale) on .wta-group__chips
+  NOTE 24b :1573 margin-top: 6px (off the 4px scale) on .card__wta
+sloplint: 0 FAIL, 0 WARN, 42 WAIVED, 3 ANSWERED, 99 NOTE across 9 file(s).
+kept: links 4/4, script hooks 103/103; before 74 FAIL, 136 REFLEX, now 0 FAIL, 0 REFLEX
