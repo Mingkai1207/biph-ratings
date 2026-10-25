@@ -1,0 +1,36 @@
+{
+  "english": [
+    "fuck", "fucks", "fucked", "fucker", "fuckers", "fucking", "fuckin",
+    "motherfucker", "motherfuckers", "motherfucking", "fuckwit", "fuckwits",
+    "fuckface", "fuckfaces", "dumbfuck", "dumbfucks", "clusterfuck", "fuckup", "fuckups",
+    "shit", "shits", "shitty", "shitting", "shithead", "shitheads",
+    "bullshit", "horseshit", "dipshit", "dipshits", "batshit",
+    "shithole", "shitholes", "shitstorm", "shitstorms",
+    "bitch", "bitches", "bitching", "bitchy", "son of a bitch",
+    "asshole", "assholes", "arsehole", "arseholes", "dumbass", "dumbasses",
+    "jackass", "jackasses", "bastard", "bastards", "bollocks",
+    "damn", "damned", "goddamn", "goddamned",
+    "cunt", "cunts", "twat", "twats", "wanker", "wankers",
+    "dickhead", "dickheads", "dickwad", "dickwads", "cocksucker", "cocksuckers",
+    "douchebag", "douchebags", "whore", "whores", "slut", "sluts",
+    "nigger", "niggers", "nigga", "niggas", "faggot", "faggots",
+    "fag", "fags", "chink", "chinks", "gook", "gooks", "spic", "spics",
+    "kike", "kikes", "tranny", "trannies", "retard", "retards", "retarded"
+  ],
+  "english_literal_aliases": [
+    "f*ck", "f**k", "f***", "f*cking", "f**king", "f***ing",
+    "sh*t", "s**t", "b*tch", "b**ch", "a**hole", "a**holes",
+    "c*nt", "c**t"
+  ],
+  "chinese": [
+    "傻逼", "傻比", "傻屄", "傻叉", "傻屌", "煞笔", "煞筆",
+    "脑残", "腦殘", "他妈的", "他媽的", "他娘的",
+    "去你妈的", "去你媽的", "你妈逼", "你媽逼",
+    "操你妈", "操你媽", "肏你妈", "肏你媽", "草泥马", "草泥馬",
+    "我操", "我艹", "卧槽", "臥槽", "滚你妈", "滾你媽",
+    "狗娘养的", "狗娘養的", "狗日的", "狗屎", "王八蛋", "混蛋",
+    "贱人", "賤人", "婊子", "臭婊子", "傻婊", "卖逼", "賣逼",
+    "你妈死了", "你媽死了", "死全家", "狗逼", "狗屌",
+    "黑鬼", "白皮猪", "白皮豬", "黄皮猴子", "黃皮猴子", "支那猪", "支那豬"
+  ]
+}

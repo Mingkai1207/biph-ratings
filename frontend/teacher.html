@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Read student reviews and share your experience of a BIPH teacher." />
   <title>Rate BIPH: teacher profile</title>
-  <link rel="stylesheet" href="styles.css?v=hallmark-polish-20261025" />
+  <link rel="stylesheet" href="styles.css?v=word-blur-20261025" />
   <script src="config.js?v=22926e5"></script>
 </head>
 <body data-page="teacher">
@@ -34,7 +34,7 @@
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=hallmark-polish-20261025"></script>
+  <script src="app.js?v=word-blur-20261025"></script>
   <script>
   (function () {
     const id = new URLSearchParams(location.search).get('id');
@@ -372,7 +372,7 @@
           ${METRICS.map(m => `<span class="metric-badge">${metricLabelShort(m.key)} <strong>${mine[m.key]}</strong></span>`).join('')}
           ${wtaBadge}
         </div>
-        ${mine.comment ? `<div class="review-notice__comment">${escape(mine.comment)}</div>` : ''}
+        ${mine.comment ? `<div class="review-notice__comment">${RB.renderComment(mine)}</div>` : ''}
         ${revokeBlock}`;
       RB.renderStars(panel.querySelector('[data-my-stars]'), avg, { size: 28 });
 
@@ -467,7 +467,7 @@
             <span data-review-stars></span>
             <span class="review__date">${RB.relDate(r.created_at)}</span>
           </div>
-          ${r.comment ? `<div class="review__body">${escape(r.comment)}</div>` : `<div class="review__body review__body--empty">${RB.t('teacher.review.noComment')}</div>`}
+          ${r.comment ? `<div class="review__body">${RB.renderComment(r)}</div>` : `<div class="review__body review__body--empty">${RB.t('teacher.review.noComment')}</div>`}
           <div class="review__metrics">
             ${METRICS.map(m => `<span class="metric-badge">${metricLabelShort(m.key)} <strong>${r[m.key]}</strong></span>`).join('')}
             ${wtaBadge}

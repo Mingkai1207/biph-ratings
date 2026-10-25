@@ -21,6 +21,7 @@ From the repo root:
 ./venv/bin/python -m pytest -x           # stop on first failure
 ./venv/bin/python -m pytest -k cards     # filter by name
 ./venv/bin/python -m pytest --cov=backend  # with coverage
+node --test tests/comment_renderer.test.cjs  # masked comment HTML and accessibility
 ```
 
 ## Test Isolation

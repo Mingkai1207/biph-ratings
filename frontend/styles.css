@@ -663,6 +663,17 @@ body[data-page="home"] .container {
   overflow-wrap: anywhere;
 }
 .review__body--empty { color: var(--ink-mute); font-style: italic; }
+.review-word-mask {
+  display: inline-block;
+  vertical-align: baseline;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.review-word-mask__blur {
+  display: inline-block;
+  filter: blur(3px);
+  opacity: 0.75;
+}
 .review__metrics {
   display: flex; flex-wrap: wrap; gap: 8px;
   margin-top: 12px;

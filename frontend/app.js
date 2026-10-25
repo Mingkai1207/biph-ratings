@@ -63,7 +63,7 @@
       // Home
       'home.pageTitle':           'Rate BIPH: anonymous teacher reviews',
       'home.hero.titleHtml':      'How is the teacher, honestly?',
-      'home.hero.subtitle':       'Real reviews from BIPH students. Anonymous, unfiltered, kind when deserved.',
+      'home.hero.subtitle':       'Real reviews from BIPH students. Anonymous, kind when deserved.',
       'home.search.placeholder':  'Teacher name or course…',
       'home.search.go':           'Search',
       'home.chips.all':           'All',
@@ -85,6 +85,7 @@
       'teacher.review.sortLabel': 'most liked first',
       'teacher.review.empty':     'No reviews yet. Be the first.',
       'teacher.review.noComment': 'No comment — rating only.',
+      'teacher.review.blurredWord': 'Sensitive word blurred',
       'teacher.basedOn':          'based on {n} anonymous reviews',
       'teacher.basedOnSingular':  'based on {n} anonymous review',
       'teacher.distribution':     'Teaching quality distribution',
@@ -326,7 +327,7 @@
       // Home
       'home.pageTitle':           'Rate BIPH: 匿名老师评价',
       'home.hero.titleHtml':      '这位老师怎么样，说真的？',
-      'home.hero.subtitle':       'BIPH 学生写的真实评价。匿名、不过滤、该夸的时候就夸。',
+      'home.hero.subtitle':       'BIPH 学生写的真实评价。匿名、该夸的时候就夸。',
       'home.search.placeholder':  '老师姓名或课程…',
       'home.search.go':           '搜索',
       'home.chips.all':           '全部',
@@ -348,6 +349,7 @@
       'teacher.review.sortLabel': '按点赞数排序',
       'teacher.review.empty':     '还没有评价。来当第一个。',
       'teacher.review.noComment': '没有评论 — 仅评分。',
+      'teacher.review.blurredWord': '敏感词已模糊处理',
       'teacher.basedOn':          '基于 {n} 条匿名评价',
       'teacher.basedOnSingular':  '基于 {n} 条匿名评价',
       'teacher.distribution':     '教学质量评分分布',
@@ -922,6 +924,27 @@
     });
   }
 
+  // Detection is shared by the API's public review responses. Keep the rest
+  // of the comment exactly as written, and never put a masked word in the DOM
+  // (including title/ARIA text) or interpret comment text as HTML.
+  function renderComment(review) {
+    const escapeText = (text) => String(text || '').replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+    const segments = Array.isArray(review.comment_segments)
+      ? review.comment_segments
+      : [{ text: review.comment || '', sensitive: false }];
+    return segments.map(segment => {
+      if (segment.sensitive !== true) return escapeText(segment.text);
+      const label = escapeText(t('teacher.review.blurredWord'));
+      // Approximate Latin/CJK word width so short Chinese matches do not
+      // disappear into what looks like an ordinary space after blurring.
+      const width = Array.from(segment.text).reduce((n, c) => n + (c.codePointAt(0) >= 0x2e80 ? 3 : 2), 0);
+      const dots = '•'.repeat(Math.max(4, Math.min(36, width)));
+      return `<span class="review-word-mask" role="img" aria-label="${label}" title="${label}"><span class="review-word-mask__blur" aria-hidden="true">${dots}</span></span>`;
+    }).join('');
+  }
+
   function renderFooter() {
     const host = document.querySelector('[data-footer]');
     if (!host) return;
@@ -932,7 +955,7 @@
 
   window.RB = {
     api, renderStars, avatarEl, initials, avatarColor, toast, relDate,
-    mountTurnstile, renderTopnav, renderFooter,
+    mountTurnstile, renderTopnav, renderFooter, renderComment,
     t, getLang, setLang, applyI18n, localizeSubject,
   };
   document.addEventListener('DOMContentLoaded', () => {

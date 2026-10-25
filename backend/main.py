@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, conint
 
 from .cards import render_teacher_card, render_teacher_qr
 from .db import get_conn, init_db
+from .sensitive_words import comment_segments
 from .spam import (
     TEACHER_COOLDOWN_DAYS,
     SpamError,
@@ -439,6 +440,7 @@ def get_teacher(teacher_id: str, request: Request):
     d["distribution"] = dist
     if my_review_row:
         mr = dict(my_review_row)
+        mr["comment_segments"] = comment_segments(mr["comment"])
         mr["cooldown_days"] = TEACHER_COOLDOWN_DAYS
         # Tell the frontend the revoke window so the countdown UI is one
         # source of truth (server). UI shows the button only inside this window.
@@ -560,7 +562,7 @@ def list_reviews(
             (iph, teacher_id, limit, offset),
         ).fetchall()
     return {
-        "reviews": [dict(r) for r in rows],
+        "reviews": [dict(r, comment_segments=comment_segments(r["comment"])) for r in rows],
         "has_more": len(rows) == limit,
     }
 
