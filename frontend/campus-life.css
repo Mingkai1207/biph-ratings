@@ -1,62 +1,78 @@
-/* Rate BIPH campus notebook: documentary photographs in the margins, with clear reading and form areas. */
+/* Hallmark · v2.0.0 · scope: app · genre: editorial · theme: BIPH brand · redesign: full · surface: absolute · posture: Restrained · imagery: actual campus photographs as page architecture · copy: verbatim */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: H, turn separate image ornaments into one photographic masthead with a continuous white reading surface */
+/* Hallmark · dropped duplicate About auditorium and directory library thumbnail · user rejected pasted-on decoration; the auditorium remains on Suggestions */
 @import url('./study-system/tokens.css');
 @import url('./study-system/base.css');
 
-:root { --container: 1120px; }
+:root {
+  --container: 1120px;
+  --campus-copy-width: 800px;
+  --campus-fade: linear-gradient(90deg, rgb(255 255 255 / .99) 0%, rgb(255 255 255 / .93) 54%, rgb(255 255 255 / 0) 94%);
+}
 .campus-scene { margin: 0; min-width: 0; }
 .campus-scene img { display: block; width: 100%; height: auto; border-radius: 0; }
-.campus-scene figcaption { margin-top: var(--space-xs); color: var(--ink-mute); font-size: 13px; line-height: 1.5; }
-.campus-scene figcaption a { color: var(--accent); text-underline-offset: 3px; }
+.campus-scene figcaption { color: var(--ink-mute); font-size: 12px; line-height: 1.5; }
 
-/* A small library view belongs in the directory margin, outside the roster. */
-.directory-sidebar .campus-scene { margin-top: var(--space-lg); }
-.directory-sidebar .campus-scene figcaption { font-size: 12px; }
-.directory-sidebar .campus-scene figcaption span { display: block; }
-.directory-subjects { max-height: max(200px, calc(100dvh - 440px)); }
-.directory-sidebar__note { margin-top: var(--space-md); }
+.directory-subjects { max-height: calc(100dvh - 240px); }
+.directory-sidebar__campus { display: block; margin-top: var(--space-sm); }
 
-.campus-page {
-  max-width: var(--container);
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: var(--space-xxl);
-  align-items: start;
-  padding: var(--space-xxl) var(--space-xl) var(--space-2xl);
+.campus-page { max-width: var(--container); padding: var(--space-ml) 0 var(--space-2xl); }
+.campus-masthead {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: 288px;
+  padding: var(--space-xl) var(--space-xl) var(--space-2xl);
 }
-.campus-page__content { min-width: 0; }
-.campus-page .page-title { font-family: var(--font-display); font-size: 40px; font-weight: 600; letter-spacing: -.035em; line-height: 1.12; margin-bottom: var(--space-md); }
-.campus-page .page-lede { margin-bottom: var(--space-ml); }
-.campus-page__photo { margin-top: var(--space-xs); }
-.campus-page__photo img { aspect-ratio: 4 / 3; object-fit: cover; }
-.campus-page .form-card { padding: var(--space-lg); }
-.campus-page .about-section { border: 0; background: transparent; padding: 0; margin: var(--space-ml) 0 0; }
-.campus-page .about-section__title { font-family: var(--font-body); font-size: 20px; font-weight: 500; line-height: 1.4; margin-bottom: var(--space-md); }
-.campus-page .about-section__body { font-size: 16px; margin-bottom: var(--space-md); }
-.campus-page .about-foot { justify-content: flex-start; margin: var(--space-lg) 0 0; }
-.campus-wide { grid-column: 1 / -1; }
-.campus-wide img { aspect-ratio: 3.25 / 1; object-fit: cover; }
-.campus-wide figcaption { display: flex; gap: var(--space-md); justify-content: space-between; }
-.campus-wide figcaption span:last-child { text-align: right; }
-
-@media (max-height: 639px) and (min-width: 761px) {
-  .directory-sidebar .campus-scene { display: none; }
-  .directory-subjects { max-height: calc(100dvh - 240px); }
+.campus-masthead::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--campus-fade);
+  z-index: 1;
+  pointer-events: none;
 }
+.campus-masthead__scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.campus-masthead__scene img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.campus-masthead__scene figcaption {
+  position: absolute;
+  top: calc(100% + var(--space-sm));
+  right: var(--space-xl);
+  max-width: 18%;
+  text-align: right;
+}
+.campus-masthead__copy { position: relative; z-index: 2; width: 60%; min-width: 0; }
+.campus-page .page-title { font-family: var(--font-display); font-size: 40px; font-weight: 600; letter-spacing: -.035em; line-height: 1.12; margin: 0; }
+.campus-page .page-lede { margin: var(--space-md) 0 0; max-width: 35em; font-size: 16px; line-height: 1.6; color: var(--ink); }
+.campus-page__content {
+  position: relative;
+  z-index: 2;
+  width: min(var(--campus-copy-width), 78%);
+  min-width: 0;
+  margin-top: calc(-1 * var(--space-ml));
+  padding: var(--space-xl) var(--space-xl) 0;
+  background: var(--bg);
+}
+.campus-page .form-card { padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; margin-bottom: 0; }
+.campus-page .about-section { border: 0; background: transparent; padding: 0; margin: 0; }
+.campus-page .about-section__title { font-family: var(--font-body); font-size: 20px; font-weight: 500; line-height: 1.4; margin: 0 0 var(--space-lg); }
+.campus-page .about-section__body { max-width: 65ch; font-size: 16px; line-height: 1.75; margin: 0 0 var(--space-md); }
+.campus-page .about-foot { justify-content: flex-start; margin: var(--space-ml) 0 0; }
+
 @media (max-width: 1000px) {
-  .campus-page { gap: var(--space-ml); }
-  .campus-page .form-card { padding: var(--space-md); }
+  .campus-masthead__copy { width: 66%; }
 }
 @media (max-width: 760px) {
-  .directory-sidebar .campus-scene { display: none; }
-  .campus-page { grid-template-columns: minmax(0, 1fr); gap: var(--space-ml); padding: var(--space-lg) var(--space-lg) var(--space-xxl); }
+  :root { --campus-fade: linear-gradient(90deg, rgb(255 255 255 / .99) 0%, rgb(255 255 255 / .91) 60%, rgb(255 255 255 / .65) 100%); }
+  .campus-page { padding: var(--space-lg) 0 var(--space-xxl); }
+  .campus-masthead { min-height: 240px; padding: var(--space-lg) var(--space-lg) var(--space-xxl); }
+  .campus-masthead__copy { width: 100%; }
   .campus-page .page-title { font-size: 32px; }
-  .campus-page__photo { margin-top: 0; }
-  .campus-page__photo img { aspect-ratio: 2 / 1; }
-  .campus-wide img { aspect-ratio: 2 / 1; }
-  .campus-wide figcaption { display: block; }
-  .campus-wide figcaption span { display: block; }
-  .campus-wide figcaption span:last-child { text-align: left; }
+  .campus-page .page-lede { margin-top: var(--space-sm); }
+  .campus-masthead__scene figcaption { display: none; }
+  .campus-page__content { width: 100%; margin-top: calc(-1 * var(--space-md)); padding: var(--space-lg) var(--space-lg) 0; }
 }
 @media (max-width: 360px) {
-  .campus-page { padding-inline: var(--space-md); }
+  .campus-masthead, .campus-page__content { padding-inline: var(--space-md); }
 }

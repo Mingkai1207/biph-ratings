@@ -1,25 +1,22 @@
 {
-  "scanned": "2026-11-03",
+  "scanned": "2026-11-09",
   "findings": {
     "fonts": "Geist + Instrument Serif: frontend/styles.css:56; retained, functional headings now Geist",
     "palette": "BIPH blue #3255a4 / white / grays: frontend/styles.css:9",
     "framework": "FastAPI static HTML/CSS/JS",
-    "structure": "Alphabetical teacher roster with subject index; reading-focused profile; approved campus header retained",
+    "structure": "Approved directory/profile headings retained; supporting pages use integrated photographic mastheads and continuous white reading/form surfaces",
     "material": "Verified official BIPH overview, entrance, and rooftop soccer-field photos: docs/biph-photo-sources.md"
   },
   "preserve": [
-    "directory and reading room layout",
-    "brand colors and fonts",
-    "all existing search/review/i18n handlers",
-    "word masking",
-    "production deployment untouched"
+    "BIPH blue/white and Geist",
+    "Existing links, IDs, form handlers and words",
+    "Approved directory/profile headers",
+    "Ordinary search, reviews, bilingual UI and word masking"
   ],
   "introduce": [
-    "compact functional typography",
-    "natural campus photos and credits",
-    "consistent token spacing",
-    "restrained form and navigation styling",
-    "Full-width campus heading photographs with left-light/right-clear white fade; plain white reading areas",
-    "Natural school directory: unruled teacher rows, small letter groups, quiet rating/review summaries"
+    "Shared masthead/photo/content geometry",
+    "Remove detached thumbnails and duplicate image ornaments",
+    "Unboxed form surface",
+    "Desktop/mobile text contrast"
   ]
 }

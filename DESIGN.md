@@ -56,13 +56,16 @@ Existing brand values come from `frontend/styles.css`, not a new palette.
 - Descriptive bilingual alt text, fixed dimensions, source credit near the footer.
 - No claims of school endorsement; independent-site disclosure remains.
 
-### Campus notebook additions
+### Integrated photographic mastheads
 
-- Directory: a small library photograph below the desktop subject index, linked to the campus pictures on About. The subject scroller is shortened so the sticky rail remains usable. Omit the extra photograph on narrow or short screens.
-- About: purpose text alongside a photograph of the auditorium; a wide field photograph follows. The removed credit clarification stays removed.
-- Contribution pages: form and copy on the left, a quiet campus scene on the right. At 760px and below the photograph follows the form; it never delays access to the fields.
-- New photographs have plain frames, 13px bilingual captions and translated alt text. Preserve the actual images, no fabricated teacher portraits or text overlays.
-- Reserve dimensions for every image and lazy-load all added photographs. Use the 288px library source only as a desktop thumbnail.
+- The user rejected isolated side pictures and a large photo appended below the About text. Photographs now define the opening of each supporting page instead of occupying spare space.
+- About uses the field; Add a teacher uses the entrance; Suggestions uses the auditorium. One purposeful photograph per supporting page.
+- Each masthead is a continuous image with a left-white/right-clear fade. Heading and introduction align to the same40px gutter as the text and form below.
+- A plain white content surface starts32px inside the masthead's lower edge. It is left-aligned, at most800px wide, with no border, shadow or rounded outer form card. The overlap becomes16px on mobile with24px gutters (16px at320px).
+- The mobile masthead grows with its text, protecting the introduction from the following content. Text uses dark ink; the stronger mobile fade protects contrast.
+- Keep desktop captions small, on white space beneath the image's exposed right edge. On mobile, translated image alt text identifies the photograph without an extra caption row.
+- The directory's isolated library thumbnail and duplicate About auditorium are removed. The campus link remains, and the accepted directory/profile headings are unchanged.
+- All image dimensions are reserved; masthead images use high fetch priority. Original official image files are retained without editing.
 - Shared layout: `frontend/campus-life.css`; source metadata stays in `docs/biph-photo-sources.md`.
 
 ## Exports
