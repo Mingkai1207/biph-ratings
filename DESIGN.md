@@ -42,7 +42,7 @@ Existing brand values come from `frontend/styles.css`, not a new palette.
 
 - Keep established API, language, filter, rating, sharing and vote handlers.
 - Instant visible focus. Native form disclosure and mobile subject select.
-- English by default; Chinese switch also translates new photo captions/alt text.
+- English by default; Chinese switch also translates photo alt text. No visible photo captions.
 - Sensitive words continue through `RB.renderComment` unchanged.
 - No ranking section, AI search, invented counts, or fake portraits.
 
@@ -51,7 +51,7 @@ Existing brand values come from `frontend/styles.css`, not a new palette.
 - Latest user direction: photographs fill the heading, with a horizontal white fade strongest at the left and clear image color at the right. No full-page background.
 - Directory header: campus aerial view behind the title. Teacher header: school entrance behind the teacher identity. The text stays on the light left side.
 - Desktop heading minimum height240px; mobile200px, expanding for longer text. Photo and gradient span the entire heading, including container gutters.
-- Plain white reading area. Header-only white gradient is explicitly user requested. Overlay and image layers ignore pointer events; heading controls remain above them. No animation.
+- Plain white reading area. Header-only white gradient is explicitly user requested. Overlay and image layers ignore pointer events; heading controls remain above them. Brief one-time photo entrance; see Decorations and motion below.
 - Originals from the official BIPH website, provenance in `docs/biph-photo-sources.md`.
 - Descriptive bilingual alt text, fixed dimensions, source credit near the footer.
 - No claims of school endorsement; independent-site disclosure remains.
@@ -63,7 +63,7 @@ Existing brand values come from `frontend/styles.css`, not a new palette.
 - Each masthead is a continuous image with a left-white/right-clear fade. Heading and introduction align to the same40px gutter as the text and form below.
 - A plain white content surface starts32px inside the masthead's lower edge. It is left-aligned, at most800px wide, with no border, shadow or rounded outer form card. The overlap becomes16px on mobile with24px gutters (16px at320px).
 - The mobile masthead grows with its text, protecting the introduction from the following content. Text uses dark ink; the stronger mobile fade protects contrast.
-- Keep desktop captions small, on white space beneath the image's exposed right edge. On mobile, translated image alt text identifies the photograph without an extra caption row.
+- No explanatory photo captions at any width. Bilingual alt text remains for accessibility.
 - The directory's isolated library thumbnail and duplicate About auditorium are removed. The campus link remains, and the accepted directory/profile headings are unchanged.
 - All image dimensions are reserved; masthead images use high fetch priority. Original official image files are retained without editing.
 - Shared layout: `frontend/campus-life.css`; source metadata stays in `docs/biph-photo-sources.md`.
@@ -73,3 +73,12 @@ Existing brand values come from `frontend/styles.css`, not a new palette.
 `frontend/study-system/tokens.css` and `base.css`; page-specific styles consume them.
 
 Header treatment: `frontend/campus-header.css`; the superseded background stylesheet was replaced.
+
+## Decorations and motion
+
+- Shared `frontend/campus-details.css` loads last on all six public pages. Admin and QR tools remain unchanged.
+- School-yearbook details: a short blue print rule above each photographic heading, a fine white crop corner on the exposed photograph, and a matching blue segment on the footer rule.
+- Directory hover uses a pale blue wash and side rule. Teacher names, scores, and rows remain stationary; the selected subject receives a small blue margin rule.
+- Navigation underlines draw in 180ms. Primary actions lift 1px on pointer hover and depress on click. Keyboard focus stays immediate.
+- Photos settle from 1.035 scale over 1000ms; heading copy enters 6px over 480ms. Opening the review composer/mobile menu takes 220ms. No loops, scroll parallax, cursor effects, or delayed content visibility.
+- CSS only, with no new dependencies or event handlers. Content remains visible without JavaScript; reduced motion disables animations, transitions, and button displacement.
