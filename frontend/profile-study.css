@@ -1,0 +1,110 @@
+/* Hallmark · v2.0.0 · checked: ratebiph.com local study · built: the project · redesign: restyle · scope: app · genre: editorial · theme: BIPH brand · nav: kept · footer: student-run disclosure · surface: absolute · posture: Restrained */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R4 V3 · weakest: R, oversized serif names and blue-filled writing panel competed with student comments; replaced with compact school-roster typography and an outline disclosure */
+/* Hallmark · reworded "What students said" to "Student reviews" · gate 69 removes repeated rhetorical framing */
+/* Hallmark · dropped "Anonymous student reviews." / "匿名学生评价。" from profile header · gate 69 removes a repeat of the composer and footer anonymity notice to keep review prose in the mobile first screen */
+/* Hallmark · dropped visible initials avatar · gate 66 removes redundant decoration; original avatar render hook remains in the DOM */
+@import url('./study-system/tokens.css');
+@import url('./study-system/base.css');
+
+.profile-shell { width: 100%; max-width: 1200px; margin: auto; padding: var(--space-lg) var(--space-xl) var(--space-2xl); }
+.profile-shell .crumb { font-size: 13px; margin-bottom: var(--space-lg); }
+.profile-shell .profile-hero { display: block; margin: 0 0 var(--space-lg); padding: 0 0 var(--space-lg); border-bottom: 1px solid var(--line); }
+.profile-shell .profile-hero:has(.profile-campus) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: var(--space-xl); align-items: center; }
+.profile-heading { min-width: 0; }
+.profile-shell .profile-hero__name { font-family: var(--font-sans); color: var(--ink); font-size: 40px; font-weight: 600; letter-spacing: -.035em; line-height: 1.1; margin-bottom: var(--space-md); text-align: left; text-wrap: pretty; overflow-wrap: break-word; min-width: 0; }
+.profile-shell .profile-hero__meta { margin: 0; gap: var(--space-sm); }
+.profile-shell .profile-hero__meta > div:last-child { display: flex; flex-wrap: wrap; gap: var(--space-2xs) var(--space-md); align-items: baseline; min-width: 0; }
+.profile-shell .profile-hero__subject { color: var(--ink); font-size: 14px; font-weight: 500; }
+.profile-shell .profile-hero__courses { margin: 0; font-size: 14px; color: var(--ink-mute); line-height: 1.5; overflow-wrap: anywhere; }
+.profile-shell .profile-hero__meta > .avatar { display: none; }
+.profile-campus { margin: 0; min-width: 0; }
+.profile-campus img { object-position: center; }
+.profile-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: var(--space-xl); align-items: start; }
+.profile-summary { min-width: 0; }
+.profile-summary__label { font-family: var(--font-sans); margin: 0 0 var(--space-sm); color: var(--ink-mute); font-size: 13px; font-weight: 500; letter-spacing: 0; }
+.profile-shell .profile-hero__rating { align-items: flex-start; gap: var(--space-xs); padding-bottom: var(--space-lg); }
+.profile-shell .profile-hero__big { font-family: var(--font-sans); color: var(--ink); font-size: 48px; font-weight: 600; letter-spacing: -.035em; line-height: 1; font-variant-numeric: tabular-nums; }
+.profile-shell .profile-hero__big small { font-family: var(--font-sans); color: var(--ink-mute); font-size: 20px; font-weight: 400; letter-spacing: 0; }
+.profile-shell .profile-hero__count { margin-top: 0; font-size: 12px; line-height: 1.6; }
+.profile-breakdown { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.profile-breakdown > summary { padding: var(--space-md) 0; font-size: 13px; font-weight: 500; color: var(--ink); cursor: pointer; }
+.profile-breakdown > summary::marker { color: var(--accent); }
+.profile-shell .stats-block { border: 0; border-radius: 0; background: transparent; padding: 0 0 var(--space-lg); margin: 0; display: flex; flex-direction: column-reverse; gap: var(--space-lg); }
+.profile-shell .stats-block__right { padding: 0; border: 0; }
+.profile-shell .metric { padding: var(--space-sm) 0; gap: var(--space-xs); }
+.profile-shell .metric + .metric { border-top: 1px solid var(--line); }
+.profile-shell .metric__label { font-size: 13px; line-height: 1.4; }
+.profile-shell .metric__value { font-family: var(--font-sans); color: var(--ink); font-size: 16px; font-weight: 500; }
+.profile-shell .metric--wta .metric__note { margin-top: 0; font-size: 12px; }
+.profile-shell .stats-block h2 { font-family: var(--font-sans); font-size: 12px; font-weight: 500; color: var(--ink-mute); margin-bottom: var(--space-sm); letter-spacing: 0; }
+.profile-shell .distrow { font-size: 12px; grid-template-columns: 24px minmax(0, 1fr) 24px; }
+.profile-shell .distrow__bar, .profile-shell .distrow__fill { border-radius: 0; height: 5px; }
+.profile-shell .share-bar { margin: var(--space-md) 0 0; gap: var(--space-xs); }
+.profile-shell .share-bar .btn { border: 0; border-radius: 0; padding: var(--space-xs) 0; font-size: 12px; margin-right: var(--space-sm); }
+.profile-shell .share-bar .btn:hover { color: var(--accent); background: transparent; text-decoration: underline; text-underline-offset: 4px; }
+.profile-reading { min-width: 0; scroll-margin-top: var(--space-3xl); }
+.profile-shell .reviews-head { align-items: baseline; flex-wrap: wrap; gap: var(--space-sm); margin: 0 0 var(--space-md); }
+.profile-shell .reviews-head h2 { font-family: var(--font-sans); font-size: 22px; font-weight: 600; letter-spacing: -.025em; line-height: 1.25; }
+.profile-composer { border: 1px solid var(--line-strong); background: transparent; margin-bottom: var(--space-xs); border-radius: 3px; }
+.profile-composer > summary { cursor: pointer; color: var(--accent); padding: var(--space-md); font-size: 14px; font-weight: 500; }
+.profile-composer > summary::marker { color: var(--accent); }
+.profile-composer__hint { float: right; font-size: 12px; font-weight: 400; color: var(--ink-mute); line-height: 1.7; }
+.profile-composer[open] > summary { border-bottom: 1px solid var(--line); }
+.profile-shell .panel-accent { border: 0; background: transparent; border-radius: 0; padding: var(--space-lg) var(--space-md); margin: 0; }
+.profile-shell .panel-accent h2 { font-family: var(--font-sans); font-size: 20px; font-weight: 600; }
+.profile-shell .rating-row { grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-sm); }
+.profile-shell .textarea { border-radius: 3px; }
+.profile-shell .btn { border-radius: 3px; }
+.profile-shell .form-foot { flex-wrap: wrap; gap: var(--space-md); }
+.profile-shell .reviews-list { gap: 0; }
+.profile-shell .review { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: var(--space-lg) 0; background: transparent; }
+.profile-shell .review__top { margin-bottom: var(--space-md); }
+.profile-shell .review__body { max-width: 68ch; font-size: 16px; line-height: 1.65; }
+.profile-shell .review__metrics { margin-top: var(--space-md); gap: var(--space-xs) var(--space-md); }
+.profile-shell .metric-badge { background: transparent; padding: 0; border-radius: 0; font-size: 12px; letter-spacing: 0; line-height: 1.5; }
+.profile-shell .metric-badge--wta-yes { color: var(--wta-yes-ink); }
+.profile-shell .metric-badge--wta-no { color: var(--wta-no-ink); }
+.profile-shell .review__votes { margin-top: var(--space-md); }
+.profile-shell .vote { border-radius: 3px; }
+.profile-shell :is(a, button, input, textarea, select, summary):focus-visible, .profile-skip:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; transition: none; }
+.profile-skip { position: fixed; left: var(--space-md); top: var(--space-sm); transform: translateY(-180%); z-index: var(--z-sticky-nav); background: var(--bg); color: var(--accent); padding: var(--space-sm) var(--space-md); }
+.profile-skip:focus { transform: translateY(0); }
+@media (max-width: 1000px) {
+  .profile-layout { gap: var(--space-lg); }
+  .profile-shell .profile-hero:has(.profile-campus) { grid-template-columns: minmax(0, 1fr) minmax(0, 320px); gap: var(--space-lg); }
+}
+@media (max-width: 760px) {
+  .profile-shell { padding: var(--space-lg) var(--space-lg) var(--space-xl); }
+  .profile-shell .crumb { margin-bottom: var(--space-md); }
+  .profile-shell .profile-hero { margin-bottom: var(--space-md); padding-bottom: var(--space-md); }
+  .profile-shell .profile-hero:has(.profile-campus) { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
+  .profile-shell .profile-hero__name { font-size: 32px; margin-bottom: var(--space-sm); }
+  .profile-shell .profile-hero__meta > div:last-child { display: flex; flex-wrap: wrap; }
+  .profile-shell .profile-hero__subject { font-size: 14px; }
+  .profile-shell .profile-hero__courses { font-size: 12px; }
+  .profile-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
+  .profile-summary__label { margin-bottom: var(--space-sm); font-size: 12px; }
+  .profile-shell .profile-hero__rating { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2xs) var(--space-md); align-items: center; padding-bottom: var(--space-md); }
+  .profile-shell .profile-hero__big { grid-row: 1 / 3; font-size: 40px; }
+  .profile-shell .profile-hero__big small { font-size: 18px; }
+  .profile-shell .profile-hero__count { font-size: 12px; }
+  .profile-breakdown > summary { padding: var(--space-sm) 0; }
+  .profile-shell .stats-block__left { display: block; }
+  .profile-shell .stats-block { gap: var(--space-md); }
+  .profile-shell .share-bar { margin: var(--space-xs) 0 0; }
+  .profile-shell .share-bar .btn { min-height: 36px; }
+  .profile-shell .reviews-head { margin-bottom: var(--space-md); gap: var(--space-xs); }
+  .profile-shell .reviews-head h2 { font-size: 20px; }
+  .profile-shell .reviews-head .review__date { font-size: 12px; }
+  .profile-composer > summary { padding: var(--space-md); font-size: 14px; }
+  .profile-shell .panel-accent { padding: var(--space-lg) var(--space-md); }
+  .profile-shell .rating-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-xs); }
+  .profile-shell .review { padding: var(--space-lg) 0; }
+  .profile-shell .review__metrics { gap: var(--space-xs) var(--space-sm); }
+  .profile-shell .profile-hero__courses-editor { max-width: 100%; }
+}
+@media (max-width: 360px) {
+  .profile-shell { padding-inline: var(--space-md); }
+  .profile-shell .reviews-head { display: block; }
+  .profile-shell .reviews-head .review__date { display: block; margin-top: var(--space-xs); }
+}

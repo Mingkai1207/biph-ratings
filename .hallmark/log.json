@@ -1,5 +1,133 @@
 [
   {
+    "date": "2026-11-03",
+    "mode": "redesign",
+    "depth": "restyle",
+    "scope": "app",
+    "theme": "BIPH brand (preserved)",
+    "prompt": "Make the local directory and reading-focused review experiment feel less AI-made, add real BIPH photographs, and put a campus background behind the whole page. Do not deploy.",
+    "photos": [
+      "biph-campus-overview.jpg",
+      "biph-main-gate.jpg"
+    ],
+    "imagery": "Official BIPH photos span page headings behind a left-to-right white fade: light behind left-aligned titles, full image color at the right. Plain white content below.",
+    "after": {
+      "scoped_new_css": {
+        "files": 5,
+        "fail": 0,
+        "reflex": 0,
+        "warn": 0
+      },
+      "legacy_imported_scan": {
+        "fail_groups": 10,
+        "reflex": 89,
+        "note": "Inherited spacing and overridden grid declaration; no whole-site clean claim."
+      }
+    },
+    "kept": {
+      "links": "5/5",
+      "script_hooks": "31/31",
+      "routes": "all",
+      "backend": "unchanged"
+    },
+    "waived": [
+      "Existing BIPH white brand surface",
+      "Photographic whole-page background explicitly requested by the user"
+    ],
+    "browser": {
+      "tool": "CUA",
+      "background_widths": [
+        320,
+        375,
+        1024,
+        1280,
+        1440
+      ],
+      "result": "passed focused screenshot and geometry checks",
+      "limits": "No Hallmark automated render tier; isolated preview database; no production submissions"
+    },
+    "finishReview": {
+      "reviewer": "fresh-context subagent",
+      "decision": "ship",
+      "resolved": [
+        "footer alignment",
+        "school proper-name correction",
+        "tablet footer width seam"
+      ],
+      "background_followup": "ship"
+    },
+    "checks": [
+      "116 Python tests before final background CSS",
+      "7 Node renderer tests after final edits",
+      "JavaScript syntax",
+      "git diff --check"
+    ],
+    "comparison": "/Users/mingkai/Documents/Codex/2026-11-03/ratebiph-hallmark/compare.html",
+    "report": "/Users/mingkai/Documents/Codex/2026-11-03/ratebiph-hallmark/RESULT.md",
+    "deployment": "not deployed",
+    "gradient_followup": {
+      "request": "Full-screen gradient instead of an opaque white sheet",
+      "checks": [
+        "1280 and375 screenshots",
+        "320 expanded composer without overflow",
+        "ordinary search returns1matchingteacher",
+        "English/Chinese switch",
+        "background pointer-events:none",
+        "changed CSS0FAIL0REFLEX0WARN",
+        "git diff --check"
+      ],
+      "finish_review": "ship",
+      "deployment": "not deployed"
+    },
+    "header_followup": {
+      "request": "Pictures in the heading instead of a full-page gradient",
+      "css": "frontend/campus-header.css",
+      "checks": [
+        "1280px desktop and375px mobile on both screens",
+        "112px mobile photographs",
+        "no mobile overflow",
+        "CSS0FAIL0REFLEX0WARN",
+        "git diff --check"
+      ],
+      "finish_review": "ship",
+      "deployment": "not deployed"
+    },
+    "header_gradient_followup": {
+      "request": "Image fills heading with light left / dark right gradient",
+      "checks": [
+        "1280px desktop and375px mobile on both screens",
+        "200px mobile and240px desktop header",
+        "no375px overflow",
+        "CSS0FAIL0REFLEX0WARN",
+        "git diff --check"
+      ],
+      "finish_review": "ship",
+      "deployment": "not deployed"
+    },
+    "roster_followup": {
+      "request": "Make the teacher list more natural; preserve approved header",
+      "changes": [
+        "plain name/subject/course identity",
+        "quiet combined exact rating and review summary",
+        "alphabetic groups only on unfiltered roster",
+        "fewer rules and no table headings",
+        "simple subject index and search"
+      ],
+      "checks": [
+        "10Node tests passed",
+        "Unicode/case/order and metadata-dedup tests",
+        "searchAbhi returns1, subjectMath10, no group headings when filtered",
+        "99teachers and18lettergroups unfiltered",
+        "320px Chinese long-name result no overflow",
+        "sidebar long label wraps without clipping",
+        "CSS0FAIL0REFLEX0WARN",
+        "JavaScript syntax and git diff checks"
+      ],
+      "finish_review": "ship",
+      "deployment": "not deployed"
+    }
+  },
+  {
     "date": "2026-10-25",
     "mode": "redesign",
     "depth": "polish",

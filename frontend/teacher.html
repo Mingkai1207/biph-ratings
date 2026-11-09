@@ -6,35 +6,56 @@
   <meta name="description" content="Read student reviews and share your experience of a BIPH teacher." />
   <title>Rate BIPH: teacher profile</title>
   <link rel="stylesheet" href="styles.css?v=word-blur-20261025" />
+  <link rel="stylesheet" href="profile-study.css?v=hallmark-2" />
+  <link rel="stylesheet" href="campus-header.css?v=header-gradient-2" />
   <script src="config.js?v=22926e5"></script>
 </head>
 <body data-page="teacher">
+  <a class="profile-skip" href="#studentReviews" data-profile-text="skip">Skip to student reviews</a>
   <div data-topnav></div>
 
-  <main class="container container--narrow">
+  <main class="profile-shell">
     <a href="index.html" class="crumb" data-i18n="teacher.back">Back to roster</a>
 
-    <section class="profile-hero" id="hero">
-      <div class="profile-hero__left" id="heroLeft"></div>
-      <div class="profile-hero__rating" id="heroRight"></div>
-    </section>
+    <header class="profile-hero" id="hero">
+      <div class="profile-heading">
+        <div class="profile-hero__left" id="heroLeft"></div>
+      </div>
+      <figure class="profile-campus campus-photo">
+        <img src="assets/biph/biph-main-gate.jpg" width="1920" height="800" alt="Main entrance of the BIPH campus" data-profile-alt="photoAlt" fetchpriority="high" />
+        <figcaption data-profile-text="campus">BIPH campus</figcaption>
+      </figure>
+    </header>
 
-    <div class="share-bar" id="shareBar"></div>
+    <div class="profile-layout">
+      <aside class="profile-summary" aria-labelledby="summaryHeading">
+        <h2 id="summaryHeading" class="profile-summary__label" data-profile-text="overall">Overall student rating</h2>
+        <div class="profile-hero__rating" id="heroRight"></div>
+        <details class="profile-breakdown" id="ratingBreakdown" open>
+          <summary data-profile-text="breakdown">Ratings breakdown</summary>
+          <section class="stats-block" id="stats"></section>
+        </details>
+        <div class="share-bar" id="shareBar"></div>
+      </aside>
 
-    <section class="stats-block" id="stats"></section>
-
-    <section class="panel-accent" id="reviewPanel"></section>
-
-    <div class="reviews-head">
-      <h2 class="serif" data-i18n="teacher.review.heading">What students said</h2>
-      <span class="review__date" data-i18n="teacher.review.sortLabel">most liked first</span>
+      <section class="profile-reading" id="studentReviews" tabindex="-1" aria-labelledby="reviewsHeading">
+        <div class="reviews-head">
+          <h2 class="serif" id="reviewsHeading" data-profile-text="reviews">Student reviews</h2>
+          <span class="review__date" data-i18n="teacher.review.sortLabel">most liked first</span>
+        </div>
+        <details class="profile-composer" id="reviewComposer">
+          <summary><span id="composerLabel" data-profile-text="write">Write a review</span><span class="profile-composer__hint" data-profile-text="anonymous">Anonymous</span></summary>
+          <section class="panel-accent" id="reviewPanel"></section>
+        </details>
+        <div id="reviewList" class="reviews-list"></div>
+        <div id="reviewEmpty" class="empty" hidden data-i18n="teacher.review.empty">No reviews yet. Be the first.</div>
+      </section>
     </div>
-    <div id="reviewList" class="reviews-list"></div>
-    <div id="reviewEmpty" class="empty" hidden data-i18n="teacher.review.empty">No reviews yet. Be the first.</div>
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=word-blur-20261025"></script>
+  <p class="campus-credit" data-credits><span data-profile-text="photoCredit">Campus photographs:</span> <a href="https://biph.basischina.com/#/about/our_school" target="_blank" rel="noopener">BASIS International School Park Lane Harbour</a></p>
+  <script src="app.js?v=hallmark-20261103"></script>
   <script>
   (function () {
     const id = new URLSearchParams(location.search).get('id');
@@ -50,6 +71,33 @@
     ];
     const metricLabel      = (k) => RB.t('teacher.metrics.' + k);
     const metricLabelShort = (k) => RB.t('teacher.metrics.short.' + k);
+
+    // Labels used only by this local structural study; shared translations stay intact.
+    const studyCopy = {
+      en: { skip: 'Skip to student reviews', overall: 'Overall student rating', breakdown: 'Ratings breakdown', write: 'Write a review', yours: 'Your review', anonymous: 'Anonymous', reviews: 'Student reviews', photoCredit: 'Campus photographs:', photoAlt: 'Main entrance of the BIPH campus', campus: 'BIPH campus' },
+      zh: { skip: '跳转到学生评价', overall: '学生综合评分', breakdown: '评分详情', write: '写评价', yours: '你的评价', anonymous: '匿名', reviews: '学生评价', photoCredit: '校园照片：', photoAlt: 'BIPH 校园正门', campus: 'BIPH 校园' },
+    };
+    function renderStudyLabels() {
+      const copy = studyCopy[RB.getLang()] || studyCopy.en;
+      document.querySelectorAll('[data-profile-text]').forEach(el => {
+        el.textContent = copy[el.dataset.profileText];
+      });
+      document.querySelectorAll('[data-profile-alt]').forEach(el => {
+        el.alt = copy[el.dataset.profileAlt];
+      });
+      const label = document.getElementById('composerLabel');
+      if (label) label.textContent = copy[state.teacher?.my_recent_review ? 'yours' : 'write'];
+    }
+    // Keep the sidebar readable on a phone without putting a long score sheet
+    // between the teacher's name and their reviews. Native disclosure is usable
+    // by mouse, keyboard and assistive technology at every width.
+    const compactProfile = window.matchMedia('(max-width: 760px)');
+    const resizeBreakdown = () => {
+      const breakdown = document.getElementById('ratingBreakdown');
+      if (breakdown) breakdown.open = !compactProfile.matches;
+    };
+    resizeBreakdown();
+    compactProfile.addEventListener('change', resizeBreakdown);
 
     const state = {
       teacher: null,
@@ -67,6 +115,7 @@
         document.querySelector('main').innerHTML = `<div class="empty">${RB.t('teacher.notFound')}</div>`;
         return;
       }
+      renderStudyLabels();
       renderHero();
       renderShareBar();
       renderStats();
@@ -80,6 +129,7 @@
 
     document.addEventListener('rb:lang', () => {
       if (!state.teacher) return;
+      renderStudyLabels();
       renderHero();
       renderShareBar();
       renderStats();
@@ -97,15 +147,15 @@
         ? `<div class="profile-hero__courses">${escape(t.courses.join(', '))}</div>`
         : `<button type="button" class="profile-hero__courses-add" data-add-courses>${RB.t('teacher.courses.add')}</button>`;
       left.innerHTML = `
+        <h1 class="profile-hero__name serif">${escape(t.name)}</h1>
         <div class="profile-hero__meta">
           <div data-avatar></div>
           <div>
             <div class="profile-hero__subject">${escape(RB.localizeSubject(t.subject) || '—')}</div>
             ${coursesLine}
           </div>
-        </div>
-        <h1 class="profile-hero__name serif">${escape(t.name)}</h1>`;
-      left.querySelector('[data-avatar]').replaceWith(RB.avatarEl(t.name, 72));
+        </div>`;
+      left.querySelector('[data-avatar]').replaceWith(RB.avatarEl(t.name, 36));
       const addBtn = left.querySelector('[data-add-courses]');
       if (addBtn) addBtn.addEventListener('click', openCoursesEditor);
 
@@ -276,7 +326,9 @@
     function renderReviewPanel() {
       const panel = document.getElementById('reviewPanel');
       const mine = state.teacher.my_recent_review;
+      renderStudyLabels();
       if (mine) {
+        document.getElementById('reviewComposer').open = true;
         renderAlreadyReviewed(panel, mine);
       } else {
         renderReviewForm(panel);

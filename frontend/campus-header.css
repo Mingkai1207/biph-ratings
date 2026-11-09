@@ -1,0 +1,61 @@
+/* Hallmark · v2.0.0 · scope: app · theme: BIPH brand · redesign: restyle · surface: absolute · posture: Restrained · imagery: actual BIPH photographs confined to page headers */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 · weakest: R, a left-to-right white fade keeps the title legible while the campus fills the heading */
+:root {
+  --container: 1120px;
+  --header-gutter: var(--space-xl);
+  --header-fade: linear-gradient(90deg, rgb(255 255 255 / .98) 0%, rgb(255 255 255 / .94) 27%, rgb(255 255 255 / .78) 46%, rgb(255 255 255 / .24) 68%, rgb(255 255 255 / 0) 86%);
+}
+.directory-shell, .profile-shell {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+}
+.footer, .campus-credit { width: 100%; max-width: var(--container); }
+.directory-intro,
+.profile-shell .profile-hero:has(.profile-campus) {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: 240px;
+  padding: var(--space-ml) var(--header-gutter);
+  margin-inline: calc(-1 * var(--header-gutter));
+  border: 0;
+}
+.directory-intro::after, .profile-hero:has(.profile-campus)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--header-fade);
+  pointer-events: none;
+}
+.directory-intro .campus-photo, .profile-hero .profile-campus {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  pointer-events: none;
+}
+.directory-intro .campus-photo img, .profile-hero .profile-campus img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.directory-intro .campus-photo figcaption, .profile-campus figcaption { display: none; }
+.directory-intro__copy, .profile-heading {
+  position: relative;
+  z-index: 2;
+  width: 62%;
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  :root {
+    --header-gutter: var(--space-lg);
+    --header-fade: linear-gradient(90deg, rgb(255 255 255 / .98) 0%, rgb(255 255 255 / .94) 30%, rgb(255 255 255 / .78) 55%, rgb(255 255 255 / .16) 100%);
+  }
+  .directory-intro, .profile-shell .profile-hero:has(.profile-campus) { min-height: 200px; padding-block: var(--space-lg); }
+  .directory-intro__copy, .profile-heading { width: 84%; }
+}
+@media (max-width: 360px) { :root { --header-gutter: var(--space-md); } }

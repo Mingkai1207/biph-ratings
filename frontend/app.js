@@ -40,7 +40,7 @@
       'nav.admin':       'Admin',
       'nav.menu':        'Menu',
       // Footer
-      'footer.body':     'Rate BIPH is student-run and independent of Beijing International Private High. Reviews are anonymous and moderated.<br/>Be kind. Be honest. Be specific.',
+      'footer.body':     'Rate BIPH is student-run and independent of BASIS International School Park Lane Harbour. Reviews are anonymous and moderated.<br/>Be kind. Be honest. Be specific.',
       // Relative time
       'time.today':      'today',
       'time.yesterday':  'yesterday',
@@ -219,14 +219,10 @@
       'sug.success.again':   'Send another',
       'sug.success.back':    'Back to roster',
 
-      // About / clarification
+      // About
       'about.pageTitle':       'Rate BIPH: about',
       'about.eyebrow':         'A FEW THINGS UP FRONT',
       'about.headingHtml':     'About Rate BIPH',
-      'about.lede':            'Two things to clarify so nobody walks in confused.',
-      'about.credit.title':    "Credit where it’s due",
-      'about.credit.body1':    'The idea of students rating teachers anonymously on a website came from <strong>BIPH Insights</strong>, the no-code prototype earlier students put together on base44. <strong>This isn’t my original idea</strong>; huge credit to whoever started it. I posted on my WeChat moments to make that clear. What I rebuilt here is the experience, not the original site.',
-      'about.credit.body2':    'I rebuilt it on a real domain (ratebiph.com, not a base44 subdomain) with a real backend because I wanted the experience to feel like a developed web product, not a hosted prototype. Faster pages, real search, anonymous reviews that actually scale, a proper mobile experience, comparison pages, shareable cards, daily auto-sync.',
       'about.purpose.title':   'What this site is for',
       'about.purpose.body1':   "This isn’t a place to <strong>curse</strong> teachers. It’s a place to share <strong>opinions</strong>, honestly and specifically, so the next class of students can pick courses with their eyes open.",
       'about.purpose.body2':   'Be specific: <em>what</em> the teacher does well, <em>where</em> the class is hard, <em>how</em> the homework actually feels. “Sucks” tells nobody anything. “Tests are short but every question is a synthesis problem” tells the next student what to expect.',
@@ -304,7 +300,7 @@
       'nav.admin':       '管理',
       'nav.menu':        '菜单',
       // Footer
-      'footer.body':     'Rate BIPH 由学生独立运营，与北京君诚国际学校无任何关联。所有评价匿名提交并经过审核。<br/>请友善、诚实、具体。',
+      'footer.body':     'Rate BIPH 由学生独立运营，与华润小径湾贝赛思国际学校无任何关联。所有评价匿名提交并经过审核。<br/>请友善、诚实、具体。',
       // Relative time
       'time.today':      '今天',
       'time.yesterday':  '昨天',
@@ -483,14 +479,10 @@
       'sug.success.again':   '再发一条',
       'sug.success.back':    '返回名单',
 
-      // About / clarification
+      // About
       'about.pageTitle':       'Rate BIPH: 说明',
       'about.eyebrow':         '先说几件事',
       'about.headingHtml':     '关于 Rate BIPH',
-      'about.lede':            '两件事先讲清楚，免得有人误会。',
-      'about.credit.title':    '该感谢的要感谢',
-      'about.credit.body1':    '"学生匿名评价老师"这个想法，最早是同学们在 base44 上搭的 <strong>BIPH Insights</strong> 做的。<strong>这个想法不是我原创的</strong>，非常感谢最初做这件事的人，我已经在朋友圈里说明过。我在这里重新做的是体验本身，不是原来的网站。',
-      'about.credit.body2':    '我之所以重新做了一遍，是因为想要一个真正的产品体验：自己的域名（ratebiph.com，而不是 base44 的子域名），真正的后端，更快的页面，能用的搜索，可扩展的匿名评价，像样的移动端体验，老师对比，可分享的名片，每天自动同步。',
       'about.purpose.title':   '这个网站是干嘛的',
       'about.purpose.body1':   '这里不是<strong>骂老师</strong>的地方，是诚实、具体地分享<strong>看法</strong>的地方，让下一届同学选课时能心里有数。',
       'about.purpose.body2':   '具体一点：老师<em>哪里</em>讲得好，课程<em>哪里</em>难，作业<em>到底</em>是什么感觉。"垃圾"对任何人都没有信息量。"考试不长，但每题都是综合应用"才能让后面的人有所准备。',
@@ -861,8 +853,7 @@
       link('compare.html',     'compare',     'nav.compare'),
       link('submit.html',      'submit',      'nav.submit'),
       link('suggestions.html', 'suggestions', 'nav.suggestions'),
-      // About page is the credit + intent clarification — sits next to
-      // Suggestions because both are "meta" links (not part of the core flow).
+      // About explains the site purpose and review guidelines.
       link('about.html',       'about',       'nav.about'),
       // Admin link is always visible in the nav. Clicking lands on the
       // token-gated admin page — non-admins just see the login screen.

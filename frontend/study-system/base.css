@@ -1,0 +1,39 @@
+/* Hallmark · v2.0.0 · scope: app · theme: BIPH brand · redesign: restyle · nav: retained utility links · footer: student-run disclosure */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R5 V3 · weakest: V, familiar shell retained so teacher search stays familiar */
+html, body { overflow-x: clip; }
+html { scrollbar-color: var(--line-strong) var(--bg); scroll-padding-top: var(--space-3xl); }
+body { caret-color: var(--accent); }
+::selection { background: var(--accent-bg); color: var(--ink); }
+h1, h2, h3 { overflow-wrap: break-word; min-width: 0; text-wrap: balance; }
+p { text-wrap: pretty; }
+img { max-width: 100%; display: block; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; transition: none; }
+.topnav { z-index: var(--z-sticky-nav); }
+.topnav__inner { max-width: var(--container); padding: var(--space-sm) var(--space-xl); }
+.topnav__link { border-radius: 0; padding: var(--space-xs) var(--space-sm); }
+.topnav__link[aria-current="page"] { background: transparent; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 8px; }
+.topnav__lang { min-height: 36px; min-width: 40px; border-radius: var(--radius-control); border-color: var(--field-edge); }
+.topnav__toggle { border-radius: var(--radius-control); }
+.btn { border-radius: var(--radius-control); box-shadow: none; white-space: nowrap; }
+.btn--primary:active, .btn--accent:active { background: var(--ink); color: var(--on-accent); }
+button:disabled, .btn:disabled { cursor: not-allowed; opacity: .65; color: var(--ink-mute); background: var(--bg-sunken); }
+.footer { max-width: var(--container); margin-inline: auto; padding: var(--space-xl) var(--space-xl) var(--space-md); text-align: left; }
+.campus-credit { max-width: var(--container); margin: 0 auto; padding: 0 var(--space-xl) var(--space-lg); color: var(--ink-mute); font-size: var(--text-xs); line-height: 1.6; }
+.campus-credit a { text-underline-offset: 3px; }
+.campus-photo { margin: 0; min-width: 0; }
+.campus-photo img { width: 100%; height: 176px; object-fit: cover; border-radius: 0; }
+.campus-photo figcaption { padding-top: var(--space-xs); color: var(--ink-mute); font-size: var(--text-xs); line-height: 1.4; }
+@media (max-width: 760px) {
+  .topnav__inner { padding: var(--space-sm) var(--space-lg); }
+  .footer { padding: var(--space-ml) var(--space-lg) var(--space-md); }
+  .campus-credit { padding: 0 var(--space-lg) var(--space-lg); }
+  .campus-photo img { height: 112px; }
+}
+@media (max-width: 360px) {
+  .topnav__inner { padding-inline: var(--space-md); }
+  .footer, .campus-credit { padding-inline: var(--space-md); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
