@@ -73,3 +73,36 @@ Source attribution records provenance and is not a license grant. The assets are
 3. `biph-campus-overview.jpg`: useful if the goal is immediately showing the whole campus, but dense architectural detail makes it weaker behind long text.
 
 The other official carousel photos were inspected: the auditorium/dormitory are interiors, while the basketball court has active players and a more cluttered composition. No dusk photograph appears in this six-image BIPH carousel.
+
+## Additional campus imagery — 2026-11-09
+
+The user requested more campus photographs throughout the website. These two additional originals were downloaded and visually inspected. They are unmodified source JPEGs and contain no people. The official BIPH home data bundle above assigns both to the BIPH campus; labels below follow that source. No frontend or deployment changes were made as part of this asset task.
+
+### `biph-auditorium.jpg`
+
+- Source page: [Official BIPH Our School](https://biph.basischina.com/#/about/our_school)
+- Original asset: [VR_4_Auditorium.jpg](https://bgbasis.oss-cn-shenzhen.aliyuncs.com/school-official-website/home/BIPH/VR_4_Auditorium.jpg)
+- Official labels: “Auditorium” / “阶梯教室”.
+- Dimensions: 1920 × 800 pixels
+- Size: 162,112 bytes
+- SHA-256: `42ad8c5ac0aca463ff9591cebfce1edcc69cb30c8cf377d78ba997985a5df2c2`
+- English alt text: Rows of blue seats beneath a folded cream ceiling in the BIPH auditorium.
+- Chinese alt text: BIPH 阶梯教室内，米白色折面天花板下排列着蓝色座椅。
+- Recommended use: a supporting campus photograph on About or a compact sidebar image. The blue seats reinforce the site's existing palette. Keep the architecture visible; avoid placing text across the repeated chair details.
+
+### `biph-dormitory.jpg`
+
+- Inspected candidate only; not included in the website assets or deployment.
+- Source page: [Official BIPH Our School](https://biph.basischina.com/#/about/our_school)
+- Original asset: [VR_5_Students_Domitory.jpg](https://bgbasis.oss-cn-shenzhen.aliyuncs.com/school-official-website/home/BIPH/VR_5_Students_Domitory.jpg)
+- Official labels: “Students Domitory” / “学生宿舍” (the English asset spelling is from the source).
+- Dimensions: 1920 × 800 pixels
+- Size: 126,641 bytes
+- SHA-256: `e7c4413c42b018bf199c182846404ffe60a7e68169f07a633d11360e3ce715c0`
+- English alt text: An empty BIPH student dormitory with pale wooden bunk beds and a central aisle.
+- Chinese alt text: BIPH 学生宿舍内，浅木色上下铺分列在中央过道两侧。
+- Optional use: a broader campus-life collection. Less directly relevant to teacher reviews than the auditorium; keep secondary if used.
+
+### Library-image check
+
+The official library bundle exposes three BIPH originals. `BIPH4.jpg` is the existing people-free interior at 288 × 180. `BIPH3.jpg` is also 288 × 180 and shows a student using a laptop. `BIPH1.jpg` is 1268 × 845 but uses a young child as its prominent foreground subject. The two student-focused files were inspected but not added to the site's assets. No higher-resolution people-free library interior was found in that bundle; do not upscale the existing thumbnail for a large panel.

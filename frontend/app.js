@@ -41,6 +41,17 @@
       'nav.menu':        'Menu',
       // Footer
       'footer.body':     'Rate BIPH is student-run and independent of BASIS International School Park Lane Harbour. Reviews are anonymous and moderated.<br/>Be kind. Be honest. Be specific.',
+      'campus.credit': 'Campus photographs:',
+      'campus.school': 'BASIS International School Park Lane Harbour',
+      'campus.seeMore': 'A look around campus',
+      'campus.library.caption': 'The library',
+      'campus.library.alt': 'Desks, bookshelves and a staircase in the BIPH library',
+      'campus.auditorium.caption': 'The auditorium',
+      'campus.auditorium.alt': 'Rows of blue seats beneath the angular ceiling of the BIPH auditorium',
+      'campus.field.caption': 'The rooftop field',
+      'campus.field.alt': 'The BIPH rooftop soccer field surrounded by green hills',
+      'campus.gate.caption': 'The school entrance',
+      'campus.gate.alt': 'Main entrance of the BIPH campus',
       // Relative time
       'time.today':      'today',
       'time.yesterday':  'yesterday',
@@ -301,6 +312,17 @@
       'nav.menu':        '菜单',
       // Footer
       'footer.body':     'Rate BIPH 由学生独立运营，与华润小径湾贝赛思国际学校无任何关联。所有评价匿名提交并经过审核。<br/>请友善、诚实、具体。',
+      'campus.credit': '校园照片：',
+      'campus.school': '华润小径湾贝赛思国际学校',
+      'campus.seeMore': '看看校园',
+      'campus.library.caption': '图书馆',
+      'campus.library.alt': 'BIPH 图书馆内的书桌、书架与楼梯',
+      'campus.auditorium.caption': '阶梯教室',
+      'campus.auditorium.alt': 'BIPH 阶梯教室内的蓝色座椅与几何造型天花板',
+      'campus.field.caption': '山顶足球场',
+      'campus.field.alt': '绿山环绕的 BIPH 山顶足球场',
+      'campus.gate.caption': '学校正门',
+      'campus.gate.alt': 'BIPH 校园正门',
       // Relative time
       'time.today':      '今天',
       'time.yesterday':  '昨天',
@@ -629,6 +651,9 @@
     });
     document.querySelectorAll('[data-i18n-title]').forEach(el => {
       el.title = t(el.getAttribute('data-i18n-title'));
+    });
+    document.querySelectorAll('[data-i18n-alt]').forEach(el => {
+      el.alt = t(el.getAttribute('data-i18n-alt'));
     });
     document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
       el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));

@@ -1,7 +1,7 @@
-# Design: Rate BIPH directory study
+# Design: Rate BIPH
 
-Local exploration only. This system covers the directory and teacher profile;
-it does not replace the production design until the user asks to deploy.
+The directory and teacher profile design was deployed on 9 November 2026.
+The same system extends to the About and contribution pages.
 
 ## System
 
@@ -55,6 +55,15 @@ Existing brand values come from `frontend/styles.css`, not a new palette.
 - Originals from the official BIPH website, provenance in `docs/biph-photo-sources.md`.
 - Descriptive bilingual alt text, fixed dimensions, source credit near the footer.
 - No claims of school endorsement; independent-site disclosure remains.
+
+### Campus notebook additions
+
+- Directory: a small library photograph below the desktop subject index, linked to the campus pictures on About. The subject scroller is shortened so the sticky rail remains usable. Omit the extra photograph on narrow or short screens.
+- About: purpose text alongside a photograph of the auditorium; a wide field photograph follows. The removed credit clarification stays removed.
+- Contribution pages: form and copy on the left, a quiet campus scene on the right. At 760px and below the photograph follows the form; it never delays access to the fields.
+- New photographs have plain frames, 13px bilingual captions and translated alt text. Preserve the actual images, no fabricated teacher portraits or text overlays.
+- Reserve dimensions for every image and lazy-load all added photographs. Use the 288px library source only as a desktop thumbnail.
+- Shared layout: `frontend/campus-life.css`; source metadata stays in `docs/biph-photo-sources.md`.
 
 ## Exports
 

@@ -6,12 +6,14 @@
   <meta name="description" content="Submit a missing BIPH teacher for review by a student moderator." />
   <title>Rate BIPH: add a teacher</title>
   <link rel="stylesheet" href="styles.css?v=hallmark-polish-20261025" />
+  <link rel="stylesheet" href="campus-life.css?v=campus-20261109" />
   <script src="config.js?v=22926e5"></script>
 </head>
 <body data-page="submit">
   <div data-topnav></div>
 
-  <main class="container container--narrow">
+  <main class="container campus-page">
+    <div class="campus-page__content">
     <h1 class="page-title serif" data-i18n-html="sub.headingHtml">Add a teacher to the roster.</h1>
     <p class="page-lede" data-i18n="sub.lede">Submissions are reviewed by a student moderator and usually show up within a day. No photos, no personal contact info, just the basics.</p>
 
@@ -47,10 +49,16 @@
         <a href="index.html" class="btn btn--ghost" data-i18n="sub.success.back">Back to roster</a>
       </div>
     </div>
+    </div>
+    <figure class="campus-page__photo campus-scene">
+      <img src="assets/biph/biph-main-gate.jpg" width="1920" height="800" loading="lazy" decoding="async" alt="Main entrance of the BIPH campus" data-i18n-alt="campus.gate.alt" />
+      <figcaption data-i18n="campus.gate.caption">The school entrance</figcaption>
+    </figure>
   </main>
 
   <div data-footer></div>
-  <script src="app.js?v=hallmark-polish-20261025"></script>
+  <p class="campus-credit"><span data-i18n="campus.credit">Campus photographs:</span> <a href="https://biph.basischina.com/#/about/our_school" target="_blank" rel="noopener" data-i18n="campus.school">BASIS International School Park Lane Harbour</a></p>
+  <script src="app.js?v=campus-20261109"></script>
   <script>
   (function () {
     const state = { subject: '', subjects: [], turnstileToken: null };
